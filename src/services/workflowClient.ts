@@ -71,6 +71,8 @@ class WorkflowClient {
                 } else if (data.type === 'music_update') {
                     // Incremental update
                     this.handleMusicUpdate(data);
+                } else if (data.type === 'project_status_update') {
+                    this.handleProjectStatusUpdate(data);
                 } else if (data.type === 'ping') {
                     // Keep-alive, ignore
                 }
@@ -169,6 +171,19 @@ class WorkflowClient {
             music_status: status,
             music_url: url || this.lastState.music_url,
             projectStatus
+        });
+    }
+
+    private handleProjectStatusUpdate(data: any) {
+        if (!this.lastState) {
+            this.fetchState();
+            return;
+        }
+
+        const { status } = data;
+        this.updateLocalState({
+            ...this.lastState,
+            projectStatus: status
         });
     }
 
