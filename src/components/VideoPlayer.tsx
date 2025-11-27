@@ -25,6 +25,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
   const musicRef = useRef<HTMLAudioElement | null>(null);
 
   const [showExportOptions, setShowExportOptions] = useState(false);
+  const [includeOutro, setIncludeOutro] = useState(false);
   const [outroFile, setOutroFile] = useState<File | null>(null);
 
   // Hook for Download Logic
@@ -146,7 +147,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
       </button>
 
       {/* Main Player Container */}
-      <div className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
+      <div className="relative h-[80vh] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
 
         {/* Background Image */}
         <img
@@ -191,38 +192,50 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
 
         {/* EXPORT OPTIONS MODAL */}
         {showExportOptions && !isDownloading && (
-          <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center text-white p-6 text-center animate-fade-in-up rounded-[2.5rem]">
-            <h3 className="text-xl font-bold mb-6 text-white">Export Options</h3>
+          <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center text-white p-6 text-center animate-fade-in-up">
+            <h3 className="text-xl font-bold mb-2 text-white">Export Options</h3>
+            <p className="text-xs text-slate-400 mb-6">Resolution: 1080x1920 (9:16 Vertical)</p>
 
-            <div className="w-full max-w-xs mb-8">
-              <label className="block text-sm font-medium text-slate-300 mb-2 text-left">
-                Add Outro Video (Optional)
-              </label>
-              <div className="relative group">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setOutroFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-slate-400
-                                    file:mr-4 file:py-2.5 file:px-4
-                                    file:rounded-full file:border-0
-                                    file:text-sm file:font-semibold
-                                    file:bg-indigo-500/10 file:text-indigo-400
-                                    hover:file:bg-indigo-500/20
-                                    cursor-pointer border border-slate-700 rounded-lg bg-slate-800/50 p-1"
-                />
-                {outroFile && (
-                  <button
-                    onClick={() => setOutroFile(null)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-red-400 bg-slate-900 rounded-full"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
+            <div className="w-full max-w-xs mb-8 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+              <div className="flex items-center justify-between mb-4">
+                <label className="text-sm font-medium text-slate-300">Add Outro Video</label>
+                <div
+                  onClick={() => setIncludeOutro(!includeOutro)}
+                  className={`w-10 h-5 rounded-full cursor-pointer transition-colors relative ${includeOutro ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${includeOutro ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
               </div>
-              <p className="text-[10px] text-slate-500 mt-2 text-left">
-                Select a short video to play at the end.
-              </p>
+
+              {includeOutro && (
+                <div className="animate-fade-in-up">
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setOutroFile(e.target.files?.[0] || null)}
+                      className="block w-full text-xs text-slate-400
+                                        file:mr-3 file:py-2 file:px-3
+                                        file:rounded-lg file:border-0
+                                        file:text-xs file:font-semibold
+                                        file:bg-indigo-500/10 file:text-indigo-400
+                                        hover:file:bg-indigo-500/20
+                                        cursor-pointer border border-slate-700 rounded-lg bg-slate-800/50 p-1"
+                    />
+                    {outroFile && (
+                      <button
+                        onClick={() => setOutroFile(null)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-400 bg-slate-900 rounded-full"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-2 text-left leading-relaxed">
+                    Upload a vertical video (1080x1920) to play after the generated content.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 w-full max-w-xs">
