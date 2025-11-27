@@ -27,6 +27,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [includeOutro, setIncludeOutro] = useState(false);
   const [outroFile, setOutroFile] = useState<File | null>(null);
+  const [exportFormat, setExportFormat] = useState<'mp4' | 'webm'>('mp4');
+  const [isMp4Supported, setIsMp4Supported] = useState(true);
+
+  useEffect(() => {
+    // Check for native MP4 recording support
+    const supported = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/mp4');
+    setIsMp4Supported(supported);
+    if (!supported) {
+      setExportFormat('webm');
+    }
+  }, []);
 
   // Hook for Download Logic
   const {
@@ -122,7 +133,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
 
   const confirmExport = () => {
     setShowExportOptions(false);
-    startExport();
+    startExport(exportFormat);
   };
 
   if (!activeScene) {
@@ -196,9 +207,34 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
             <h3 className="text-xl font-bold mb-2 text-white">Export Options</h3>
             <p className="text-xs text-slate-400 mb-6">Resolution: 1080x1920 (9:16 Vertical)</p>
 
+            <div className="w-full max-w-xs mb-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+              <label className="text-sm font-medium text-slate-300 block mb-3 text-left">Format</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => isMp4Supported && setExportFormat('mp4')}
+                  disabled={!isMp4Supported}
+                  title={!isMp4Supported ? "MP4 export is not supported by your browser. Please use WebM." : ""}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${exportFormat === 'mp4'
+                    ? 'bg-indigo-600 border-indigo-500 text-white'
+                    : !isMp4Supported
+                      ? 'bg-slate-800/50 border-slate-800 text-slate-600 cursor-not-allowed'
+                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                    }`}
+                >
+                  MP4 {!isMp4Supported && '(N/A)'}
+                </button>
+                <button
+                  onClick={() => setExportFormat('webm')}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${exportFormat === 'webm' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                >
+                  WebM
+                </button>
+              </div>
+            </div>
+
             <div className="w-full max-w-xs mb-8 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
               <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-medium text-slate-300">Add Outro Video</label>
+                <label className="text-sm font-medium text-slate-300">Merge Video</label>
                 <div
                   onClick={() => setIncludeOutro(!includeOutro)}
                   className={`w-10 h-5 rounded-full cursor-pointer transition-colors relative ${includeOutro ? 'bg-indigo-500' : 'bg-slate-700'}`}

@@ -15,17 +15,6 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
     useEffect(() => {
         if (!audioUrl) return;
 
-        // Clean up previous audio before creating new one
-        if (audioRef.current) {
-            audioRef.current.pause();
-            const oldSrc = audioRef.current.src;
-            audioRef.current.src = ''; // Clear the source first
-            audioRef.current.load(); // Reset the audio element
-            if (oldSrc.startsWith('blob:')) {
-                URL.revokeObjectURL(oldSrc);
-            }
-        }
-
         try {
             let resolvedUrl = audioUrl;
             let blobUrl: string | null = null;
@@ -53,19 +42,26 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
                 }
             }
 
-            audioRef.current = new Audio(resolvedUrl);
-            audioRef.current.onended = () => setIsPlaying(false);
-            audioRef.current.onpause = () => setIsPlaying(false);
-            audioRef.current.onerror = (e) => {
-                const audio = audioRef.current;
+            const audio = new Audio(resolvedUrl);
+            audioRef.current = audio;
+
+            audio.onended = () => setIsPlaying(false);
+            audio.onpause = () => setIsPlaying(false);
+            audio.onerror = (e) => {
+                // Ignore errors if we are cleaning up (audioRef might be null or different)
+                if (!audioRef.current) return;
+
+                // If error is null/undefined but event fired, it might be a false positive during loading/interruption
+                if (!audio.error && audio.networkState === 2) return;
+
                 console.error("Audio playback error:", {
                     event: e,
-                    error: audio?.error,
-                    errorCode: audio?.error?.code,
-                    errorMessage: audio?.error?.message,
-                    networkState: audio?.networkState,
-                    readyState: audio?.readyState,
-                    src: audio?.src?.substring(0, 100)
+                    error: audio.error,
+                    errorCode: audio.error?.code,
+                    errorMessage: audio.error?.message,
+                    networkState: audio.networkState,
+                    readyState: audio.readyState,
+                    src: audio.src?.substring(0, 100)
                 });
                 setIsPlaying(false);
             };
@@ -76,10 +72,20 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
         // Cleanup function
         return () => {
             if (audioRef.current) {
+                // Prevent error triggers during cleanup
+                audioRef.current.onerror = null;
+                audioRef.current.onended = null;
+                audioRef.current.onpause = null;
+
                 audioRef.current.pause();
                 const srcToCleanup = audioRef.current.src;
                 audioRef.current.src = '';
-                audioRef.current.load();
+                try {
+                    audioRef.current.load();
+                } catch (e) {
+                    // Ignore load errors during cleanup
+                }
+
                 if (srcToCleanup && srcToCleanup.startsWith('blob:')) {
                     URL.revokeObjectURL(srcToCleanup);
                 }

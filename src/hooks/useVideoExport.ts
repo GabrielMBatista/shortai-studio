@@ -75,7 +75,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
         });
     };
 
-    const startExport = async () => {
+    const startExport = async (format: 'mp4' | 'webm' = 'mp4') => {
         if (isDownloadingRef.current || validScenes.length === 0) return;
 
         setIsDownloading(true);
@@ -248,15 +248,26 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
             const audioTrack = dest.stream.getAudioTracks()[0];
             if (audioTrack) stream.addTrack(audioTrack);
 
-            // Prioritize VP9/Opus for best sync and quality
-            const mimeTypes = [
-                'video/webm;codecs=vp9,opus',
-                'video/webm;codecs=h264,opus',
-                'video/webm;codecs=vp8,opus',
-                'video/webm',
-                'video/mp4'
-            ];
+            // Prioritize requested format
+            let mimeTypes: string[] = [];
+            if (format === 'mp4') {
+                mimeTypes = [
+                    'video/mp4',
+                    'video/webm;codecs=h264,opus', // Often produces mp4-compatible container or easily convertible
+                    'video/webm;codecs=vp9,opus',
+                    'video/webm'
+                ];
+            } else {
+                mimeTypes = [
+                    'video/webm;codecs=vp9,opus',
+                    'video/webm;codecs=vp8,opus',
+                    'video/webm',
+                    'video/mp4'
+                ];
+            }
+
             const mimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
+            console.log(`[VideoExport] Selected MIME type: ${mimeType} (Preferred: ${format})`);
 
             recorder = new MediaRecorder(stream, {
                 mimeType,
@@ -279,7 +290,19 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
 
                     const a = document.createElement('a');
                     a.style.display = 'none';
-                    const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+
+                    // Determine extension based on actual mimeType used, but respect preference if possible
+                    let ext = 'webm';
+                    if (mimeType.includes('mp4')) {
+                        ext = 'mp4';
+                    } else if (format === 'mp4' && mimeType.includes('h264')) {
+                        // If we wanted MP4 and got h264 webm, we can try naming it mp4, 
+                        // but it's risky. Safer to keep webm or mkv. 
+                        // However, user explicitly asked for MP4. 
+                        // Many players play h264/webm as mp4. Let's stick to strict mime check.
+                        ext = 'webm';
+                    }
+
                     const safeTitle = (title || 'video').replace(/[^a-z0-9]/gi, '-').toLowerCase().substring(0, 50);
                     a.href = url;
                     a.download = `${safeTitle}.${ext}`;
