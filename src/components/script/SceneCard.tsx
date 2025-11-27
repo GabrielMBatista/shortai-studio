@@ -49,8 +49,8 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     };
 
     // UI purely reflects backend state. No local 'isBusy' state.
-    const isImageLoading = scene.imageStatus === 'loading';
-    const isAudioLoading = scene.audioStatus === 'loading';
+    const isImageLoading = ['pending', 'queued', 'processing', 'loading'].includes(scene.imageStatus);
+    const isAudioLoading = ['pending', 'queued', 'processing', 'loading'].includes(scene.audioStatus);
 
     const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: 'image' | 'audio' | null }>({ isOpen: false, type: null });
 

@@ -15,19 +15,20 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
     useEffect(() => {
         if (!audioUrl) return;
 
-        console.log("Audio URL:", audioUrl.substring(0, 50) + "...");
-
-        // Clean up previous audio
+        // Clean up previous audio before creating new one
         if (audioRef.current) {
             audioRef.current.pause();
-            if (audioRef.current.src.startsWith('blob:')) {
-                URL.revokeObjectURL(audioRef.current.src);
+            const oldSrc = audioRef.current.src;
+            audioRef.current.src = ''; // Clear the source first
+            audioRef.current.load(); // Reset the audio element
+            if (oldSrc.startsWith('blob:')) {
+                URL.revokeObjectURL(oldSrc);
             }
-            audioRef.current = null;
         }
 
         try {
             let resolvedUrl = audioUrl;
+            let blobUrl: string | null = null;
 
             // Convert data URI to Blob URL for better browser compatibility
             if (audioUrl.startsWith('data:audio/')) {
@@ -43,7 +44,8 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
                             bytes[i] = binaryString.charCodeAt(i);
                         }
                         const blob = new Blob([bytes], { type: mimeType });
-                        resolvedUrl = URL.createObjectURL(blob);
+                        blobUrl = URL.createObjectURL(blob);
+                        resolvedUrl = blobUrl;
                     } catch (err) {
                         console.error("Failed to convert data URI to Blob:", err);
                         return;
@@ -55,16 +57,33 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
             audioRef.current.onended = () => setIsPlaying(false);
             audioRef.current.onpause = () => setIsPlaying(false);
             audioRef.current.onerror = (e) => {
-                console.error("Audio Load Error", e, audioRef.current);
+                const audio = audioRef.current;
+                console.error("Audio playback error:", {
+                    event: e,
+                    error: audio?.error,
+                    errorCode: audio?.error?.code,
+                    errorMessage: audio?.error?.message,
+                    networkState: audio?.networkState,
+                    readyState: audio?.readyState,
+                    src: audio?.src?.substring(0, 100)
+                });
                 setIsPlaying(false);
             };
         } catch (e) {
-            console.warn("Audio init error", e);
+            console.error("Audio initialization error:", e);
         }
 
+        // Cleanup function
         return () => {
-            if (audioRef.current?.src.startsWith('blob:')) {
-                URL.revokeObjectURL(audioRef.current.src);
+            if (audioRef.current) {
+                audioRef.current.pause();
+                const srcToCleanup = audioRef.current.src;
+                audioRef.current.src = '';
+                audioRef.current.load();
+                if (srcToCleanup && srcToCleanup.startsWith('blob:')) {
+                    URL.revokeObjectURL(srcToCleanup);
+                }
+                audioRef.current = null;
             }
         };
     }, [audioUrl]);
@@ -86,8 +105,11 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
         }
     };
 
-    if (status === 'loading') return <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />;
-    if (status === 'error') return <AlertCircle className="w-4 h-4 text-red-400" />;
+    // Show loader for any processing state
+    const isLoading = ['pending', 'queued', 'processing', 'loading'].includes(status);
+
+    if (isLoading) return <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />;
+    if (status === 'error' || status === 'failed') return <AlertCircle className="w-4 h-4 text-red-400" />;
     if (status === 'completed' && audioUrl) {
         return (
             <button

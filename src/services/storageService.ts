@@ -240,15 +240,16 @@ const fromApiProject = (apiP: any): VideoProject => {
                 uniqueScenesMap.set(s.scene_number, {
                     id: s.id || s._id,
                     sceneNumber: s.scene_number,
-                    visualDescription: s.visual_description || s.visual_description,
+                    visualDescription: s.visualDescription || s.visual_description || '',
                     narration: s.narration,
                     durationSeconds: Number(s.duration_seconds) || 5,
                     imageUrl: s.image_url,
                     audioUrl: s.audio_url,
                     sfxUrl: s.sfx_url,
-                    imageStatus: s.image_status || (s.image_url ? 'completed' : 'pending'),
-                    audioStatus: s.audio_status || (s.audio_url ? 'completed' : 'pending'),
-                    sfxStatus: s.sfx_status || (s.sfx_url ? 'completed' : 'pending'),
+                    // Use status from backend as-is
+                    imageStatus: s.image_status,
+                    audioStatus: s.audio_status,
+                    sfxStatus: s.sfx_status,
                     imageAttempts: s.image_attempts || 0,
                     audioAttempts: s.audio_attempts || 0,
                     errorMessage: s.error_message
