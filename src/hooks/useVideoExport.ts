@@ -8,15 +8,16 @@ interface UseVideoExportProps {
     scenes: Scene[];
     bgMusicUrl?: string;
     title?: string;
+    outroFile?: File | null;
 }
 
-export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProps) => {
+export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVideoExportProps) => {
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState("");
     const [downloadError, setDownloadError] = useState<string | null>(null);
     const [eta, setEta] = useState<string | null>(null);
     const isDownloadingRef = useRef(false);
-    
+
     const validScenes = scenes.filter(s => s.imageStatus === 'completed' && s.imageUrl);
 
     // --- Helpers ---
@@ -25,9 +26,9 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
             return await ctx.decodeAudioData(arrayBuffer);
-        } catch (e) { 
+        } catch (e) {
             console.warn("Audio load error", e);
-            return null; 
+            return null;
         }
     };
 
@@ -49,7 +50,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
     const precomputeSubtitleLayouts = (ctx: CanvasRenderingContext2D, scenes: any[], canvasWidth: number): SubtitleLayout[] => {
         // Use shared font style
         ctx.font = `${SUBTITLE_STYLES.fontWeight} ${SUBTITLE_STYLES.canvasFontSize}px ${SUBTITLE_STYLES.fontFamily}`;
-        
+
         return scenes.map(scene => {
             const duration = scene.durationSeconds || 5;
             const timings = getWordTimings(scene.narration, duration);
@@ -57,17 +58,17 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
             const lines: string[][] = [];
             let currentLine: string[] = [];
             let currentWidth = 0;
-            const maxWidth = canvasWidth - 160; 
+            const maxWidth = canvasWidth - 160;
             words.forEach(word => {
-                 const width = ctx.measureText(word + ' ').width;
-                 if (currentWidth + width > maxWidth && currentLine.length > 0) {
-                     lines.push(currentLine);
-                     currentLine = [word];
-                     currentWidth = width;
-                 } else {
-                     currentLine.push(word);
-                     currentWidth += width;
-                 }
+                const width = ctx.measureText(word + ' ').width;
+                if (currentWidth + width > maxWidth && currentLine.length > 0) {
+                    lines.push(currentLine);
+                    currentLine = [word];
+                    currentWidth = width;
+                } else {
+                    currentLine.push(word);
+                    currentWidth += width;
+                }
             });
             if (currentLine.length > 0) lines.push(currentLine);
             return { lines, timings };
@@ -76,13 +77,13 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
 
     const startExport = async () => {
         if (isDownloadingRef.current || validScenes.length === 0) return;
-        
+
         setIsDownloading(true);
         setDownloadError(null);
         setEta("calculating...");
         isDownloadingRef.current = true;
         setDownloadProgress("Loading assets (0%)...");
-        
+
         await new Promise(r => setTimeout(r, 100)); // UI Breath
 
         let mainAudioCtx: AudioContext | null = null;
@@ -106,7 +107,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
             // 2. Audio Context (Real-time with Safety Graph)
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             mainAudioCtx = new AudioContextClass(); // Use native sample rate to avoid resampling artifacts
-            
+
             // Create a virtual destination stream
             const dest = mainAudioCtx.createMediaStreamDestination();
 
@@ -121,7 +122,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
 
             const masterGain = mainAudioCtx.createGain();
             masterGain.gain.value = 0.8; // Headroom to prevent clipping when mixing music + voice
-            
+
             masterGain.connect(compressor);
             compressor.connect(dest);
 
@@ -130,27 +131,53 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
             const assets = await Promise.all(validScenes.map(async (s, index) => {
                 const percent = Math.round((index / validScenes.length) * 20);
                 setDownloadProgress(`Loading assets (${percent}%)...`);
-                
+
                 const img = await loadImage(s.imageUrl!);
                 let buffer: AudioBuffer | null = null;
                 if (s.audioUrl) buffer = await loadAudioBuffer(mainAudioCtx!, s.audioUrl);
-                
+
                 // Use actual buffer duration if available, otherwise DB duration
                 const fallbackDuration = Number(s.durationSeconds) || 5;
                 const realDuration = (buffer && Number.isFinite(buffer.duration)) ? buffer.duration : fallbackDuration;
-                
+
                 return { ...s, img, buffer, renderDuration: realDuration };
             }));
 
             let bgMusicBuffer: AudioBuffer | null = null;
             if (bgMusicUrl) {
-                try { bgMusicBuffer = await loadAudioBuffer(mainAudioCtx, bgMusicUrl); } catch (e) {}
+                try { bgMusicBuffer = await loadAudioBuffer(mainAudioCtx, bgMusicUrl); } catch (e) { }
+            }
+
+            // Load Outro Video
+            let outroElement: HTMLVideoElement | null = null;
+            let outroDuration = 0;
+            if (outroFile) {
+                setDownloadProgress("Loading outro video...");
+                outroElement = document.createElement('video');
+                outroElement.src = URL.createObjectURL(outroFile);
+                outroElement.crossOrigin = "anonymous";
+                // Important: We don't set muted=true here because createMediaElementSource needs the audio track.
+                // But we don't want it playing to speakers, only to the context.
+                // Connecting to context automatically disconnects from speakers usually, but let's be careful.
+
+                await new Promise((resolve) => {
+                    outroElement!.onloadedmetadata = () => {
+                        outroDuration = outroElement!.duration;
+                        resolve(null);
+                    };
+                    outroElement!.onerror = () => {
+                        console.warn("Failed to load outro video");
+                        outroElement = null;
+                        resolve(null);
+                    };
+                });
             }
 
             // 4. Schedule Audio (The "Live" Mix with Micro-Fades)
             setDownloadProgress("Scheduling audio timeline...");
-            
-            const totalDuration = assets.reduce((acc, s) => acc + s.renderDuration, 0);
+
+            const totalScenesDuration = assets.reduce((acc, s) => acc + s.renderDuration, 0);
+            const totalDuration = totalScenesDuration + outroDuration;
             const startTime = mainAudioCtx.currentTime + 0.2; // Small buffer before start
             let currentAudioTime = startTime;
 
@@ -159,7 +186,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
                 if (asset.buffer) {
                     const source = mainAudioCtx!.createBufferSource();
                     source.buffer = asset.buffer;
-                    
+
                     // Individual gain for micro-fades
                     const clipGain = mainAudioCtx!.createGain();
                     source.connect(clipGain);
@@ -175,7 +202,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
                     // Fade In
                     clipGain.gain.setValueAtTime(0, startT);
                     clipGain.gain.linearRampToValueAtTime(1, startT + fadeTime);
-                    
+
                     // Fade Out
                     clipGain.gain.setValueAtTime(1, endT - fadeTime);
                     clipGain.gain.linearRampToValueAtTime(0, endT);
@@ -188,24 +215,35 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
                 const musicSource = mainAudioCtx.createBufferSource();
                 musicSource.buffer = bgMusicBuffer;
                 musicSource.loop = true;
-                
+
                 const musicGain = mainAudioCtx.createGain();
                 musicGain.gain.value = 0.12; // Subtle background
-                
+
                 musicSource.connect(musicGain);
                 musicGain.connect(masterGain);
-                
+
                 musicSource.start(startTime);
-                // Stop music with a fade out at the end
-                const musicEnd = startTime + totalDuration;
+                // Stop music with a fade out at the end of SCENES (before outro usually, or fade into outro?)
+                // Let's fade out music when scenes end.
+                const musicEnd = startTime + totalScenesDuration;
                 musicGain.gain.setValueAtTime(0.12, musicEnd - 1.0);
                 musicGain.gain.linearRampToValueAtTime(0, musicEnd);
                 musicSource.stop(musicEnd + 0.5);
             }
 
+            // Connect Outro Audio
+            if (outroElement) {
+                const source = mainAudioCtx.createMediaElementSource(outroElement);
+                const outroGain = mainAudioCtx.createGain();
+                outroGain.gain.value = 1.0;
+                source.connect(outroGain);
+                outroGain.connect(masterGain);
+                // We will trigger play() in the draw loop when time is right
+            }
+
             // 5. Recorder Setup
             const stream = canvas.captureStream(30); // 30 FPS video
-            
+
             // Add the "Live" audio track from our mix
             const audioTrack = dest.stream.getAudioTracks()[0];
             if (audioTrack) stream.addTrack(audioTrack);
@@ -228,7 +266,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
 
             const chunks: Blob[] = [];
             recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-            
+
             recorder.onerror = (e: any) => {
                 if (isDownloadingRef.current) setDownloadError("Encoding failed: " + (e.error?.message || "Unknown"));
             };
@@ -238,7 +276,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
                 try {
                     const blob = new Blob(chunks, { type: mimeType });
                     const url = URL.createObjectURL(blob);
-                    
+
                     const a = document.createElement('a');
                     a.style.display = 'none';
                     const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
@@ -247,10 +285,11 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
                     a.download = `${safeTitle}.${ext}`;
                     document.body.appendChild(a);
                     a.click();
-                    
-                    setTimeout(() => { 
-                        window.URL.revokeObjectURL(url); 
-                        document.body.removeChild(a); 
+
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                        if (outroElement && outroElement.src) window.URL.revokeObjectURL(outroElement.src); // Revoke outro URL
+                        document.body.removeChild(a);
                     }, 1000);
 
                     setIsDownloading(false);
@@ -267,30 +306,34 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
             // 6. Start Recording & Rendering
             recorder.start(1000); // 1s chunks
             const recordingStartTime = Date.now();
-            
+
             // Precompute Text Layouts
-            const syncedScenes = assets.map(a => ({...a, durationSeconds: a.renderDuration}));
+            const syncedScenes = assets.map(a => ({ ...a, durationSeconds: a.renderDuration }));
             const subtitleLayouts = precomputeSubtitleLayouts(ctx, syncedScenes, canvas.width);
+
+            let lastDrawTime = 0;
+            let backupTimer: number | null = null;
 
             const draw = () => {
                 if (!isDownloadingRef.current) return;
 
+                lastDrawTime = Date.now();
                 const now = mainAudioCtx!.currentTime;
                 // Sync video time to audio time (Master Clock)
                 const elapsedTime = Math.max(0, now - startTime);
-                
+
                 // Progress UI
                 const realTimeNow = Date.now();
                 if (realTimeNow - lastProgressUpdate > 200) {
                     const pct = Math.min((elapsedTime / totalDuration), 0.99);
                     const renderProgress = Math.round(pct * 100);
                     setDownloadProgress(`Rendering video (${renderProgress}%)...`);
-                    
+
                     if (pct > 0.1) {
                         const elapsedMs = realTimeNow - recordingStartTime;
                         const totalMs = elapsedMs / pct;
                         const remainSec = Math.ceil((totalMs - elapsedMs) / 1000);
-                        setEta(remainSec < 60 ? `~${remainSec}s` : `~${Math.floor(remainSec/60)}m ${remainSec%60}s`);
+                        setEta(remainSec < 60 ? `~${remainSec}s` : `~${Math.floor(remainSec / 60)}m ${remainSec % 60}s`);
                     }
                     lastProgressUpdate = realTimeNow;
                 }
@@ -298,109 +341,150 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
                 // End Condition
                 if (elapsedTime >= totalDuration + 0.1) {
                     if (recorder && recorder.state === 'recording') recorder.stop();
+                    if (backupTimer) clearInterval(backupTimer);
                     return;
                 }
-
-                // Determine Current Scene
-                let currentSceneIdx = 0;
-                let accumTime = 0;
-                let timeInScene = 0;
-                
-                for (let i = 0; i < assets.length; i++) {
-                    if (elapsedTime < accumTime + assets[i].renderDuration) {
-                        currentSceneIdx = i;
-                        timeInScene = elapsedTime - accumTime;
-                        break;
-                    }
-                    accumTime += assets[i].renderDuration;
-                }
-                
-                // Safety clamp
-                if (currentSceneIdx >= assets.length) {
-                    currentSceneIdx = assets.length - 1;
-                    timeInScene = assets[currentSceneIdx].renderDuration;
-                }
-
-                const asset = assets[currentSceneIdx];
-                const layout = subtitleLayouts[currentSceneIdx];
 
                 // --- Drawing ---
                 const w = canvas.width;
                 const h = canvas.height;
-                
-                // Ken Burns Effect
-                const scale = 1.0 + (0.15 * (timeInScene / asset.renderDuration));
-                
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, w, h);
-                
-                if (asset.img) {
-                    const sw = w * scale;
-                    const sh = h * scale;
-                    const ox = (w - sw) / 2;
-                    const oy = (h - sh) / 2;
-                    ctx.drawImage(asset.img, ox, oy, sw, sh);
-                }
-                
-                // Gradient Overlay
-                // We use a linear gradient from transparent (top) to black (bottom)
-                // Using explicit rgba(0,0,0,0) ensures clean blending in Canvas
-                const gradient = ctx.createLinearGradient(0, h * 0.4, 0, h);
-                gradient.addColorStop(0, 'rgba(0,0,0,0)');
-                gradient.addColorStop(0.3, 'rgba(0,0,0,0)');
-                gradient.addColorStop(0.7, 'rgba(0,0,0,0.6)');
-                gradient.addColorStop(1, 'rgba(0,0,0,0.95)');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, w, h);
 
-                // Subtitles
-                if (layout) {
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    
-                    // Match the shared constants
-                    ctx.shadowColor = SUBTITLE_STYLES.shadowColor;
-                    ctx.shadowBlur = SUBTITLE_STYLES.shadowBlur;
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = SUBTITLE_STYLES.shadowOffsetY;
+                // Check if we are in Outro phase
+                if (elapsedTime >= totalScenesDuration && outroElement) {
+                    // Outro Phase
+                    if (outroElement.paused) {
+                        outroElement.play().catch(e => console.error("Outro play failed", e));
+                    }
 
-                    const timings = layout.timings;
-                    const lines = layout.lines;
-                    const activeWordObj = timings.find(t => timeInScene >= t.start && timeInScene < t.end);
-                    const activeIndex = activeWordObj ? timings.indexOf(activeWordObj) : -1;
+                    // Draw video frame
+                    // Scale to cover
+                    const vw = outroElement.videoWidth;
+                    const vh = outroElement.videoHeight;
+                    if (vw > 0 && vh > 0) {
+                        const scale = Math.max(w / vw, h / vh);
+                        const sw = vw * scale;
+                        const sh = vh * scale;
+                        const ox = (w - sw) / 2;
+                        const oy = (h - sh) / 2;
+                        ctx.drawImage(outroElement, ox, oy, sw, sh);
+                    } else {
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(0, 0, w, h);
+                    }
 
-                    const lineHeight = 80;
-                    const totalBlockHeight = lines.length * lineHeight;
-                    const startY = h - 200 - totalBlockHeight; 
+                } else {
+                    // Scenes Phase
 
-                    let wordGlobalIndex = 0;
-                    lines.forEach((line, lineIdx) => {
-                        const lineStr = line.join(' ');
-                        const lineWidth = ctx.measureText(lineStr).width;
-                        let x = (w - lineWidth) / 2;
-                        const y = startY + (lineIdx * lineHeight);
+                    // Determine Current Scene
+                    let currentSceneIdx = 0;
+                    let accumTime = 0;
+                    let timeInScene = 0;
 
-                        line.forEach((word) => {
-                            const isCurrent = wordGlobalIndex === activeIndex;
-                            // Re-apply font to ensure weight is correct if changed elsewhere (safety)
-                            ctx.font = isCurrent 
-                                ? `${SUBTITLE_STYLES.fontWeight} 58px ${SUBTITLE_STYLES.fontFamily}` 
-                                : `${SUBTITLE_STYLES.fontWeight} ${SUBTITLE_STYLES.canvasFontSize}px ${SUBTITLE_STYLES.fontFamily}`;
-                            
-                            // Highlight active word
-                            ctx.fillStyle = isCurrent ? SUBTITLE_STYLES.activeColor : SUBTITLE_STYLES.inactiveColor;
-                            
-                            ctx.fillText(word, x + (ctx.measureText(word).width/2), y);
-                            x += ctx.measureText(word + ' ').width;
-                            wordGlobalIndex++;
+                    for (let i = 0; i < assets.length; i++) {
+                        if (elapsedTime < accumTime + assets[i].renderDuration) {
+                            currentSceneIdx = i;
+                            timeInScene = elapsedTime - accumTime;
+                            break;
+                        }
+                        accumTime += assets[i].renderDuration;
+                    }
+
+                    // Safety clamp
+                    if (currentSceneIdx >= assets.length) {
+                        currentSceneIdx = assets.length - 1;
+                        timeInScene = assets[currentSceneIdx].renderDuration;
+                    }
+
+                    const asset = assets[currentSceneIdx];
+                    const layout = subtitleLayouts[currentSceneIdx];
+
+                    // Ken Burns Effect
+                    const scale = 1.0 + (0.15 * (timeInScene / asset.renderDuration));
+
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, w, h);
+
+                    if (asset.img) {
+                        const sw = w * scale;
+                        const sh = h * scale;
+                        const ox = (w - sw) / 2;
+                        const oy = (h - sh) / 2;
+                        ctx.drawImage(asset.img, ox, oy, sw, sh);
+                    }
+
+                    // Gradient Overlay
+                    // We use a linear gradient from transparent (top) to black (bottom)
+                    // Using explicit rgba(0,0,0,0) ensures clean blending in Canvas
+                    const gradient = ctx.createLinearGradient(0, h * 0.4, 0, h);
+                    gradient.addColorStop(0, 'rgba(0,0,0,0)');
+                    gradient.addColorStop(0.3, 'rgba(0,0,0,0)');
+                    gradient.addColorStop(0.7, 'rgba(0,0,0,0.6)');
+                    gradient.addColorStop(1, 'rgba(0,0,0,0.95)');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, w, h);
+
+                    // Subtitles
+                    if (layout) {
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        // Match the shared constants
+                        ctx.shadowColor = SUBTITLE_STYLES.shadowColor;
+                        ctx.shadowBlur = SUBTITLE_STYLES.shadowBlur;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = SUBTITLE_STYLES.shadowOffsetY;
+
+                        const timings = layout.timings;
+                        const lines = layout.lines;
+                        const activeWordObj = timings.find(t => timeInScene >= t.start && timeInScene < t.end);
+                        const activeIndex = activeWordObj ? timings.indexOf(activeWordObj) : -1;
+
+                        const lineHeight = 80;
+                        const totalBlockHeight = lines.length * lineHeight;
+                        const startY = h - 200 - totalBlockHeight;
+
+                        let wordGlobalIndex = 0;
+                        lines.forEach((line, lineIdx) => {
+                            const lineStr = line.join(' ');
+                            const lineWidth = ctx.measureText(lineStr).width;
+                            let x = (w - lineWidth) / 2;
+                            const y = startY + (lineIdx * lineHeight);
+
+                            line.forEach((word) => {
+                                const isCurrent = wordGlobalIndex === activeIndex;
+                                // Re-apply font to ensure weight is correct if changed elsewhere (safety)
+                                ctx.font = isCurrent
+                                    ? `${SUBTITLE_STYLES.fontWeight} 58px ${SUBTITLE_STYLES.fontFamily}`
+                                    : `${SUBTITLE_STYLES.fontWeight} ${SUBTITLE_STYLES.canvasFontSize}px ${SUBTITLE_STYLES.fontFamily}`;
+
+                                // Highlight active word
+                                ctx.fillStyle = isCurrent ? SUBTITLE_STYLES.activeColor : SUBTITLE_STYLES.inactiveColor;
+
+                                ctx.fillText(word, x + (ctx.measureText(word).width / 2), y);
+                                x += ctx.measureText(word + ' ').width;
+                                wordGlobalIndex++;
+                            });
                         });
-                    });
+                    }
                 }
 
                 animationFrameId = requestAnimationFrame(draw);
             };
 
+            // Start Hybrid Loop
             animationFrameId = requestAnimationFrame(draw);
+
+            // Backup Timer: Checks every 50ms if draw() hasn't run recently (e.g. tab inactive)
+            // If rAF is throttled, this ensures we still push frames to the recorder.
+            backupTimer = window.setInterval(() => {
+                if (!isDownloadingRef.current) {
+                    clearInterval(backupTimer!);
+                    return;
+                }
+                if (Date.now() - lastDrawTime > 50) {
+                    draw();
+                }
+            }, 50);
 
         } catch (err: any) {
             console.error("Export error", err);
@@ -411,10 +495,10 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title }: UseVideoExportProp
     };
 
     const cancelExport = () => {
-         setIsDownloading(false);
-         setDownloadError(null);
-         setEta(null);
-         isDownloadingRef.current = false;
+        setIsDownloading(false);
+        setDownloadError(null);
+        setEta(null);
+        isDownloadingRef.current = false;
     };
 
     return {

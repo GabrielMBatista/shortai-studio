@@ -17,8 +17,13 @@ O **ShortsAI Studio** é uma aplicação web moderna que transforma ideias em v�
 - **Hybrid Sync Engine**: 
   - **Offline First**: Todos os dados são salvos instantaneamente no IndexedDB (suporta blobs grandes).
   - **Cloud Sync**: Sincronização automática com API (`shortsai-api`) quando a conexão é restabelecida.
-  - **Fallback Robusto**: Se a API cair, o app continua funcionando localmente sem interrupção.
-- **Renderização Client-Side**: Compilação de vídeo `.mp4`/`.webm` direto no navegador (Canvas API + MediaRecorder) com legendas sincronizadas e efeito Ken Burns.
+  - **Real-time Updates (SSE)**: Conexão persistente (`EventSource`) para receber progresso granular do backend (ex: "Gerando áudio da cena 2...").
+- **Renderização Client-Side Robusta**: 
+  - Compilação de vídeo `.mp4`/`.webm` direto no navegador (Canvas API + MediaRecorder).
+  - **Hybrid Render Loop**: Sistema de renderização que combina `requestAnimationFrame` com timers de backup para garantir que a exportação continue mesmo se a aba estiver em segundo plano (evitando throttling do navegador).
+  - **Audio-Driven Timing**: Sincronia perfeita baseada no clock do `AudioContext`, imune a lags visuais.
+- **Gerenciamento de Dados**:
+  - **Soft Delete**: Cenas removidas são preservadas no banco de dados para segurança, permitindo recuperação futura.
 - **Segurança**: Criptografia/Ofuscação de API Keys no LocalStorage (`utils/security.ts`).
 
 ---
