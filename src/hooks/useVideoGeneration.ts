@@ -174,11 +174,29 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     // Asset Command Wrappers
     regenerateSceneImage: (idx: number, force: boolean) => {
       const s = project?.scenes[idx];
-      if (s?.id) regenerateSceneAsset(s.id, 'image', force);
+      if (s?.id) {
+        // Optimistic Update
+        setProject(prev => {
+          if (!prev) return null;
+          const newScenes = [...prev.scenes];
+          newScenes[idx] = { ...newScenes[idx], imageStatus: 'loading' };
+          return { ...prev, scenes: newScenes };
+        });
+        regenerateSceneAsset(s.id, 'image', force);
+      }
     },
     regenerateSceneAudio: (idx: number, force: boolean) => {
       const s = project?.scenes[idx];
-      if (s?.id) regenerateSceneAsset(s.id, 'audio', force);
+      if (s?.id) {
+        // Optimistic Update
+        setProject(prev => {
+          if (!prev) return null;
+          const newScenes = [...prev.scenes];
+          newScenes[idx] = { ...newScenes[idx], audioStatus: 'loading' };
+          return { ...prev, scenes: newScenes };
+        });
+        regenerateSceneAsset(s.id, 'audio', force);
+      }
     },
     regenerateAllAudio,
     regenerateMusic,

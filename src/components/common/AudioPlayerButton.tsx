@@ -13,27 +13,66 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
-        // Fix: Prevent creating Audio object if URL is invalid to avoid 'no supported sources' error
         if (!audioUrl) return;
 
-        if (!audioRef.current) {
-            try {
-                audioRef.current = new Audio(audioUrl);
-                audioRef.current.onended = () => setIsPlaying(false);
-                audioRef.current.onpause = () => setIsPlaying(false);
-                audioRef.current.onerror = () => setIsPlaying(false);
-            } catch(e) {
-                console.warn("Audio init error", e);
+        console.log("Audio URL:", audioUrl.substring(0, 50) + "...");
+
+        // Clean up previous audio
+        if (audioRef.current) {
+            audioRef.current.pause();
+            if (audioRef.current.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audioRef.current.src);
             }
-        } else if (audioRef.current.src !== audioUrl) {
-             audioRef.current.src = audioUrl;
+            audioRef.current = null;
         }
+
+        try {
+            let resolvedUrl = audioUrl;
+
+            // Convert data URI to Blob URL for better browser compatibility
+            if (audioUrl.startsWith('data:audio/')) {
+                const [header, base64Data] = audioUrl.split(',');
+                if (base64Data) {
+                    const mimeMatch = header.match(/data:(.*?);/);
+                    const mimeType = mimeMatch ? mimeMatch[1] : 'audio/wav';
+
+                    try {
+                        const binaryString = atob(base64Data);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        const blob = new Blob([bytes], { type: mimeType });
+                        resolvedUrl = URL.createObjectURL(blob);
+                    } catch (err) {
+                        console.error("Failed to convert data URI to Blob:", err);
+                        return;
+                    }
+                }
+            }
+
+            audioRef.current = new Audio(resolvedUrl);
+            audioRef.current.onended = () => setIsPlaying(false);
+            audioRef.current.onpause = () => setIsPlaying(false);
+            audioRef.current.onerror = (e) => {
+                console.error("Audio Load Error", e, audioRef.current);
+                setIsPlaying(false);
+            };
+        } catch (e) {
+            console.warn("Audio init error", e);
+        }
+
+        return () => {
+            if (audioRef.current?.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audioRef.current.src);
+            }
+        };
     }, [audioUrl]);
 
     const toggleAudio = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!audioRef.current || !audioUrl) return;
-        
+
         if (isPlaying) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
@@ -51,7 +90,7 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
     if (status === 'error') return <AlertCircle className="w-4 h-4 text-red-400" />;
     if (status === 'completed' && audioUrl) {
         return (
-            <button 
+            <button
                 onClick={toggleAudio}
                 className="flex items-center space-x-1 text-xs bg-slate-700 hover:bg-slate-600 text-indigo-300 px-2 py-1 rounded transition-colors"
                 title={isPlaying ? "Stop" : "Play"}
