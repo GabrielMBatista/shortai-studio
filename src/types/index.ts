@@ -31,7 +31,7 @@ export const IS_DEMO_LOGIN = (process.env.USE_DEMO_LOGIN as unknown) === true ||
 
 export interface ApiKeys {
   gemini?: string; // User specific key
-  elevenLabs?: string;
+  elevenlabs?: string;
   suno?: string;
 }
 

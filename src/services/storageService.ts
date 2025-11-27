@@ -4,57 +4,9 @@ import { encryptData, decryptData } from '../utils/security';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const SESSION_ID_KEY = 'shortsai_user_id';
-const DB_NAME = 'ShortsAIDB';
-const STORE_NAME = 'projects';
 
 // --- Global User Cache ---
 let currentUserCache: User | null = null;
-
-// --- IndexedDB Helpers (CACHE ONLY) ---
-// Note: IDB is strictly a non-authoritative read-through cache
-const openDB = (): Promise<IDBDatabase> => {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onupgradeneeded = (e: any) => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            }
-        };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-    });
-};
-
-const idbGet = async (id: string): Promise<VideoProject | undefined> => {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const req = tx.objectStore(STORE_NAME).get(id);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-    });
-};
-
-const idbPut = async (project: VideoProject) => {
-    const db = await openDB();
-    return new Promise<void>((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const req = tx.objectStore(STORE_NAME).put(project);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-    });
-};
-
-const idbDelete = async (id: string) => {
-    const db = await openDB();
-    return new Promise<void>((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const req = tx.objectStore(STORE_NAME).delete(id);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-    });
-};
 
 // --- API Helper ---
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
@@ -105,7 +57,7 @@ export const restoreSession = async (): Promise<User | null> => {
         const keys: ApiKeys = {};
         if (remoteKeys) {
             if (remoteKeys.gemini_key) keys.gemini = decryptData(remoteKeys.gemini_key);
-            if (remoteKeys.elevenlabs_key) keys.elevenLabs = decryptData(remoteKeys.elevenlabs_key);
+            if (remoteKeys.elevenlabs_key) keys.elevenlabs = decryptData(remoteKeys.elevenlabs_key);
             if (remoteKeys.suno_key) keys.suno = decryptData(remoteKeys.suno_key);
         }
 
@@ -163,7 +115,7 @@ export const loginUser = async (email: string, name: string, avatar: string, id?
                 const remoteKeys = await apiFetch(`/user/apikeys?user_id=${userId}`);
                 if (remoteKeys) {
                     if (remoteKeys.gemini_key) apiKeys.gemini = decryptData(remoteKeys.gemini_key);
-                    if (remoteKeys.elevenlabs_key) apiKeys.elevenLabs = decryptData(remoteKeys.elevenlabs_key);
+                    if (remoteKeys.elevenlabs_key) apiKeys.elevenlabs = decryptData(remoteKeys.elevenlabs_key);
                     if (remoteKeys.suno_key) apiKeys.suno = decryptData(remoteKeys.suno_key);
                 }
             } catch (e) { }
@@ -199,7 +151,7 @@ export const updateUserApiKeys = async (userId: string, keys: ApiKeys): Promise<
         const payload = {
             user_id: userId,
             gemini_key: keys.gemini ? encryptData(keys.gemini) : "",
-            elevenlabs_key: keys.elevenLabs ? encryptData(keys.elevenLabs) : "",
+            elevenlabs_key: keys.elevenlabs ? encryptData(keys.elevenlabs) : "",
             suno_key: keys.suno ? encryptData(keys.suno) : ""
         };
         await apiFetch('/user/apikeys', { method: 'POST', body: JSON.stringify(payload) });
@@ -255,6 +207,7 @@ const fromApiProject = (apiP: any): VideoProject => {
                     errorMessage: s.error_message
                 });
             }
+            
         });
     }
 
@@ -289,235 +242,111 @@ const fromApiProject = (apiP: any): VideoProject => {
 export const getProject = async (projectId: string): Promise<VideoProject | null> => {
     try {
         const apiData = await apiFetch(`/projects/${projectId}`);
-        const project = fromApiProject(apiData);
-        idbPut(project).catch(e => console.warn("Cache update failed", e));
-        return project;
+        return fromApiProject(apiData);
     } catch (e) {
-        console.warn("API unavailable, fetching from cache", e);
-        const cached = await idbGet(projectId);
-        return cached || null;
+        console.warn("API unavailable", e);
+        return null;
     }
 };
 
 export const lockSceneAsset = async (projectId: string, sceneId: string, assetType: 'image' | 'audio', force: boolean = false): Promise<Scene> => {
-    try {
-        // Try Backend First
-        const payload = {
-            type: assetType,
-            asset_type: assetType,
-            status: 'processing',
-            force_regen: force
-        };
+    const payload = {
+        type: assetType,
+        asset_type: assetType,
+        status: 'processing',
+        force_regen: force
+    };
 
-        const res = await apiFetch(`/scenes/${sceneId}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
-        });
+    const res = await apiFetch(`/scenes/${sceneId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
 
-        const lockedScene = {
-            ...res,
-            sceneNumber: res.scene_number,
-            imageStatus: res.image_status,
-            audioStatus: res.audio_status,
-            imageUrl: res.image_url,
-            audioUrl: res.audio_url,
-            sfxUrl: res.sfx_url,
-            sfxStatus: res.sfx_status
-        } as Scene;
-
-        // Sync to Local IDB
-        const project = await idbGet(projectId);
-        if (project) {
-            const idx = project.scenes.findIndex(s => s.id === sceneId || s.sceneNumber === lockedScene.sceneNumber);
-            if (idx !== -1) {
-                Object.assign(project.scenes[idx], lockedScene);
-                await idbPut(project);
-            }
-        }
-        return lockedScene;
-
-    } catch (e: any) {
-        // 400/409 are Logic Errors (e.g. Project Status not 'generating') -> Rethrow
-        if (e.status && e.status !== 503 && e.status !== 504) throw e;
-
-        // Offline Fallback
-        console.warn("Offline: lockSceneAsset local fallback", e);
-        const project = await idbGet(projectId);
-        if (!project) throw new Error("Project not found locally");
-
-        const scene = project.scenes.find(s => s.id === sceneId);
-        if (!scene) throw new Error("Scene not found locally");
-
-        // Emulate lock state
-        if (assetType === 'image') scene.imageStatus = 'processing';
-        else scene.audioStatus = 'processing';
-
-        await idbPut(project);
-        return scene;
-    }
+    return {
+        ...res,
+        sceneNumber: res.scene_number,
+        imageStatus: res.image_status,
+        audioStatus: res.audio_status,
+        imageUrl: res.image_url,
+        audioUrl: res.audio_url,
+        sfxUrl: res.sfx_url,
+        sfxStatus: res.sfx_status
+    } as Scene;
 };
 
 export const saveSceneAsset = async (projectId: string, sceneId: string, assetType: 'image' | 'audio', dataUrl: string): Promise<Scene> => {
     const urlField = assetType === 'image' ? 'image_url' : 'audio_url';
     const statusField = assetType === 'image' ? 'image_status' : 'audio_status';
 
-    try {
-        const payload = {
-            type: assetType,
-            asset_type: assetType,
-            [urlField]: dataUrl,
-            [statusField]: 'completed',
-            status: 'completed'
-        };
+    const payload = {
+        type: assetType,
+        asset_type: assetType,
+        [urlField]: dataUrl,
+        [statusField]: 'completed',
+        status: 'completed'
+    };
 
-        const res = await apiFetch(`/scenes/${sceneId}/asset`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
-        });
+    const res = await apiFetch(`/scenes/${sceneId}/asset`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
 
-        const savedScene = {
-            ...res,
-            sceneNumber: res.scene_number,
-            imageStatus: res.image_status,
-            audioStatus: res.audio_status,
-            imageUrl: res.image_url,
-            audioUrl: res.audio_url,
-            sfxUrl: res.sfx_url,
-            sfxStatus: res.sfx_status
-        } as Scene;
-
-        // Sync Local
-        const project = await idbGet(projectId);
-        if (project) {
-            const idx = project.scenes.findIndex(s => s.id === sceneId || s.sceneNumber === savedScene.sceneNumber);
-            if (idx !== -1) {
-                Object.assign(project.scenes[idx], savedScene);
-                await idbPut(project);
-            }
-        }
-        return savedScene;
-
-    } catch (e: any) {
-        if (e.status && e.status !== 503 && e.status !== 504) throw e;
-
-        // Offline Fallback
-        console.warn("Offline: saveSceneAsset local fallback", e);
-        const project = await idbGet(projectId);
-        if (!project) throw new Error("Project not found locally");
-
-        const scene = project.scenes.find(s => s.id === sceneId);
-        if (!scene) throw new Error("Scene not found locally");
-
-        if (assetType === 'image') {
-            scene.imageUrl = dataUrl;
-            scene.imageStatus = 'completed';
-        } else {
-            scene.audioUrl = dataUrl;
-            scene.audioStatus = 'completed';
-        }
-
-        await idbPut(project);
-        return scene;
-    }
+    return {
+        ...res,
+        sceneNumber: res.scene_number,
+        imageStatus: res.image_status,
+        audioStatus: res.audio_status,
+        imageUrl: res.image_url,
+        audioUrl: res.audio_url,
+        sfxUrl: res.sfx_url,
+        sfxStatus: res.sfx_status
+    } as Scene;
 };
 
 export const saveSceneSFX = async (projectId: string, sceneId: string, sfxUrl: string): Promise<Scene> => {
-    try {
-        const payload = {
-            sfx_url: sfxUrl,
-            sfx_status: 'completed'
-        };
+    const payload = {
+        sfx_url: sfxUrl,
+        sfx_status: 'completed'
+    };
 
-        const res = await apiFetch(`/scenes/${sceneId}/sfx`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
-        });
+    const res = await apiFetch(`/scenes/${sceneId}/sfx`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
 
-        const savedScene = {
-            ...res,
-            sceneNumber: res.scene_number,
-            imageStatus: res.image_status,
-            audioStatus: res.audio_status,
-            imageUrl: res.image_url,
-            audioUrl: res.audio_url,
-            sfxUrl: res.sfx_url,
-            sfxStatus: res.sfx_status
-        } as Scene;
-
-        const project = await idbGet(projectId);
-        if (project) {
-            const idx = project.scenes.findIndex(s => s.id === sceneId || s.sceneNumber === savedScene.sceneNumber);
-            if (idx !== -1) {
-                Object.assign(project.scenes[idx], savedScene);
-                await idbPut(project);
-            }
-        }
-        return savedScene;
-
-    } catch (e: any) {
-        if (e.status) throw e;
-
-        // Offline
-        const project = await idbGet(projectId);
-        if (!project) throw new Error("Project not found locally");
-        const scene = project.scenes.find(s => s.id === sceneId);
-        if (scene) {
-            scene.sfxUrl = sfxUrl;
-            scene.sfxStatus = 'completed';
-            await idbPut(project);
-            return scene;
-        }
-        throw e;
-    }
+    return {
+        ...res,
+        sceneNumber: res.scene_number,
+        imageStatus: res.image_status,
+        audioStatus: res.audio_status,
+        imageUrl: res.image_url,
+        audioUrl: res.audio_url,
+        sfxUrl: res.sfx_url,
+        sfxStatus: res.sfx_status
+    } as Scene;
 };
 
 export const reportSceneError = async (projectId: string, sceneId: string, assetType: 'image' | 'audio', errorMessage: string): Promise<void> => {
-    try {
-        const statusField = assetType === 'image' ? 'image_status' : 'audio_status';
-        const payload = {
-            [statusField]: 'error',
-            error_message: errorMessage
-        };
+    const statusField = assetType === 'image' ? 'image_status' : 'audio_status';
+    const payload = {
+        [statusField]: 'error',
+        error_message: errorMessage
+    };
 
-        await apiFetch(`/scenes/${sceneId}`, {
-            method: 'PATCH',
-            body: JSON.stringify(payload)
-        });
-    } catch (e) {
-        console.warn("Offline: reportSceneError local fallback", e);
-        const project = await idbGet(projectId);
-        if (project) {
-            const scene = project.scenes.find(s => s.id === sceneId);
-            if (scene) {
-                if (assetType === 'image') scene.imageStatus = 'error';
-                else scene.audioStatus = 'error';
-                scene.errorMessage = errorMessage;
-                await idbPut(project);
-            }
-        }
-    }
+    await apiFetch(`/scenes/${sceneId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
 };
 
 export const setProjectStatus = async (projectId: string, status: BackendProjectStatus) => {
-    // 1. Update Local First (Optimistic UI)
-    const project = await idbGet(projectId);
-    if (project) {
-        project.status = status;
-        await idbPut(project);
-    }
-
-    // 2. Try Backend
     try {
         await apiFetch(`/projects/${projectId}`, {
             method: 'PATCH',
             body: JSON.stringify({ status })
         });
     } catch (e: any) {
-        // If HTTP Error (e.g. 400 Draft -> Generating invalid), re-throw
-        if (e.status) throw e;
-
-        // If Network Error, suppress (Assume Offline Mode)
-        console.warn(`Offline: setProjectStatus(${status}) local only`);
+        console.warn(`setProjectStatus(${status}) failed`, e);
     }
 };
 
@@ -568,10 +397,12 @@ export const saveProject = async (project: VideoProject): Promise<VideoProject> 
                 if (res.bg_music_status) savedProject.bgMusicStatus = res.bg_music_status;
                 apiSuccess = true;
             } catch (createErr) {
-                console.warn("Offline: Create project failed", createErr);
+                console.warn("Create project failed", createErr);
+                throw createErr;
             }
         } else {
-            console.warn("Offline: Update project failed", e);
+            console.warn("Update project failed", e);
+            throw e;
         }
     }
 
@@ -600,10 +431,9 @@ export const saveProject = async (project: VideoProject): Promise<VideoProject> 
                 return { ...scene, id: existing.id };
             }));
             savedProject.scenes = updatedScenes;
-        } catch (e) { console.warn("Offline: Scene sync failed", e); }
+        } catch (e) { console.warn("Scene sync failed", e); }
     }
 
-    await idbPut(savedProject);
     return savedProject;
 };
 
@@ -628,24 +458,14 @@ export const getUserProjects = async (userId: string): Promise<VideoProject[]> =
                 return mapped;
             }).sort((a, b) => b.createdAt - a.createdAt);
 
-            const db = await openDB();
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            mappedProjects.forEach(p => tx.objectStore(STORE_NAME).put(p));
-
             return mappedProjects;
         }
     } catch (e) { }
 
-    const db = await openDB();
-    return new Promise((resolve) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const req = tx.objectStore(STORE_NAME).getAll();
-        req.onsuccess = () => resolve((req.result as VideoProject[]).sort((a, b) => b.createdAt - a.createdAt));
-    });
+    return [];
 };
 
 export const deleteProject = async (projectId: string) => {
-    await idbDelete(projectId);
     try { await apiFetch(`/projects/${projectId}`, { method: 'DELETE' }); } catch (e) { }
 };
 
