@@ -17,11 +17,16 @@ class WorkflowClient {
     private onStateChange: ((state: WorkflowState) => void) | null = null;
     private reconnectAttempts = 0;
     private maxReconnectAttempts = 5;
+    private lastState: WorkflowState | null = null;
 
     connect(projectId: string, callback: (state: WorkflowState) => void) {
         // If already connected to same project, just update callback
         if (this.currentProjectId === projectId && this.eventSource) {
             this.onStateChange = callback;
+            // If we have state, emit it immediately
+            if (this.lastState) {
+                callback(this.lastState);
+            }
             return;
         }
 
@@ -31,10 +36,13 @@ class WorkflowClient {
         this.currentProjectId = projectId;
         this.onStateChange = callback;
         this.reconnectAttempts = 0;
+        this.lastState = null;
 
         console.log('[WorkflowClient] Connecting to project', projectId);
 
         this.setupEventSource();
+        // Initial fetch to populate state quickly while SSE connects
+        this.fetchState();
     }
 
     private setupEventSource() {
@@ -49,18 +57,22 @@ class WorkflowClient {
 
                 if (data.type === 'init') {
                     // Initial state from server
-                    this.onStateChange?.({
+                    const newState: WorkflowState = {
                         projectStatus: data.projectStatus,
                         scenes: data.scenes,
                         music_status: data.bgMusicStatus,
                         music_url: data.bgMusicUrl
-                    });
+                    };
+                    this.updateLocalState(newState);
+
                 } else if (data.type === 'scene_update') {
-                    // Scene status update - trigger a refresh
-                    this.fetchState();
+                    // Incremental update
+                    this.handleSceneUpdate(data);
                 } else if (data.type === 'music_update') {
-                    // Music status update
-                    this.fetchState();
+                    // Incremental update
+                    this.handleMusicUpdate(data);
+                } else if (data.type === 'ping') {
+                    // Keep-alive, ignore
                 }
             } catch (err) {
                 console.error('[WorkflowClient] Failed to parse SSE message:', err);
@@ -76,6 +88,10 @@ class WorkflowClient {
                 const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
                 console.log(`[WorkflowClient] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
+                // Close current before reconnecting
+                this.eventSource?.close();
+                this.eventSource = null;
+
                 setTimeout(() => {
                     if (this.currentProjectId) {
                         this.setupEventSource();
@@ -88,6 +104,72 @@ class WorkflowClient {
             console.log('[WorkflowClient] SSE connection established');
             this.reconnectAttempts = 0;
         };
+    }
+
+    private updateLocalState(newState: WorkflowState) {
+        this.lastState = newState;
+        this.onStateChange?.(newState);
+    }
+
+    private handleSceneUpdate(data: any) {
+        if (!this.lastState) {
+            this.fetchState(); // Fallback if no state yet
+            return;
+        }
+
+        const { sceneId, field, status, url, error } = data;
+
+        const updatedScenes = this.lastState.scenes.map(scene => {
+            if (scene.id === sceneId) {
+                const updatedScene = { ...scene };
+
+                if (field === 'image') {
+                    updatedScene.imageStatus = status;
+                    if (url) updatedScene.imageUrl = url;
+                } else if (field === 'audio') {
+                    updatedScene.audioStatus = status;
+                    if (url) updatedScene.audioUrl = url;
+                }
+
+                if (error) updatedScene.errorMessage = error;
+
+                return updatedScene;
+            }
+            return scene;
+        });
+
+        // Infer project status if something is processing
+        let projectStatus = this.lastState.projectStatus;
+        if (status === 'processing' || status === 'loading') {
+            projectStatus = 'generating';
+        }
+
+        this.updateLocalState({
+            ...this.lastState,
+            scenes: updatedScenes,
+            projectStatus
+        });
+    }
+
+    private handleMusicUpdate(data: any) {
+        if (!this.lastState) {
+            this.fetchState();
+            return;
+        }
+
+        const { status, url } = data;
+
+        let projectStatus = this.lastState.projectStatus;
+        if (status === 'loading' || status === 'processing') {
+            projectStatus = 'generating';
+        }
+
+        this.updateLocalState({
+            ...this.lastState,
+            music_status: status,
+            music_url: url || this.lastState.music_url,
+            projectStatus
+        });
     }
 
     private async fetchState() {
@@ -116,14 +198,17 @@ class WorkflowClient {
                 errorMessage: s.error_message
             }));
 
-            this.onStateChange?.({
+            const newState: WorkflowState = {
                 projectStatus: data.projectStatus as BackendProjectStatus,
                 scenes: mappedScenes,
                 generationMessage: data.generationMessage,
                 fatalError: data.fatalError,
                 music_status: data.music_status,
                 music_url: data.music_url
-            });
+            };
+
+            this.updateLocalState(newState);
+
         } catch (err) {
             console.error('[WorkflowClient] Failed to fetch state:', err);
         }
@@ -138,6 +223,7 @@ class WorkflowClient {
         this.currentProjectId = null;
         this.onStateChange = null;
         this.reconnectAttempts = 0;
+        this.lastState = null;
     }
 
     async sendCommand(action: string, projectId: string, userId: string, sceneId?: string, extras?: any) {
