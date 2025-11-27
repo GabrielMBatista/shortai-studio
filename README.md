@@ -18,10 +18,13 @@ O **ShortsAI Studio** é uma aplicação web moderna que transforma ideias em v�
   - **Offline First**: Todos os dados são salvos instantaneamente no IndexedDB (suporta blobs grandes).
   - **Cloud Sync**: Sincronização automática com API (`shortsai-api`) quando a conexão é restabelecida.
   - **Real-time Updates (SSE)**: Conexão persistente (`EventSource`) para receber progresso granular do backend (ex: "Gerando áudio da cena 2...").
-- **Renderização Client-Side Robusta**: 
-  - Compilação de vídeo `.mp4`/`.webm` direto no navegador (Canvas API + MediaRecorder).
-  - **Hybrid Render Loop**: Sistema de renderização que combina `requestAnimationFrame` com timers de backup para garantir que a exportação continue mesmo se a aba estiver em segundo plano (evitando throttling do navegador).
-  - **Audio-Driven Timing**: Sincronia perfeita baseada no clock do `AudioContext`, imune a lags visuais.
+- **Renderização Client-Side Profissional**: 
+  - **MP4 (WebCodecs + mp4-muxer)**: Exportação de alta fidelidade usando encoders nativos do navegador (`VideoEncoder`/`AudioEncoder`). Garante áudio cristalino (AAC 48kHz) e vídeo H.264 sem artefatos, superando as limitações do `MediaRecorder` padrão.
+  - **WebM (MediaRecorder)**: Suporte legado robusto para exportações rápidas em VP9/Opus.
+  - **Audio Mixing Offline**: Processamento de áudio desacoplado usando `OfflineAudioContext`. Todo o mix (narração + música + efeitos) é pré-renderizado em um buffer perfeito antes da codificação, eliminando "estalos" e desincronias causadas por carga de CPU.
+  - **Hybrid Render Loop**: Sistema de renderização resiliente que combina `requestAnimationFrame` com timers de backup, garantindo exportação contínua mesmo em background.
+- **Monetization-Ready**:
+  - Geração de roteiros otimizada para **65s-90s** por padrão, garantindo elegibilidade para monetização em plataformas de vídeo curto.
 - **Gerenciamento de Dados**:
   - **Soft Delete**: Cenas removidas são preservadas no banco de dados para segurança, permitindo recuperação futura.
 - **Segurança**: Criptografia/Ofuscação de API Keys no LocalStorage (`utils/security.ts`).
