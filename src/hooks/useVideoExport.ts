@@ -107,7 +107,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
             mainAudioCtx = new AudioContextClass({ sampleRate: 48000 });
 
             // 3. Load Assets
-            setEta("~15s");
+            setEta("~150s");
             const assets = await Promise.all(validScenes.map(async (s, index) => {
                 const percent = Math.round((index / validScenes.length) * 20);
                 setDownloadProgress(`Loading assets (${percent}%)...`);

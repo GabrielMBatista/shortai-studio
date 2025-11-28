@@ -196,6 +196,13 @@ const App: React.FC = () => {
         }
     }, [project, currentUser, step]);
 
+    // Auto-transition from GENERATING_IMAGES to SCRIPTING when done
+    useEffect(() => {
+        if (step === AppStep.GENERATING_IMAGES && project?.status && ['completed', 'failed', 'paused'].includes(project.status)) {
+            setStep(AppStep.SCRIPTING);
+        }
+    }, [project?.status, step]);
+
     if (isInitializing) {
         return <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-slate-400">Loading Session...</div>;
     }

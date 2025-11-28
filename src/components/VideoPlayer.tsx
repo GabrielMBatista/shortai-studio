@@ -194,12 +194,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           />
         )}
 
-        {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-          <div
-            className="h-full bg-indigo-500 transition-all duration-100 ease-linear"
-            style={{ width: `${progress}%` }}
-          />
+        {/* Instagram-style Segmented Progress Bar */}
+        <div className="absolute top-3 left-3 right-3 z-30 flex gap-1.5">
+          {validScenes.map((_, index) => (
+            <div key={index} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-white transition-all duration-100 ease-linear"
+                style={{
+                  width: index < currentSceneIndex ? '100%' :
+                    index === currentSceneIndex ? `${progress}%` : '0%'
+                }}
+              />
+            </div>
+          ))}
         </div>
 
         {/* EXPORT OPTIONS MODAL */}
@@ -346,7 +353,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
         <button onClick={() => setShowSubtitles(!showSubtitles)} className={`p-3 rounded-full transition-colors ${showSubtitles ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}>{showSubtitles ? <Captions className="w-5 h-5" /> : <CaptionsOff className="w-5 h-5" />}</button>
         <div className={`p-3 transition-colors ${activeScene.audioUrl ? 'text-white' : 'text-slate-600'}`}>{activeScene.audioUrl ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}</div>
       </div>
-    </div>
+    </div >
   );
 };
 
