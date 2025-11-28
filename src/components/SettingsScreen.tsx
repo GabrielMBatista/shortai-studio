@@ -55,7 +55,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) =
       <div className="grid gap-8">
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
           <img src={user.avatar} alt={user.name} className="w-20 h-20 rounded-full border-2 border-indigo-500" />
-          <div className="text-center md:text-left flex-1"><h2 className="text-xl font-bold text-white">{user.name}</h2><p className="text-slate-400">{user.email}</p><span className="inline-block mt-2 px-2 py-1 bg-indigo-500/20 text-indigo-300 text-xs rounded border border-indigo-500/30">Pro Plan</span></div>
+          <div className="text-center md:text-left flex-1"><h2 className="text-xl font-bold text-white">{user.name}</h2><p className="text-slate-400">{user.email}</p><span className={`inline-block mt-2 px-2 py-1 text-xs rounded border ${user.subscriptionPlan === 'PRO' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-slate-500/20 text-slate-300 border-slate-500/30'}`}>{user.subscriptionPlan === 'PRO' ? 'Pro Plan' : 'Free Plan'}</span></div>
         </div>
         <form onSubmit={handleSave} className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><Key className="w-5 h-5 text-indigo-400" />API Configuration</h3>

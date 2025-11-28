@@ -71,7 +71,8 @@ export const restoreSession = async (): Promise<User | null> => {
                     name: userFromApi.name || session.user.name,
                     email: userFromApi.email,
                     avatar: userFromApi.avatar_url || session.user.image,
-                    apiKeys: keys
+                    apiKeys: keys,
+                    subscriptionPlan: userFromApi.subscription_plan || 'FREE'
                 };
                 currentUserCache = user;
                 return user;
@@ -110,7 +111,8 @@ export const restoreSession = async (): Promise<User | null> => {
             name: userData.name || 'Returning User',
             email: userData.email || '',
             avatar: userData.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + storedId,
-            apiKeys: keys
+            apiKeys: keys,
+            subscriptionPlan: userData.subscription_plan || 'FREE'
         };
 
         currentUserCache = user;
@@ -163,7 +165,8 @@ export const loginUser = async (email: string, name: string, avatar: string, id?
                 name: userFromApi.name,
                 email: userFromApi.email,
                 avatar: userFromApi.avatar_url || avatar,
-                apiKeys: apiKeys
+                apiKeys: apiKeys,
+                subscriptionPlan: userFromApi.subscription_plan || 'FREE'
             };
         }
     } catch (error) {

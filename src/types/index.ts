@@ -44,6 +44,7 @@ export interface User {
   email: string;
   avatar: string;
   apiKeys: ApiKeys;
+  subscriptionPlan?: 'FREE' | 'PRO';
 }
 
 export interface SavedCharacter {
