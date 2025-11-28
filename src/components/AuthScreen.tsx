@@ -15,7 +15,7 @@ const GoogleLoginButton: React.FC<{ disabled: boolean }> = ({ disabled }) => {
   const [csrfToken, setCsrfToken] = useState<string>('');
 
   React.useEffect(() => {
-    fetch(`${apiUrl}/auth/csrf`)
+    fetch(`${apiUrl}/auth/csrf`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setCsrfToken(data.csrfToken))
       .catch(err => console.error("Failed to fetch CSRF token", err));

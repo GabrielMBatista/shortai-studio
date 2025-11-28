@@ -4,6 +4,7 @@ import InputSection from './components/InputSection';
 import ScriptView from './components/ScriptView';
 import VideoPlayer from './components/VideoPlayer';
 import AuthScreen from './components/AuthScreen';
+import Loader from './components/Loader';
 import Dashboard from './components/Dashboard';
 import SettingsScreen from './components/SettingsScreen';
 import QuotaHud from './components/QuotaHud';
@@ -103,10 +104,14 @@ const App: React.FC = () => {
         }
     };
 
-    const handleLogout = () => {
-        logoutUser();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        await logoutUser();
         setCurrentUser(null);
         setStep(AppStep.AUTH);
+        setIsLoggingOut(false);
         showToast("Logged out successfully.", 'info');
     };
 
@@ -209,6 +214,9 @@ const App: React.FC = () => {
         <div className="min-h-screen bg-[#0f172a] text-slate-50 flex flex-col font-sans">
             {/* Notifications */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {/* Global Loader */}
+            {isLoggingOut && <Loader fullScreen text="Signing out..." />}
 
             {/* Modals */}
             <ConfirmModal

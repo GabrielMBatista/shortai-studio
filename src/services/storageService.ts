@@ -181,18 +181,42 @@ export const loginUser = async (email: string, name: string, avatar: string, id?
 
 export const logoutUser = async () => {
     try {
-        // Call NextAuth signout endpoint
-        // We use window.location.href to ensure a full redirect and cookie clearing
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
 
-        // Clear local state first
+        // 1. Clear local state immediately
         localStorage.removeItem(SESSION_ID_KEY);
         currentUserCache = null;
 
-        // Redirect to signout
-        window.location.href = `${apiUrl}/auth/signout?callbackUrl=http://localhost:3000`;
+        // 2. Get CSRF Token
+        let csrfToken = '';
+        try {
+            const csrfRes = await fetch(`${apiUrl}/auth/csrf`, { credentials: 'include' });
+            const csrfData = await csrfRes.json();
+            csrfToken = csrfData.csrfToken;
+        } catch (e) {
+            console.warn("Failed to fetch CSRF for logout", e);
+        }
+
+        // 3. Perform Logout via POST to avoid confirmation page
+        // We use fetch with URLSearchParams to simulate a form submission which NextAuth expects
+        await fetch(`${apiUrl}/auth/signout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                csrfToken: csrfToken,
+                callbackUrl: 'http://localhost:3000'
+            }),
+            credentials: 'include' // IMPORTANT: Send session cookie so backend knows who to sign out
+        });
+
+        // 4. Force reload/redirect to ensure UI is clean
+        window.location.href = 'http://localhost:3000';
     } catch (e) {
         console.error("Logout failed", e);
+        // Fallback
+        window.location.href = 'http://localhost:3000';
     }
 };
 
