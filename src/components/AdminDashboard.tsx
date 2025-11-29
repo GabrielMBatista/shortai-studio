@@ -99,7 +99,7 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     if (isLoading) return <Loader text="Loading Admin Dashboard..." />;
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="w-full max-w-[1800px] mx-auto px-6 py-8">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                     <Shield className="w-8 h-8 text-indigo-500" /> Admin Dashboard
@@ -161,7 +161,7 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                             <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-emerald-400" /> User Growth (30 Days)
                             </h3>
-                            <div className="h-64 w-full">
+                            <div className="h-64 lg:h-96 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={stats.analytics}>
                                         <defs>
