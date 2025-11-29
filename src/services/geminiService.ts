@@ -15,7 +15,7 @@ export const generateScript = async (
   style: string,
   language: string = 'English',
   config: { minDuration: number; maxDuration: number; targetScenes?: number } = { minDuration: 55, maxDuration: 65 }
-): Promise<{ scenes: Scene[]; metadata: { title: string; description: string; } }> => {
+): Promise<{ scenes: Scene[]; metadata: { title: string; description: string; characterAnchor?: string; } }> => {
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
@@ -44,7 +44,8 @@ export const generateScript = async (
     scenes: data.scenes,
     metadata: {
       title: data.videoTitle,
-      description: data.videoDescription
+      description: data.videoDescription,
+      characterAnchor: data.meta?.character_anchor_used
     }
   };
 };
