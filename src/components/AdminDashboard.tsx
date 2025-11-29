@@ -34,16 +34,17 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
     });
 
     const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview');
+    const [dateRange, setDateRange] = useState<number>(30);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [dateRange]); // Refetch when dateRange changes
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
             const [statsRes, usersRes] = await Promise.all([
-                fetch('/api/admin/stats'),
+                fetch(`/api/admin/stats?days=${dateRange}`),
                 fetch('/api/admin/users')
             ]);
 
@@ -124,6 +125,19 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
             {activeTab === 'overview' && stats && (
                 <div className="animate-fade-in">
+                    {/* Date Range Filter */}
+                    <div className="flex justify-end mb-6">
+                        <select
+                            value={dateRange}
+                            onChange={(e) => setDateRange(Number(e.target.value))}
+                            className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5"
+                        >
+                            <option value={7}>Last 7 Days</option>
+                            <option value={30}>Last 30 Days</option>
+                            <option value={90}>Last 90 Days</option>
+                        </select>
+                    </div>
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
@@ -159,7 +173,7 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                             <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-emerald-400" /> User Growth (30 Days)
+                                <TrendingUp className="w-5 h-5 text-emerald-400" /> User Growth ({dateRange} Days)
                             </h3>
                             <div className="h-64 lg:h-96 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -185,9 +199,9 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
 
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                             <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                <Film className="w-5 h-5 text-purple-400" /> Project Creation (30 Days)
+                                <Film className="w-5 h-5 text-purple-400" /> Project Creation ({dateRange} Days)
                             </h3>
-                            <div className="h-64 w-full">
+                            <div className="h-64 lg:h-96 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={stats.analytics}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
