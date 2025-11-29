@@ -2,7 +2,7 @@
 import { Scene, ReferenceCharacter } from "../types";
 import { getCurrentUser } from "./storageService";
 
-const API_URL = (import.meta.env.VITE_API_URL as string) || '';
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api';
 
 const getHeaders = () => {
   return {
@@ -19,7 +19,7 @@ export const generateScript = async (
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_URL}/api/ai/generate-script`, {
+  const response = await fetch(`${API_BASE_URL}/ai/generate-script`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({
@@ -53,7 +53,7 @@ export const generateMusicPrompt = async (topic: string, style: string): Promise
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_URL}/api/ai/generate-music-prompt`, {
+  const response = await fetch(`${API_BASE_URL}/ai/generate-music-prompt`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({
@@ -77,7 +77,7 @@ export const analyzeCharacterFeatures = async (base64Image: string): Promise<str
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_URL}/api/ai/analyze-character`, {
+  const response = await fetch(`${API_BASE_URL}/ai/analyze-character`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({
@@ -100,7 +100,7 @@ export const optimizeReferenceImage = async (base64ImageUrl: string): Promise<st
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_URL}/api/ai/optimize-image`, {
+  const response = await fetch(`${API_BASE_URL}/ai/optimize-image`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({
@@ -123,7 +123,7 @@ export const generatePreviewAudio = async (text: string, voice: string, provider
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_URL}/api/ai/generate-audio`, {
+  const response = await fetch(`${API_BASE_URL}/ai/generate-audio`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({
@@ -148,7 +148,7 @@ export const getVoices = async (): Promise<any[]> => {
   const user = getCurrentUser();
   if (!user) return [];
 
-  const response = await fetch(`${API_URL}/api/ai/voices`, {
+  const response = await fetch(`${API_BASE_URL}/ai/voices`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({

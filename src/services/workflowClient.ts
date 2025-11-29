@@ -1,6 +1,6 @@
 import { Scene, BackendProjectStatus } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export interface WorkflowState {
     projectStatus: BackendProjectStatus;
@@ -48,7 +48,7 @@ class WorkflowClient {
     private setupEventSource() {
         if (!this.currentProjectId) return;
 
-        this.eventSource = new EventSource(`${API_URL}/api/events/${this.currentProjectId}`);
+        this.eventSource = new EventSource(`${API_BASE_URL}/events/${this.currentProjectId}`);
 
         this.eventSource.onmessage = (event) => {
             try {
@@ -198,7 +198,7 @@ class WorkflowClient {
         const fetchStart = Date.now();
 
         try {
-            const res = await fetch(`${API_URL}/api/workflow/state/${this.currentProjectId}`);
+            const res = await fetch(`${API_BASE_URL}/workflow/state/${this.currentProjectId}`);
             if (!res.ok) return;
 
             const data = await res.json();
@@ -266,7 +266,7 @@ class WorkflowClient {
         };
 
         try {
-            const res = await fetch(`${API_URL}/api/workflow/command`, {
+            const res = await fetch(`${API_BASE_URL}/workflow/command`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
