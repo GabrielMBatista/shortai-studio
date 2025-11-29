@@ -136,10 +136,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 try {
                     const voices = await getVoices();
                     setAvailableVoices(voices);
-                    if (voices.length > 0) {
-                        const currentVoiceExists = voices.find(v => v.name === selectedVoice);
-                        if (!currentVoiceExists) setSelectedVoice(voices[0].name);
-                    }
                 } catch (e) {
                     console.error("Failed to load ElevenLabs voices", e);
                     setAvailableVoices([]);
@@ -148,17 +144,34 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 // Import GROQ_VOICES from types
                 const { GROQ_VOICES } = await import('../types');
                 setAvailableVoices(GROQ_VOICES);
-                const currentVoiceExists = GROQ_VOICES.find(v => v.name === selectedVoice);
-                if (!currentVoiceExists) setSelectedVoice(GROQ_VOICES[0].name);
             } else {
                 setAvailableVoices(AVAILABLE_VOICES);
-                const currentVoiceExists = AVAILABLE_VOICES.find(v => v.name === selectedVoice);
-                if (!currentVoiceExists) setSelectedVoice(AVAILABLE_VOICES[0].name);
             }
             setIsLoadingVoices(false);
         };
         loadVoices();
     }, [selectedProvider]);
+
+    // Filter voices based on language
+    const filteredVoices = availableVoices.filter(v => {
+        if (!selectedLanguage) return true;
+        const langObj = AVAILABLE_LANGUAGES.find(l => l.label === selectedLanguage);
+        if (!langObj) return true;
+
+        if (v.supportedLanguages && v.supportedLanguages.length > 0) {
+            return v.supportedLanguages.includes(langObj.code) || v.supportedLanguages.includes('multilingual');
+        }
+        return true;
+    });
+
+    // Ensure selected voice is valid when language/provider changes
+    useEffect(() => {
+        if (filteredVoices.length > 0) {
+            if (!filteredVoices.find(v => v.name === selectedVoice)) {
+                setSelectedVoice(filteredVoices[0].name);
+            }
+        }
+    }, [selectedLanguage, selectedProvider, filteredVoices]);
 
     const completedImages = scenes.filter(s => s.imageStatus === 'completed').length;
     const completedAudio = scenes.filter(s => s.audioStatus === 'completed').length;
@@ -308,7 +321,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             disabled={isGeneratingImages}
                                             className="bg-transparent text-white text-sm py-1 outline-none cursor-pointer hover:text-indigo-300 transition-colors appearance-none max-w-[150px] sm:max-w-[220px] truncate font-medium"
                                         >
-                                            {availableVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)}
+                                            {filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)}
                                         </select>
                                     )}
                                 </div>

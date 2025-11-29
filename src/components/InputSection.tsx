@@ -116,6 +116,27 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     const [voice, setVoice] = useState('');
     const [dynamicVoices, setDynamicVoices] = useState<Voice[]>(AVAILABLE_VOICES);
 
+    // Filter voices based on language
+    const filteredVoices = dynamicVoices.filter(v => {
+        if (!language) return true;
+        const langObj = AVAILABLE_LANGUAGES.find(l => l.label === language);
+        if (!langObj) return true;
+
+        if (v.supportedLanguages && v.supportedLanguages.length > 0) {
+            return v.supportedLanguages.includes(langObj.code) || v.supportedLanguages.includes('multilingual');
+        }
+        return true;
+    });
+
+    // Ensure selected voice is valid when language/provider changes
+    useEffect(() => {
+        if (filteredVoices.length > 0) {
+            if (!filteredVoices.find(v => v.name === voice)) {
+                setVoice(filteredVoices[0].name);
+            }
+        }
+    }, [language, ttsProvider, filteredVoices]);
+
     // Selection State
     const [selectedCharIds, setSelectedCharIds] = useState<string[]>([]);
     const [optimizeRef, setOptimizeRef] = useState(false);
@@ -138,22 +159,12 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
             if (ttsProvider === 'elevenlabs') {
                 const v = await getVoices();
                 setDynamicVoices(v);
-                if (v.length > 0) {
-                    if (!v.find(existing => existing.name === voice)) {
-                        setVoice(v[0].name);
-                    }
-                }
+                // Selection logic moved to separate effect
             } else if (ttsProvider === 'groq') {
                 const { GROQ_VOICES } = await import('../types');
                 setDynamicVoices(GROQ_VOICES);
-                if (!GROQ_VOICES.find(existing => existing.name === voice)) {
-                    setVoice(GROQ_VOICES[0].name);
-                }
             } else {
                 setDynamicVoices(AVAILABLE_VOICES);
-                if (!AVAILABLE_VOICES.find(existing => existing.name === voice)) {
-                    setVoice(AVAILABLE_VOICES[0].name);
-                }
             }
         };
         fetchVoices();
@@ -516,11 +527,11 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         <div className="flex gap-3 mb-8">
                             <div className="relative flex-1">
                                 <select id="voice" name="voice" value={voice} onChange={(e) => setVoice(e.target.value)} disabled={isBusy} className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-3 text-white appearance-none cursor-pointer hover:border-slate-500 transition-colors h-12">
-                                    {dynamicVoices.map(v => <option key={v.name} value={v.name}>{v.label} ({v.gender})</option>)}
+                                    {filteredVoices.map(v => <option key={v.name} value={v.name}>{v.label} ({v.gender})</option>)}
                                 </select>
                                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
                             </div>
-                            <VoicePreviewButton voice={voice} provider={ttsProvider} voices={dynamicVoices} />
+                            <VoicePreviewButton voice={voice} provider={ttsProvider} voices={filteredVoices} />
                         </div>
 
                         {IS_SUNO_ENABLED && (
