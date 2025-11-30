@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Role, SubscriptionPlan } from '../types';
 import Loader from './Loader';
-import { Shield, Users, Film, Layers, Ban, CheckCircle2, Edit2, Save, X, TrendingUp } from 'lucide-react';
+import { Shield, Users, Film, Layers, Ban, CheckCircle2, Edit2, Save, X, TrendingUp, Loader2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface AnalyticsData {
@@ -129,7 +129,7 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
         }
     };
 
-    if (isLoading) return <Loader text="Loading Admin Dashboard..." />;
+    if (isLoading && !stats) return <Loader text="Loading Admin Dashboard..." />;
 
     return (
         <div className="w-full max-w-[1800px] mx-auto px-6 py-8">
@@ -158,11 +158,18 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             {activeTab === 'overview' && stats && (
                 <div className="animate-fade-in">
                     {/* Date Range Filter */}
-                    <div className="flex justify-end mb-6">
+                    <div className="flex justify-end mb-6 items-center gap-3">
+                        {isLoading && (
+                            <div className="flex items-center gap-2 text-slate-400 text-sm bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50 animate-pulse">
+                                <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                                <span>Updating...</span>
+                            </div>
+                        )}
                         <select
                             value={dateRange}
                             onChange={(e) => setDateRange(Number(e.target.value))}
-                            className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5"
+                            className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isLoading}
                         >
                             <option value={7}>Last 7 Days</option>
                             <option value={30}>Last 30 Days</option>
