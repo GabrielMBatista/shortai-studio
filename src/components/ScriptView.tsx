@@ -170,6 +170,8 @@ const ScriptView: React.FC<ScriptViewProps> = ({
             if (!filteredVoices.find(v => v.name === selectedVoice)) {
                 setSelectedVoice(filteredVoices[0].name);
             }
+        } else {
+            setSelectedVoice('');
         }
     }, [selectedLanguage, selectedProvider, filteredVoices]);
 
@@ -318,10 +320,14 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             name="scriptVoice"
                                             value={selectedVoice}
                                             onChange={(e) => setSelectedVoice(e.target.value)}
-                                            disabled={isGeneratingImages}
+                                            disabled={isGeneratingImages || filteredVoices.length === 0}
                                             className="bg-transparent text-white text-sm py-1 outline-none cursor-pointer hover:text-indigo-300 transition-colors appearance-none max-w-[150px] sm:max-w-[220px] truncate font-medium"
                                         >
-                                            {filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)}
+                                            {filteredVoices.length > 0 ? (
+                                                filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)
+                                            ) : (
+                                                <option value="" disabled className="bg-slate-900 text-slate-500">No voices available</option>
+                                            )}
                                         </select>
                                     )}
                                 </div>
