@@ -556,21 +556,48 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
             const timings = layout.timings;
             const lines = layout.lines;
             const activeWordObj = timings.find(t => timeInScene >= t.start && timeInScene < t.end);
-            const activeIndex = activeWordObj ? timings.indexOf(activeWordObj) : -1;
+            let activeIndex = activeWordObj ? timings.indexOf(activeWordObj) : -1;
+
+            // Handle edge cases for activeIndex
+            if (activeIndex === -1) {
+                if (timeInScene < (timings[0]?.start || 0)) activeIndex = 0;
+                else if (timeInScene > (timings[timings.length - 1]?.end || 0)) activeIndex = timings.length - 1;
+            }
+
+            // Find active line
+            let wordCount = 0;
+            let activeLineIndex = 0;
+            for (let i = 0; i < lines.length; i++) {
+                if (activeIndex >= wordCount && activeIndex < wordCount + lines[i].length) {
+                    activeLineIndex = i;
+                    break;
+                }
+                wordCount += lines[i].length;
+            }
+
+            // Define visible lines window (max 2 lines)
+            const startLine = activeLineIndex;
+            const endLine = Math.min(lines.length, startLine + 2);
+            const visibleLines = lines.slice(startLine, endLine);
 
             const lineHeight = 80;
-            const totalBlockHeight = lines.length * lineHeight;
-            const startY = h - 200 - totalBlockHeight;
+            const bottomMargin = 250; // Position lower (approx bottom-8 equivalent for 1080p)
+            const startY = h - bottomMargin - (visibleLines.length * lineHeight);
 
-            let wordGlobalIndex = 0;
-            lines.forEach((line, lineIdx) => {
+            // Calculate starting word index for the visible lines
+            let currentWordIndex = 0;
+            for (let i = 0; i < startLine; i++) {
+                currentWordIndex += lines[i].length;
+            }
+
+            visibleLines.forEach((line, lineIdx) => {
                 const lineStr = line.join(' ');
                 const lineWidth = ctx.measureText(lineStr).width;
                 let x = (w - lineWidth) / 2;
                 const y = startY + (lineIdx * lineHeight);
 
                 line.forEach((word) => {
-                    const isCurrent = wordGlobalIndex === activeIndex;
+                    const isCurrent = currentWordIndex === activeIndex;
                     ctx.font = isCurrent
                         ? `${SUBTITLE_STYLES.fontWeight} 58px ${SUBTITLE_STYLES.fontFamily}`
                         : `${SUBTITLE_STYLES.fontWeight} ${SUBTITLE_STYLES.canvasFontSize}px ${SUBTITLE_STYLES.fontFamily}`;
@@ -578,7 +605,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
                     ctx.fillStyle = isCurrent ? SUBTITLE_STYLES.activeColor : SUBTITLE_STYLES.inactiveColor;
                     ctx.fillText(word, x + (ctx.measureText(word).width / 2), y);
                     x += ctx.measureText(word + ' ').width;
-                    wordGlobalIndex++;
+                    currentWordIndex++;
                 });
             });
         }
