@@ -273,8 +273,15 @@ class WorkflowClient {
             });
 
             if (!res.ok) {
-                const error = await res.json();
-                throw new Error(error.error || 'Command failed');
+                let errorMessage = 'Command failed';
+                try {
+                    const error = await res.json();
+                    errorMessage = error.error || errorMessage;
+                } catch (e) {
+                    // If not JSON, use status text
+                    errorMessage = res.statusText;
+                }
+                throw new Error(`${errorMessage} (${res.status})`);
             }
 
             return await res.json();

@@ -296,7 +296,11 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
 
         const videoEncoder = new VideoEncoder({
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-            error: (e) => console.error("VideoEncoder error", e)
+            error: (e) => {
+                console.error("VideoEncoder error", e);
+                setDownloadError("Video encoding failed: " + e.message);
+                isDownloadingRef.current = false;
+            }
         });
 
         videoEncoder.configure({
@@ -309,7 +313,11 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
 
         const audioEncoder = new AudioEncoder({
             output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
-            error: (e) => console.error("AudioEncoder error", e)
+            error: (e) => {
+                console.error("AudioEncoder error", e);
+                setDownloadError("Audio encoding failed: " + e.message);
+                isDownloadingRef.current = false;
+            }
         });
 
         audioEncoder.configure({
@@ -377,12 +385,19 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
             videoEncoder.encode(frame, { keyFrame: i % 60 === 0 });
             frame.close();
 
+            // Throttle encoding to prevent GPU crash / OOM
+            if (videoEncoder.encodeQueueSize > 5) {
+                await new Promise(r => setTimeout(r, 20));
+            }
+
             // Yield to event loop every few frames to keep UI responsive
-            if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+            if (i % 5 === 0) await new Promise(r => setTimeout(r, 0));
         }
 
-        await videoEncoder.flush();
-        muxer.finalize();
+        if (isDownloadingRef.current) {
+            await videoEncoder.flush();
+            muxer.finalize();
+        }
 
         const { buffer } = muxer.target;
         saveFile(new Blob([buffer], { type: 'video/mp4' }), title, 'mp4');

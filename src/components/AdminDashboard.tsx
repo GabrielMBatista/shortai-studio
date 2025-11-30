@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { User, Role, SubscriptionPlan } from '../types';
 import Loader from './Loader';
-import { Shield, Users, Film, Layers, Ban, CheckCircle2, Edit2, Save, X, TrendingUp, Loader2, Search, Filter, ArrowUp, ArrowDown, AlertTriangle } from 'lucide-react';
+import { Shield, Users, Film, Layers, Ban, TrendingUp, Loader2, Search, Filter, ArrowUp, ArrowDown, CheckCircle2, Save, X, Edit2 } from 'lucide-react';
+import LogConsole from './LogConsole';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface AnalyticsData {
@@ -325,39 +326,8 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                 </div>
                             </div>
 
-                            <div className="lg:col-span-2 bg-slate-800 p-6 rounded-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[500px]">
-                                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <AlertTriangle className="w-5 h-5 text-amber-400" /> Top Failure Reasons
-                                </h3>
-                                <div className="overflow-y-auto flex-1 pr-2 space-y-4 custom-scrollbar">
-                                    {Object.entries(stats.usageStats).map(([action, data]) => (
-                                        data.errors && data.errors.length > 0 && (
-                                            <div key={action} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
-                                                <h4 className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider border-b border-slate-700 pb-2">
-                                                    {action.replace('GENERATE_', '')}
-                                                </h4>
-                                                <div className="space-y-2">
-                                                    {data.errors.map((err, idx) => (
-                                                        <div key={idx} className="flex justify-between items-start gap-4 text-sm group">
-                                                            <span className="text-red-400 font-mono bg-red-500/10 px-2 py-1 rounded text-xs break-all group-hover:bg-red-500/20 transition-colors flex-1">
-                                                                {err.message}
-                                                            </span>
-                                                            <span className="text-slate-500 whitespace-nowrap font-medium text-xs">
-                                                                {err.count}x
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )
-                                    ))}
-                                    {Object.values(stats.usageStats).every(d => !d.errors || d.errors.length === 0) && (
-                                        <div className="text-center py-12 text-slate-500">
-                                            <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-emerald-500/20" />
-                                            <p>No detailed error logs available for this period.</p>
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="lg:col-span-2">
+                                <LogConsole />
                             </div>
                         </div>
                     )}

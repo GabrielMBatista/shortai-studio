@@ -58,22 +58,55 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
   // --- WORKFLOW COMMANDS (Pass-through to Backend) ---
 
-  const generateAssets = () => {
-    if (!project || !user) return;
-    onStepChange(AppStep.GENERATING_IMAGES);
-    workflowClient.sendCommand('generate_all', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+  const handleCommandError = (err: any) => {
+    console.error("Command failed", err);
+    if (err.message?.includes('429') || err.message?.toLowerCase().includes('quota')) {
+      onError("Quota limit reached (429). Please check your API keys or upgrade your plan.");
+    } else {
+      onError(err.message || "Failed to start generation.");
+    }
+    // Revert status if needed, though usually the backend sync will handle it
+    setProject(prev => prev ? { ...prev, status: 'failed' } : null);
   };
 
-  const generateImagesOnly = () => {
+  const generateAssets = async () => {
     if (!project || !user) return;
+
+    // Optimistic update to prevent immediate fallback
+    setProject(prev => prev ? { ...prev, status: 'generating' } : null);
     onStepChange(AppStep.GENERATING_IMAGES);
-    workflowClient.sendCommand('generate_all_images', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+
+    try {
+      await workflowClient.sendCommand('generate_all', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+    }
   };
 
-  const generateAudioOnly = () => {
+  const generateImagesOnly = async () => {
     if (!project || !user) return;
+
+    setProject(prev => prev ? { ...prev, status: 'generating' } : null);
     onStepChange(AppStep.GENERATING_IMAGES);
-    workflowClient.sendCommand('generate_all_audio', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+
+    try {
+      await workflowClient.sendCommand('generate_all_images', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+    }
+  };
+
+  const generateAudioOnly = async () => {
+    if (!project || !user) return;
+
+    setProject(prev => prev ? { ...prev, status: 'generating' } : null);
+    onStepChange(AppStep.GENERATING_IMAGES);
+
+    try {
+      await workflowClient.sendCommand('generate_all_audio', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+    }
   };
 
   const cancelGeneration = () => {
@@ -81,15 +114,27 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     workflowClient.sendCommand('cancel', project.id, user.id);
   };
 
-  const resumeGeneration = () => {
+  const resumeGeneration = async () => {
     if (!project || !user) return;
-    workflowClient.sendCommand('resume', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+
+    // Optimistic update
+    setProject(prev => prev ? { ...prev, status: 'generating' } : null);
+
+    try {
+      await workflowClient.sendCommand('resume', project.id, user.id, undefined, { apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+    }
   };
 
-  const regenerateSceneAsset = (sceneId: string, type: 'image' | 'audio', force: boolean) => {
+  const regenerateSceneAsset = async (sceneId: string, type: 'image' | 'audio', force: boolean) => {
     if (!project || !user) return;
     const action = type === 'image' ? 'regenerate_image' : 'regenerate_audio';
-    workflowClient.sendCommand(action, project.id, user.id, sceneId, { force, apiKeys: user.apiKeys });
+    try {
+      await workflowClient.sendCommand(action, project.id, user.id, sceneId, { force, apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+    }
   };
 
   // --- CREATION ACTIONS (Initial Scripting) ---
@@ -146,8 +191,8 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
       onStepChange(AppStep.SCRIPTING);
     } catch (e: any) {
       console.error(e);
-      if (e.message && e.message.includes('403')) {
-        onError("Daily limit reached! Upgrade to Pro for more.");
+      if (e.message && (e.message.includes('403') || e.message.includes('429'))) {
+        onError("Quota limit reached! Please check your plan or API keys.");
       } else {
         onError(e.message || "Failed to generate script.");
       }
@@ -165,12 +210,29 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
     // Send command to regenerate
     onStepChange(AppStep.GENERATING_IMAGES);
-    workflowClient.sendCommand('generate_all_audio', project.id, user.id, undefined, { force: true, apiKeys: user.apiKeys });
+
+    // Optimistic update
+    setProject(prev => prev ? { ...prev, status: 'generating' } : null);
+
+    try {
+      await workflowClient.sendCommand('generate_all_audio', project.id, user.id, undefined, { force: true, apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+    }
   };
 
   const regenerateMusic = async () => {
     if (!project || !user) return;
-    workflowClient.sendCommand('generate_music', project.id, user.id, undefined, { force: true, apiKeys: user.apiKeys });
+
+    // Optimistic update
+    setProject(prev => prev ? { ...prev, bgMusicStatus: 'loading' } : null);
+
+    try {
+      await workflowClient.sendCommand('generate_music', project.id, user.id, undefined, { force: true, apiKeys: user.apiKeys });
+    } catch (e) {
+      handleCommandError(e);
+      setProject(prev => prev ? { ...prev, bgMusicStatus: 'failed' } : null);
+    }
   };
 
   return {
