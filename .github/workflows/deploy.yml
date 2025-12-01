@@ -26,6 +26,5 @@ jobs:
             # Adjust this relative path if your folder structure is different
             cd ../shortsai-api
             
-            # Restart services
-            docker-compose down
-            docker-compose up -d --build
+            # Restart Studio service only
+            docker-compose up -d --build studio
