@@ -21,6 +21,7 @@ interface ScriptViewProps {
     onRegenerateAudio: (newVoice: string, newProvider: TTSProvider, newLanguage: string) => void;
     onRegenerateSceneImage: (sceneIndex: number, force: boolean) => void;
     onRegenerateSceneAudio?: (sceneIndex: number, force: boolean, overrides?: { voice?: string, provider?: TTSProvider, language?: string }) => void;
+    onRegenerateSceneVideo?: (sceneIndex: number, force: boolean) => void;
     onUpdateScene: (index: number, updates: Partial<Scene>) => void;
     isGeneratingImages: boolean; // Renamed concept: now "isGeneratingWorkflow"
     onCancelGeneration?: () => void;
@@ -115,7 +116,7 @@ const OriginalConceptCard: React.FC<{ topic: string; style: string }> = ({ topic
 const ScriptView: React.FC<ScriptViewProps> = ({
     projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, scenes,
     generatedTitle, generatedDescription,
-    onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onUpdateScene, isGeneratingImages, onCancelGeneration,
+    onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic,
     isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onExport, onUpdateProjectSettings
 }) => {
@@ -529,6 +530,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                         sceneIndex={index}
                         onRegenerateImage={onRegenerateSceneImage}
                         onRegenerateAudio={(idx, force) => onRegenerateSceneAudio && onRegenerateSceneAudio(idx, force, { voice: selectedVoice, provider: selectedProvider, language: selectedLanguage })}
+                        onRegenerateVideo={onRegenerateSceneVideo}
                         onUpdateScene={onUpdateScene}
                         onRemoveScene={onRemoveScene}
                     />

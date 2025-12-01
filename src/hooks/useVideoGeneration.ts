@@ -127,9 +127,9 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     }
   };
 
-  const regenerateSceneAsset = async (sceneId: string, type: 'image' | 'audio', force: boolean) => {
+  const regenerateSceneAsset = async (sceneId: string, type: 'image' | 'audio' | 'video', force: boolean) => {
     if (!project || !user) return;
-    const action = type === 'image' ? 'regenerate_image' : 'regenerate_audio';
+    const action = type === 'image' ? 'regenerate_image' : type === 'audio' ? 'regenerate_audio' : 'regenerate_video';
     try {
       await workflowClient.sendCommand(action, project.id, user.id, sceneId, { force, apiKeys: user.apiKeys });
     } catch (e) {
@@ -290,6 +290,19 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
           return { ...prev, scenes: newScenes };
         });
         regenerateSceneAsset(s.id, 'audio', force);
+      }
+    },
+    regenerateSceneVideo: (idx: number, force: boolean) => {
+      const s = project?.scenes[idx];
+      if (s?.id) {
+        // Optimistic Update
+        setProject(prev => {
+          if (!prev) return null;
+          const newScenes = [...prev.scenes];
+          newScenes[idx] = { ...newScenes[idx], videoStatus: 'loading' };
+          return { ...prev, scenes: newScenes };
+        });
+        regenerateSceneAsset(s.id, 'video', force);
       }
     },
     regenerateAllAudio,

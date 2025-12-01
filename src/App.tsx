@@ -48,6 +48,7 @@ const App: React.FC = () => {
         skipCurrentScene,
         regenerateSceneImage,
         regenerateSceneAudio,
+        regenerateSceneVideo,
         regenerateAllAudio,
         regenerateMusic,
         removeScene,
@@ -324,6 +325,7 @@ const App: React.FC = () => {
                         onRegenerateAudio={(v, p, l) => { regenerateAllAudio(v, p, l); showToast("Regenerating audio...", 'info'); }}
                         onRegenerateSceneImage={regenerateSceneImage}
                         onRegenerateSceneAudio={regenerateSceneAudio}
+                        onRegenerateSceneVideo={regenerateSceneVideo}
                         onUpdateScene={updateScene}
                         isGeneratingImages={isGenerating || step === AppStep.GENERATING_IMAGES}
                         onCancelGeneration={() => { cancelGeneration(); showToast("Generation cancelled.", 'info'); }}

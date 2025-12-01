@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Scene } from '../../types';
-import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2 } from 'lucide-react';
+import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video } from 'lucide-react';
 import AudioPlayerButton from '../common/AudioPlayerButton';
 import ConfirmModal from '../ConfirmModal';
 
@@ -10,11 +10,12 @@ interface SceneCardProps {
     sceneIndex: number;
     onRegenerateImage: (index: number, force: boolean) => void;
     onRegenerateAudio?: (index: number, force: boolean) => void;
+    onRegenerateVideo?: (index: number, force: boolean) => void;
     onUpdateScene: (index: number, updates: Partial<Scene>) => void;
     onRemoveScene: (index: number) => void;
 }
 
-const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateImage, onRegenerateAudio, onUpdateScene, onRemoveScene }) => {
+const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateImage, onRegenerateAudio, onRegenerateVideo, onUpdateScene, onRemoveScene }) => {
     const [isPromptOpen, setIsPromptOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [narrationText, setNarrationText] = useState(scene.narration);
@@ -86,11 +87,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     // UI purely reflects backend state. No local 'isBusy' state.
     const isImageLoading = ['pending', 'queued', 'processing', 'loading'].includes(scene.imageStatus);
     const isAudioLoading = ['pending', 'queued', 'processing', 'loading'].includes(scene.audioStatus);
+    const isVideoLoading = scene.videoStatus ? ['pending', 'queued', 'processing', 'loading'].includes(scene.videoStatus) : false;
 
-    const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: 'image' | 'audio' | null }>({ isOpen: false, type: null });
+    const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: 'image' | 'audio' | 'video' | null }>({ isOpen: false, type: null });
 
-    const handleRegenClick = (type: 'image' | 'audio') => {
-        const isCompleted = type === 'image' ? scene.imageStatus === 'completed' : scene.audioStatus === 'completed';
+    const handleRegenClick = (type: 'image' | 'audio' | 'video') => {
+        const isCompleted = type === 'image' ? scene.imageStatus === 'completed' : type === 'audio' ? scene.audioStatus === 'completed' : scene.videoStatus === 'completed';
 
         if (isCompleted) {
             setModalConfig({ isOpen: true, type });
@@ -99,10 +101,11 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         }
     };
 
-    const triggerRegeneration = (type: 'image' | 'audio') => {
+    const triggerRegeneration = (type: 'image' | 'audio' | 'video') => {
         const force = true; // If we are here, we either confirmed or it wasn't completed yet (so force doesn't matter much, but let's be consistent)
         if (type === 'image') onRegenerateImage(sceneIndex, force);
-        else if (onRegenerateAudio) onRegenerateAudio(sceneIndex, force);
+        else if (type === 'audio' && onRegenerateAudio) onRegenerateAudio(sceneIndex, force);
+        else if (type === 'video' && onRegenerateVideo) onRegenerateVideo(sceneIndex, force);
         setModalConfig({ isOpen: false, type: null });
     };
 
@@ -110,7 +113,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         <>
             <ConfirmModal
                 isOpen={modalConfig.isOpen}
-                title={`Regenerate ${modalConfig.type === 'image' ? 'Image' : 'Audio'}?`}
+                title={`Regenerate ${modalConfig.type === 'image' ? 'Image' : modalConfig.type === 'audio' ? 'Audio' : 'Video'}?`}
                 message="This will overwrite the existing file. Are you sure you want to continue?"
                 confirmText="Regenerate"
                 onConfirm={() => modalConfig.type && triggerRegeneration(modalConfig.type)}
@@ -141,6 +144,16 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         >
                             <RefreshCw className={`w-3.5 h-3.5 ${isImageLoading ? 'animate-spin' : ''}`} />
                         </button>
+                        {onRegenerateVideo && scene.imageStatus === 'completed' && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleRegenClick('video'); }}
+                                className={`bg-black/60 hover:bg-purple-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm ${isVideoLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}`}
+                                disabled={isVideoLoading}
+                                title="Animate with Veo 2"
+                            >
+                                <Video className={`w-3.5 h-3.5 ${isVideoLoading ? 'animate-pulse' : ''}`} />
+                            </button>
+                        )}
                         <button
                             onClick={(e) => { e.stopPropagation(); onRemoveScene(sceneIndex); }}
                             className="bg-black/60 hover:bg-red-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm cursor-pointer hover:scale-105"
