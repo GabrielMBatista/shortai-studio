@@ -160,12 +160,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
       {/* Main Player Container */}
       <div className="relative h-[80vh] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
 
-        {/* Background Image */}
-        <img
-          src={activeScene.imageUrl || ''}
-          alt={`Scene ${currentSceneIndex + 1}`}
-          className={`w-full h-full object-cover transition-transform duration-[20s] ease-linear ${isPlaying ? 'scale-110' : 'scale-100'}`}
-        />
+        {/* Background Media - Video if available, otherwise Image */}
+        {activeScene.videoUrl && activeScene.videoStatus === 'completed' ? (
+          <video
+            src={activeScene.videoUrl}
+            className="w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img
+            src={activeScene.imageUrl || ''}
+            alt={`Scene ${currentSceneIndex + 1}`}
+            className={`w-full h-full object-cover transition-transform duration-[20s] ease-linear ${isPlaying ? 'scale-110' : 'scale-100'}`}
+          />
+        )}
 
         {/* Audio Elements */}
         <audio

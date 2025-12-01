@@ -19,6 +19,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     const [isPromptOpen, setIsPromptOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [narrationText, setNarrationText] = useState(scene.narration);
+    const [showVideo, setShowVideo] = useState(true); // Prefer video when available
 
     const [isEditingPrompt, setIsEditingPrompt] = useState(false);
     const [promptText, setPromptText] = useState(scene.visualDescription);
@@ -89,6 +90,11 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     const isAudioLoading = ['pending', 'queued', 'processing', 'loading'].includes(scene.audioStatus);
     const isVideoLoading = scene.videoStatus ? ['pending', 'queued', 'processing', 'loading'].includes(scene.videoStatus) : false;
 
+    // Check if both video and image are available for toggle
+    const hasVideo = scene.videoStatus === 'completed' && scene.videoUrl;
+    const hasImage = scene.imageStatus === 'completed' && scene.imageUrl;
+    const canToggle = hasVideo && hasImage;
+
     const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: 'image' | 'audio' | 'video' | null }>({ isOpen: false, type: null });
 
     const handleRegenClick = (type: 'image' | 'audio' | 'video') => {
@@ -120,19 +126,47 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                 onCancel={() => setModalConfig({ isOpen: false, type: null })}
             />
             <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col hover:border-slate-600 transition-colors h-full shadow-lg">
-                {/* IMAGE AREA */}
+                {/* IMAGE/VIDEO AREA */}
                 <div className="aspect-[9/16] bg-slate-900 relative group border-b border-slate-700/50">
-                    {scene.imageStatus === 'completed' && scene.imageUrl ? (
+                    {/* Show video OR image based on preference */}
+                    {showVideo && hasVideo ? (
+                        <video
+                            src={scene.videoUrl}
+                            className="w-full h-full object-cover"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                        />
+                    ) : hasImage ? (
                         <img src={scene.imageUrl} alt={`Scene ${scene.sceneNumber}`} className="w-full h-full object-cover transition-opacity duration-500" />
-                    ) : isImageLoading ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">Generating Image...</span></div>
-                    ) : scene.imageStatus === 'error' ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center text-sm bg-slate-900/80"><AlertCircle className="w-8 h-8 mb-2 mx-auto opacity-80" /><span>{scene.errorMessage || "Failed to load image."}</span></div>
+                    ) : isImageLoading || isVideoLoading ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{isVideoLoading ? 'Generating Video...' : 'Generating Image...'}</span></div>
+                    ) : scene.imageStatus === 'error' || scene.videoStatus === 'error' ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center text-sm bg-slate-900/80"><AlertCircle className="w-8 h-8 mb-2 mx-auto opacity-80" /><span>{scene.errorMessage || "Failed to load media."}</span></div>
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-slate-700 bg-slate-900"><ImageIcon className="w-16 h-16 opacity-10" /></div>
                     )}
 
-                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur px-2.5 py-1 rounded-md text-xs font-mono text-white pointer-events-none border border-white/10 shadow-sm">Scene {scene.sceneNumber}</div>
+                    <div className="absolute top-2 left-2 flex gap-2 items-center">
+                        <div className="bg-black/60 backdrop-blur px-2.5 py-1 rounded-md text-xs font-mono text-white pointer-events-none border border-white/10 shadow-sm">
+                            Scene {scene.sceneNumber}
+                        </div>
+                        {canToggle && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowVideo(!showVideo); }}
+                                className="bg-black/60 hover:bg-purple-600/80 backdrop-blur px-2 py-0.5 rounded-md text-xs font-bold text-white transition-all border border-white/10 shadow-sm hover:scale-105"
+                                title={showVideo ? "Switch to Image" : "Switch to Video"}
+                            >
+                                {showVideo ? '📹 VIDEO' : '🖼️ IMAGE'}
+                            </button>
+                        )}
+                        {hasVideo && showVideo && (
+                            <div className="bg-purple-500/80 backdrop-blur px-2 py-0.5 rounded-md text-xs font-bold text-white pointer-events-none border border-purple-400/30 shadow-sm flex items-center gap-1">
+                                <Video className="w-3 h-3" /> VEO 2
+                            </div>
+                        )}
+                    </div>
 
                     {/* Controls Overlay */}
                     <div className="absolute top-2 right-2 flex gap-2">
