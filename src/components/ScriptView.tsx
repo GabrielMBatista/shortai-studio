@@ -274,7 +274,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             <div className="flex items-center bg-slate-950/50 rounded-lg p-1 border border-slate-800 w-full sm:w-auto justify-center sm:justify-start">
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedProvider('gemini')}
+                                    onClick={() => { setSelectedProvider('gemini'); localStorage.setItem('shortsai_pref_provider', 'gemini'); }}
                                     className={`p-2 rounded-md transition-all duration-200 ${selectedProvider === 'gemini' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
                                     title="Gemini"
                                 >
@@ -282,7 +282,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedProvider('elevenlabs')}
+                                    onClick={() => { setSelectedProvider('elevenlabs'); localStorage.setItem('shortsai_pref_provider', 'elevenlabs'); }}
                                     className={`p-2 rounded-md transition-all duration-200 ${selectedProvider === 'elevenlabs' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
                                     title="ElevenLabs"
                                 >
@@ -290,7 +290,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedProvider('groq')}
+                                    onClick={() => { setSelectedProvider('groq'); localStorage.setItem('shortsai_pref_provider', 'groq'); }}
                                     className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center justify-center ${selectedProvider === 'groq' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
                                     title="Groq (PlayAI)"
                                 >
@@ -309,7 +309,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                         id="scriptLanguage"
                                         name="scriptLanguage"
                                         value={selectedLanguage}
-                                        onChange={(e) => setSelectedLanguage(e.target.value)}
+                                        onChange={(e) => { setSelectedLanguage(e.target.value); localStorage.setItem('shortsai_pref_language', e.target.value); }}
                                         disabled={isGeneratingImages}
                                         className="bg-transparent text-slate-200 text-sm py-1 outline-none cursor-pointer hover:text-white transition-colors appearance-none font-medium min-w-[80px]"
                                     >
@@ -327,7 +327,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             id="scriptVoice"
                                             name="scriptVoice"
                                             value={selectedVoice}
-                                            onChange={(e) => setSelectedVoice(e.target.value)}
+                                            onChange={(e) => { setSelectedVoice(e.target.value); localStorage.setItem('shortsai_pref_voice', e.target.value); }}
                                             disabled={isGeneratingImages || filteredVoices.length === 0}
                                             className="bg-transparent text-white text-sm py-1 outline-none cursor-pointer hover:text-indigo-300 transition-colors appearance-none max-w-[150px] sm:max-w-[220px] truncate font-medium"
                                         >

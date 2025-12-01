@@ -104,7 +104,12 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     // Form State
     const [topic, setTopic] = useState('');
     const [style, setStyle] = useState(VIDEO_STYLES[0]);
-    const [language, setLanguage] = useState(AVAILABLE_LANGUAGES[0].label);
+    const [language, setLanguage] = useState(() => localStorage.getItem('shortsai_pref_language') || AVAILABLE_LANGUAGES[0].label);
+
+    // Persist Language
+    useEffect(() => {
+        localStorage.setItem('shortsai_pref_language', language);
+    }, [language]);
 
     // Duration & Scene Config
     const [minDuration, setMinDuration] = useState<number | ''>(60);
@@ -112,8 +117,17 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     const [targetScenes, setTargetScenes] = useState<string>("");
 
     // TTS State
-    const [ttsProvider, setTtsProvider] = useState<TTSProvider>('gemini');
-    const [voice, setVoice] = useState('');
+    const [ttsProvider, setTtsProvider] = useState<TTSProvider>(() => (localStorage.getItem('shortsai_pref_provider') as TTSProvider) || 'gemini');
+    const [voice, setVoice] = useState(() => localStorage.getItem('shortsai_pref_voice') || '');
+
+    // Persist Provider & Voice
+    useEffect(() => {
+        localStorage.setItem('shortsai_pref_provider', ttsProvider);
+    }, [ttsProvider]);
+
+    useEffect(() => {
+        if (voice) localStorage.setItem('shortsai_pref_voice', voice);
+    }, [voice]);
     const [dynamicVoices, setDynamicVoices] = useState<Voice[]>(AVAILABLE_VOICES);
 
     // Filter voices based on language
