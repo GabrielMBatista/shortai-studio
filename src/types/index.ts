@@ -90,6 +90,7 @@ export interface Scene {
   // Video State (Veo 2)
   videoUrl?: string;
   videoStatus: BackendSceneStatus;
+  mediaType?: string;
 
   // Orchestration Metadata
   imageAttempts?: number;

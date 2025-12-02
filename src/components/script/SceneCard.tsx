@@ -19,7 +19,8 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     const [isPromptOpen, setIsPromptOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [narrationText, setNarrationText] = useState(scene.narration);
-    const [showVideo, setShowVideo] = useState(!!scene.videoUrl); // Prefer video if available
+    // Prefer video if explicit preference is 'video', or if no preference but video exists
+    const [showVideo, setShowVideo] = useState(scene.mediaType === 'video' || (!scene.mediaType && !!scene.videoUrl));
 
     const [isEditingPrompt, setIsEditingPrompt] = useState(false);
     const [promptText, setPromptText] = useState(scene.visualDescription);
@@ -158,7 +159,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         </div>
                         {canToggle && (
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowVideo(!showVideo); }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newShowVideo = !showVideo;
+                                    setShowVideo(newShowVideo);
+                                    onUpdateScene(sceneIndex, { mediaType: newShowVideo ? 'video' : 'image' });
+                                }}
                                 className="bg-black/60 hover:bg-purple-600/80 backdrop-blur px-2 py-0.5 rounded-md text-xs font-bold text-white transition-all border border-white/10 shadow-sm hover:scale-105"
                                 title={showVideo ? "Switch to Image" : "Switch to Video"}
                             >

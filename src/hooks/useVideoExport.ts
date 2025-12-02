@@ -47,6 +47,19 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
         });
     };
 
+    const loadVideo = (url: string): Promise<HTMLVideoElement> => {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.crossOrigin = "anonymous";
+            video.src = url;
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = "auto";
+            video.onloadedmetadata = () => resolve(video);
+            video.onerror = () => reject(new Error(`Failed to load video: ${url}`));
+        });
+    };
+
     const precomputeSubtitleLayouts = (ctx: CanvasRenderingContext2D, scenes: any[], canvasWidth: number): SubtitleLayout[] => {
         // Use shared font style
         ctx.font = `${SUBTITLE_STYLES.fontWeight} ${SUBTITLE_STYLES.canvasFontSize}px ${SUBTITLE_STYLES.fontFamily}`;
@@ -112,7 +125,22 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
                 const percent = Math.round((index / validScenes.length) * 20);
                 setDownloadProgress(`Loading assets (${percent}%)...`);
 
-                const img = await loadImage(s.imageUrl!);
+                let img: HTMLImageElement | null = null;
+                let video: HTMLVideoElement | null = null;
+
+                const useVideo = (s.mediaType === 'video' || (!s.mediaType && s.videoUrl)) && s.videoUrl && s.videoStatus === 'completed';
+
+                if (useVideo) {
+                    try {
+                        video = await loadVideo(s.videoUrl!);
+                    } catch (e) {
+                        console.warn("Failed to load video, falling back to image", e);
+                        img = await loadImage(s.imageUrl!);
+                    }
+                } else {
+                    img = await loadImage(s.imageUrl!);
+                }
+
                 let buffer: AudioBuffer | null = null;
                 if (s.audioUrl) buffer = await loadAudioBuffer(mainAudioCtx!, s.audioUrl);
 
@@ -120,7 +148,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
                 const fallbackDuration = Number(s.durationSeconds) || 5;
                 const realDuration = (buffer && Number.isFinite(buffer.duration)) ? buffer.duration : fallbackDuration;
 
-                return { ...s, img, buffer, renderDuration: realDuration };
+                return { ...s, img, video, buffer, renderDuration: realDuration };
             }));
 
             let bgMusicBuffer: AudioBuffer | null = null;
@@ -375,6 +403,22 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
             const time = i * frameDuration;
             setDownloadProgress(`Encoding video (${Math.round((i / totalFrames) * 100)}%)...`);
 
+            // Seek video if needed
+            let accum = 0;
+            for (const asset of assets) {
+                if (time < accum + asset.renderDuration) {
+                    if (asset.video) {
+                        asset.video.currentTime = time - accum;
+                        await new Promise<void>(r => {
+                            const onSeek = () => { asset.video.removeEventListener('seeked', onSeek); r(); };
+                            asset.video.addEventListener('seeked', onSeek, { once: true });
+                        });
+                    }
+                    break;
+                }
+                accum += asset.renderDuration;
+            }
+
             // Draw Frame
             drawFrame(ctx, canvas.width, canvas.height, time, assets, outroElement, totalScenesDuration, subtitleLayouts);
 
@@ -529,7 +573,13 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile }: UseVide
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, w, h);
 
-        if (asset.img) {
+        if (asset.video) {
+            const sw = w * scale;
+            const sh = h * scale;
+            const ox = (w - sw) / 2;
+            const oy = (h - sh) / 2;
+            ctx.drawImage(asset.video, ox, oy, sw, sh);
+        } else if (asset.img) {
             const sw = w * scale;
             const sh = h * scale;
             const ox = (w - sw) / 2;
