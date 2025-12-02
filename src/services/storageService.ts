@@ -289,7 +289,8 @@ const fromApiProject = (apiP: any): VideoProject => {
                     imageAttempts: s.image_attempts || 0,
                     audioAttempts: s.audio_attempts || 0,
                     errorMessage: s.error_message,
-                    videoStatus: s.video_status || 'pending'
+                    videoStatus: s.video_status || 'pending',
+                    mediaType: s.media_type || 'image'
                 });
             }
 
@@ -462,6 +463,7 @@ export const patchScene = async (projectId: string, scene: Partial<Scene> & { sc
     const payload: any = {};
     if (scene.narration !== undefined) payload.narration = scene.narration;
     if (scene.visualDescription !== undefined) payload.visual_description = scene.visualDescription;
+    if (scene.mediaType !== undefined) payload.media_type = scene.mediaType;
 
     if (Object.keys(payload).length > 0) {
         try {

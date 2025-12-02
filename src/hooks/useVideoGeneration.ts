@@ -38,6 +38,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
             ...backendScene,
             narration: localScene.narration, // Keep local edit
             visualDescription: localScene.visualDescription, // Keep local edit
+            mediaType: localScene.mediaType || backendScene.mediaType, // Prefer local edit if exists (for optimistic UI), else backend
           };
         });
 

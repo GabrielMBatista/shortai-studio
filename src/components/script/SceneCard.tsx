@@ -36,6 +36,11 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         setPromptText(scene.visualDescription);
     }, [scene.visualDescription]);
 
+    useEffect(() => {
+        // Sync local state with prop if it changes externally (or on remount if parent persisted it)
+        setShowVideo(scene.mediaType === 'video' || (!scene.mediaType && !!scene.videoUrl));
+    }, [scene.mediaType, scene.videoUrl]);
+
     const handleSaveNarration = () => {
         if (narrationText !== scene.narration) {
             onUpdateScene(sceneIndex, { narration: narrationText });
