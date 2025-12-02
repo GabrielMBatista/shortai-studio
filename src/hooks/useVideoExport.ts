@@ -122,6 +122,13 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile, showSubti
 
             // 3. Load Assets
             setEta("~150s");
+            console.log(`Starting export with ${validScenes.length} valid scenes out of ${scenes.length} total.`);
+
+            if (validScenes.length < scenes.length) {
+                console.warn("Some scenes were skipped because they are not completed or missing images.");
+                // Optional: You could alert the user here, but for now we just log.
+            }
+
             const assets = await Promise.all(validScenes.map(async (s, index) => {
                 const percent = Math.round((index / validScenes.length) * 20);
                 setDownloadProgress(`Loading assets (${percent}%)...`);
@@ -135,7 +142,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile, showSubti
                     try {
                         video = await loadVideo(s.videoUrl!);
                     } catch (e) {
-                        console.warn("Failed to load video, falling back to image", e);
+                        console.warn(`Failed to load video for scene ${s.sceneNumber}, falling back to image`, e);
                         img = await loadImage(s.imageUrl!);
                     }
                 } else {
@@ -143,11 +150,19 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, outroFile, showSubti
                 }
 
                 let buffer: AudioBuffer | null = null;
-                if (s.audioUrl) buffer = await loadAudioBuffer(mainAudioCtx!, s.audioUrl);
+                if (s.audioUrl) {
+                    buffer = await loadAudioBuffer(mainAudioCtx!, s.audioUrl);
+                    if (!buffer) {
+                        console.warn(`Failed to load audio for scene ${s.sceneNumber}: ${s.audioUrl}`);
+                    }
+                }
 
                 // Use actual buffer duration if available, otherwise DB duration
-                const fallbackDuration = Number(s.durationSeconds) || 5;
+                const dbDuration = Number(s.durationSeconds) || 0;
+                const fallbackDuration = dbDuration > 0 ? dbDuration : 5;
                 const realDuration = (buffer && Number.isFinite(buffer.duration)) ? buffer.duration : fallbackDuration;
+
+                console.log(`Scene ${s.sceneNumber}: DB Duration=${dbDuration}, Buffer Duration=${buffer?.duration}, Render Duration=${realDuration}`);
 
                 return { ...s, img, video, buffer, renderDuration: realDuration };
             }));

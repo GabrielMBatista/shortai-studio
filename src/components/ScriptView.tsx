@@ -289,7 +289,12 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-500/10 text-blue-300 border border-blue-500/20">{projectLanguage}</span>
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                                 <Clock className="w-3 h-3 mr-1" />
-                                {Math.round(scenes.reduce((acc, s) => acc + (s.durationSeconds || 0), 0))}s Est.
+                                {(() => {
+                                    const totalSeconds = scenes.reduce((acc, s) => acc + Number(s.durationSeconds || 0), 0);
+                                    const minutes = Math.floor(totalSeconds / 60);
+                                    const seconds = Math.round(totalSeconds % 60);
+                                    return `${minutes}:${seconds.toString().padStart(2, '0')} Est.`;
+                                })()}
                             </span>
                         </div>
 

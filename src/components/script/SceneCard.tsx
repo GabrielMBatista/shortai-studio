@@ -222,7 +222,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     {/* Bottom Right: Controls & Duration */}
                     <div className="absolute bottom-2 right-2 flex gap-2 items-center z-10">
                         <div className="bg-black/60 backdrop-blur px-2 py-1 rounded-md text-xs font-mono text-white flex items-center pointer-events-none border border-white/10 shadow-sm mr-1">
-                            <Clock className="w-3 h-3 mr-1.5 text-slate-300" /> {scene.durationSeconds}s
+                            <Clock className="w-3 h-3 mr-1.5 text-slate-300" /> {Math.round(Number(scene.durationSeconds || 0))}s
                         </div>
 
                         <button
