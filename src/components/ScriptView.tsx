@@ -283,8 +283,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 </div>
             )}
 
-            <header className="mb-8 space-y-6">
-                {/* 1. Global Settings Bar */}
+            <header className="mb-6">
                 {/* 1. Ultra-Compact Toolbar */}
                 <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-lg flex items-center justify-between px-3 py-2 text-xs text-slate-400 mb-4 overflow-x-auto whitespace-nowrap gap-4">
                     <div className="flex items-center gap-4">
@@ -374,103 +373,97 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                     </h1>
                 </div>
 
-                {/* 3. Voice & Narration Block */}
-                <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-center gap-6">
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Narration</span>
-                        <div className="h-4 w-px bg-slate-700/50 hidden sm:block"></div>
-
-                        {/* Voice Selector */}
-                        <div className="relative min-w-[200px]">
-                            {isLoadingVoices ? (
-                                <div className="flex items-center gap-2 text-slate-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading voices...</div>
-                            ) : (
-                                <select
-                                    value={selectedVoice}
-                                    onChange={(e) => {
-                                        const newVal = e.target.value;
-                                        setSelectedVoice(newVal);
-                                        localStorage.setItem('shortsai_pref_voice', newVal);
-                                        onUpdateProjectSettings({ voiceName: newVal });
-                                    }}
-                                    disabled={isGeneratingImages || filteredVoices.length === 0}
-                                    className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500 transition-colors appearance-none"
-                                >
-                                    {filteredVoices.length > 0 ? (
-                                        filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)
-                                    ) : (
-                                        <option value="" disabled>No voices available</option>
-                                    )}
-                                </select>
-                            )}
-                        </div>
-
-                        {/* Preview Button */}
-                        <button
-                            onClick={handlePreviewVoice}
-                            disabled={isGeneratingImages || isLoadingVoices}
-                            className="p-2 bg-slate-700/50 hover:bg-slate-600 text-white rounded-lg transition-colors"
-                            title="Preview Voice"
-                        >
-                            {previewState.status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : previewState.status === 'playing' ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                        </button>
+                {/* 3. Compact Narration Line */}
+                <div className="flex items-center justify-center gap-3 mb-6 text-sm">
+                    <span className="text-slate-500 font-medium">Narrator:</span>
+                    <div className="relative">
+                        {isLoadingVoices ? (
+                            <span className="text-slate-500 text-xs"><Loader2 className="w-3 h-3 animate-spin inline mr-1" />Loading...</span>
+                        ) : (
+                            <select
+                                value={selectedVoice}
+                                onChange={(e) => {
+                                    const newVal = e.target.value;
+                                    setSelectedVoice(newVal);
+                                    localStorage.setItem('shortsai_pref_voice', newVal);
+                                    onUpdateProjectSettings({ voiceName: newVal });
+                                }}
+                                disabled={isGeneratingImages || filteredVoices.length === 0}
+                                className="bg-transparent text-indigo-300 font-medium outline-none cursor-pointer hover:text-indigo-200 transition-colors appearance-none pr-4 text-center min-w-[100px]"
+                            >
+                                {filteredVoices.length > 0 ? (
+                                    filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)
+                                ) : (
+                                    <option value="" disabled>No voices</option>
+                                )}
+                            </select>
+                        )}
                     </div>
 
-                    {/* Apply Button (Only if changed) */}
+                    <button
+                        onClick={handlePreviewVoice}
+                        disabled={isGeneratingImages || isLoadingVoices}
+                        className="p-1 text-slate-400 hover:text-white transition-colors"
+                        title="Preview Voice"
+                    >
+                        {previewState.status === 'loading' ? <Loader2 className="w-3 h-3 animate-spin" /> : previewState.status === 'playing' ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                    </button>
+
+                    <div className="w-px h-3 bg-slate-700/50 mx-1"></div>
+
                     <button
                         onClick={() => onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage)}
                         disabled={isGeneratingImages || !isSettingsChanged}
-                        className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSettingsChanged ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20' : 'bg-transparent text-slate-600 cursor-not-allowed'}`}
+                        className={`text-xs font-medium transition-colors ${isSettingsChanged ? 'text-indigo-400 hover:text-indigo-300 cursor-pointer underline decoration-indigo-500/30 underline-offset-2' : 'text-slate-600 cursor-not-allowed'}`}
                     >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isGeneratingImages ? 'animate-spin' : ''}`} />
-                        Apply to All Scenes
+                        Apply to All
                     </button>
                 </div>
 
-                {/* 4. Main Actions (CTA) */}
-                <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                {/* 4. Compact Actions */}
+                <div className="flex items-center justify-center gap-3">
                     {isGeneratingImages && onCancelGeneration ? (
-                        <button onClick={onCancelGeneration} className="flex items-center px-8 py-3 rounded-xl text-base font-bold bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 transition-all animate-pulse">
-                            <StopCircle className="w-5 h-5 mr-2" /> Stop Generation
+                        <button onClick={onCancelGeneration} className="flex items-center px-6 py-2 rounded-lg text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 transition-all animate-pulse">
+                            <StopCircle className="w-4 h-4 mr-2" /> Stop
                         </button>
                     ) : (
                         <button
                             onClick={onStartImageGeneration}
-                            className="flex items-center px-8 py-3 rounded-xl text-base font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-95 transition-all"
+                            className="flex items-center px-6 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                         >
-                            <Sparkles className="w-5 h-5 mr-2" /> Generate All
+                            <Sparkles className="w-4 h-4 mr-2" /> Generate All
                         </button>
                     )}
 
                     <button
                         onClick={onPreview}
                         disabled={!canPreview}
-                        className={`flex items-center px-6 py-3 rounded-xl text-base font-bold transition-all active:scale-95 ${canPreview ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/25' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
+                        className={`flex items-center px-5 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 ${canPreview ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
                     >
-                        <PlayCircle className="w-5 h-5 mr-2" /> Preview Video
+                        <PlayCircle className="w-4 h-4 mr-2" /> Preview
                     </button>
 
                     {onExport && (
                         <button
                             onClick={onExport}
-                            className="flex items-center px-6 py-3 rounded-xl text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-all active:scale-95"
+                            className="flex items-center px-5 py-2 rounded-lg text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-all active:scale-95"
                         >
-                            <Download className="w-4 h-4 mr-2" /> Export Assets
+                            <Download className="w-4 h-4 mr-2" /> Export
                         </button>
                     )}
                 </div>
 
                 {/* Music Section (Optional/Collapsible) */}
                 {includeMusic && IS_SUNO_ENABLED && (
-                    <div className="mt-6 border-t border-slate-700/50 pt-4 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-slate-400">
-                        <div className="flex items-center gap-2">
-                            <Music className="w-4 h-4 text-pink-400" />
-                            <span>Background Music:</span>
-                            <span className={musicStatus === 'completed' ? 'text-emerald-400' : 'text-slate-300'}>
+                    <div className="mt-4 flex items-center justify-center gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                            <Music className="w-3 h-3 text-pink-400" />
+                            <span>Music:</span>
+                            <span className={musicStatus === 'completed' ? 'text-emerald-400' : 'text-slate-400'}>
                                 {musicStatus === 'completed' ? 'Ready' : musicStatus || 'Pending'}
                             </span>
                         </div>
-                        {musicUrl && <AudioPlayerButton audioUrl={musicUrl} status={musicStatus || 'pending'} label="Preview" icon={<Play className="w-3 h-3 fill-current" />} />}
+                        {musicUrl && <AudioPlayerButton audioUrl={musicUrl} status={musicStatus || 'pending'} label="Play" icon={<Play className="w-2.5 h-2.5 fill-current" />} />}
                     </div>
                 )}
             </header>

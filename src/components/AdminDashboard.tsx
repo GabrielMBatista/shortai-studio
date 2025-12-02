@@ -652,11 +652,9 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                                     <label className="block text-xs font-medium text-slate-400 mb-1">Slug (Unique ID)</label>
                                     <input
                                         type="text"
-                                        value={editingPlan.slug}
-                                        onChange={e => setEditingPlan({ ...editingPlan, slug: e.target.value })}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
-                                        placeholder="e.g. pro"
-                                        disabled={!isCreatingPlan}
+                                        value={isCreatingPlan ? 'Auto-generated' : editingPlan.slug}
+                                        readOnly
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-500 cursor-not-allowed outline-none font-mono"
                                     />
                                 </div>
                             </div>
