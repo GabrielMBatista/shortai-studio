@@ -23,6 +23,11 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     workflowClient.connect(project.id, (state) => {
       setWorkflowState(state);
 
+      // Check for fatal errors immediately
+      if (state.fatalError) {
+        onError(state.fatalError);
+      }
+
       // Sync project state with smart merge
       setProject(prev => {
         if (!prev) return null;

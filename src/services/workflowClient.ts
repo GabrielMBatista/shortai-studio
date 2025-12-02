@@ -154,10 +154,18 @@ class WorkflowClient {
             projectStatus = 'generating';
         }
 
+        // Check for fatal errors like Quota Exceeded
+        let fatalError = this.lastState.fatalError;
+        if (error && (error.includes('Quota exceeded') || error.includes('429'))) {
+            projectStatus = 'failed';
+            fatalError = "Quota exceeded. Please upgrade your plan.";
+        }
+
         this.updateLocalState({
             ...this.lastState,
             scenes: updatedScenes,
-            projectStatus
+            projectStatus,
+            fatalError
         });
     }
 
