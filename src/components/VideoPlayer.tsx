@@ -154,7 +154,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
       {/* Total Duration Badge */}
       <div className="absolute top-6 left-6 z-50 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 text-xs font-medium text-white/90">
         <Clock className="w-3.5 h-3.5 text-white/70" />
-        <span>{Math.round(validScenes.reduce((acc, s) => acc + (s.durationSeconds || 0), 0))}s</span>
+        <span>{Math.round(validScenes.reduce((acc, s) => acc + Number(s.durationSeconds || 0), 0))}s</span>
       </div>
 
       {/* Close Button */}
