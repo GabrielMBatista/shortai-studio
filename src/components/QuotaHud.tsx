@@ -39,8 +39,8 @@ const QuotaHud: React.FC<QuotaHudProps> = ({ project }) => {
             try {
                 const user = localStorage.getItem('shortsai_user_id');
                 if (!user) return;
-                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
-                const res = await fetch(`${apiUrl}/api/users/quota?user_id=${user}`);
+                const apiUrl = import.meta.env.VITE_API_URL || '/api';
+                const res = await fetch(`${apiUrl}/users/quota?user_id=${user}`);
                 if (res.ok) {
                     const data = await res.json();
                     setQuota(data);
@@ -65,8 +65,8 @@ const QuotaHud: React.FC<QuotaHudProps> = ({ project }) => {
                 return;
             }
             try {
-                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
-                const res = await fetch(`${apiUrl}/api/workflow/estimate`, {
+                const apiUrl = import.meta.env.VITE_API_URL || '/api';
+                const res = await fetch(`${apiUrl}/workflow/estimate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ projectId: project.id })
