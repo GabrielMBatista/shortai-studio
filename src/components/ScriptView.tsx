@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Scene, AVAILABLE_VOICES, AVAILABLE_LANGUAGES, Voice, TTSProvider, IS_SUNO_ENABLED } from '../types';
-import { Sparkles, Waves, Globe, Play, Square, RefreshCw, StopCircle, ImageIcon, PlayCircle, Loader2, Music, Youtube, Check, Copy, ChevronDown, ChevronUp, LayoutTemplate, AlertTriangle, SkipForward, Play as PlayIcon, Download, Plus, Clock } from 'lucide-react';
+import { Sparkles, Waves, Globe, Play, Square, RefreshCw, StopCircle, ImageIcon, PlayCircle, Loader2, Music, Youtube, Check, Copy, ChevronDown, ChevronUp, LayoutTemplate, AlertTriangle, SkipForward, Play as PlayIcon, Download, Plus, Clock, Video } from 'lucide-react';
 import { generatePreviewAudio, getVoices } from '../services/geminiService';
 import SceneCard from './script/SceneCard';
 import AudioPlayerButton from './common/AudioPlayerButton';
@@ -14,6 +14,7 @@ interface ScriptViewProps {
     projectVoice: string;
     projectProvider: TTSProvider;
     projectLanguage: string;
+    projectVideoModel?: string;
     scenes: Scene[];
     generatedTitle?: string;
     generatedDescription?: string;
@@ -42,7 +43,7 @@ interface ScriptViewProps {
     onRemoveScene: (index: number) => void;
     onAddScene?: () => void;
     onExport?: () => void;
-    onUpdateProjectSettings: (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string }) => Promise<void>;
+    onUpdateProjectSettings: (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string; videoModel?: string }) => Promise<void>;
     onReorderScenes?: (oldIndex: number, newIndex: number) => void;
 }
 
@@ -117,7 +118,7 @@ const OriginalConceptCard: React.FC<{ topic: string; style: string }> = ({ topic
 };
 
 const ScriptView: React.FC<ScriptViewProps> = ({
-    projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, scenes,
+    projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, projectVideoModel, scenes,
     generatedTitle, generatedDescription,
     onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic,
@@ -126,6 +127,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [selectedProvider, setSelectedProvider] = useState<TTSProvider>(projectProvider);
     const [selectedVoice, setSelectedVoice] = useState(projectVoice);
     const [selectedLanguage, setSelectedLanguage] = useState(projectLanguage);
+    const [selectedVideoModel, setSelectedVideoModel] = useState(projectVideoModel || 'veo');
 
     const [previewState, setPreviewState] = useState<{ status: 'idle' | 'loading' | 'playing' }>({ status: 'idle' });
     const [showMusicPrompt, setShowMusicPrompt] = useState(false);
@@ -357,6 +359,28 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 >
                                     <span className="font-bold text-[10px] uppercase tracking-wider font-mono">GROQ</span>
                                 </button>
+                            </div>
+
+                            <div className="hidden sm:block w-px h-8 bg-slate-700/50"></div>
+
+                            <div className="flex items-center gap-2 px-2">
+                                <Video className="w-4 h-4 text-slate-500" />
+                                <select
+                                    id="videoModel"
+                                    name="videoModel"
+                                    value={selectedVideoModel}
+                                    onChange={(e) => {
+                                        const newVal = e.target.value;
+                                        setSelectedVideoModel(newVal);
+                                        localStorage.setItem('shortsai_pref_video_model', newVal);
+                                        onUpdateProjectSettings({ videoModel: newVal });
+                                    }}
+                                    disabled={isGeneratingImages}
+                                    className="bg-transparent text-slate-200 text-sm py-1 outline-none cursor-pointer hover:text-white transition-colors appearance-none font-medium min-w-[80px]"
+                                >
+                                    <option value="veo" className="bg-slate-900">Veo</option>
+                                    <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2.0</option>
+                                </select>
                             </div>
 
                             <div className="hidden sm:block w-px h-8 bg-slate-700/50"></div>
