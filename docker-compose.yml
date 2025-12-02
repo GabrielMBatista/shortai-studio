@@ -7,14 +7,16 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: /api
-    container_name: shortsai-studio
+    # container_name: shortsai-studio # Removed to allow rolling updates
     ports:
       - "3000:80"
     environment:
       - VITE_API_URL=/api
     restart: always
     networks:
-      - shortsai-network
+      shortsai-network:
+        aliases:
+          - shortsai-studio
 
 networks:
   shortsai-network:
