@@ -1,10 +1,12 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Scene, AVAILABLE_VOICES, AVAILABLE_LANGUAGES, Voice, TTSProvider, IS_SUNO_ENABLED } from '../types';
 import { Sparkles, Waves, Globe, Play, Square, RefreshCw, StopCircle, ImageIcon, PlayCircle, Loader2, Music, Youtube, Check, Copy, ChevronDown, ChevronUp, LayoutTemplate, AlertTriangle, SkipForward, Play as PlayIcon, Download, Plus } from 'lucide-react';
 import { generatePreviewAudio, getVoices } from '../services/geminiService';
 import SceneCard from './script/SceneCard';
 import AudioPlayerButton from './common/AudioPlayerButton';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
+import { SortableSceneCard } from './script/SortableSceneCard';
 
 interface ScriptViewProps {
     projectTopic: string;
@@ -23,7 +25,7 @@ interface ScriptViewProps {
     onRegenerateSceneAudio?: (sceneIndex: number, force: boolean, overrides?: { voice?: string, provider?: TTSProvider, language?: string }) => void;
     onRegenerateSceneVideo?: (sceneIndex: number, force: boolean) => void;
     onUpdateScene: (index: number, updates: Partial<Scene>) => void;
-    isGeneratingImages: boolean; // Renamed concept: now "isGeneratingWorkflow"
+    isGeneratingImages: boolean;
     onCancelGeneration?: () => void;
     canPreview: boolean;
     onPreview: () => void;
@@ -32,7 +34,6 @@ interface ScriptViewProps {
     musicUrl?: string;
     musicPrompt?: string;
     onRegenerateMusic?: () => void;
-
     isPaused?: boolean;
     fatalError?: string | null;
     onResume?: () => void;
@@ -42,6 +43,7 @@ interface ScriptViewProps {
     onAddScene?: () => void;
     onExport?: () => void;
     onUpdateProjectSettings: (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string }) => Promise<void>;
+    onReorderScenes?: (oldIndex: number, newIndex: number) => void;
 }
 
 const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ title, description }) => {
@@ -119,7 +121,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     generatedTitle, generatedDescription,
     onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic,
-    isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings
+    isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings, onReorderScenes
 }) => {
     const [selectedProvider, setSelectedProvider] = useState<TTSProvider>(projectProvider);
     const [selectedVoice, setSelectedVoice] = useState(projectVoice);
@@ -133,6 +135,26 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
     const [isLoadingVoices, setIsLoadingVoices] = useState(false);
 
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = scenes.findIndex((s) => (s.id || `temp-${s.sceneNumber}`) === active.id);
+            const newIndex = scenes.findIndex((s) => (s.id || `temp-${s.sceneNumber}`) === over.id);
+
+            if (oldIndex !== -1 && newIndex !== -1 && onReorderScenes) {
+                onReorderScenes(oldIndex, newIndex);
+            }
+        }
+    };
+
     useEffect(() => {
         const loadVoices = async () => {
             setIsLoadingVoices(true);
@@ -145,7 +167,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                     setAvailableVoices([]);
                 }
             } else if (selectedProvider === 'groq') {
-                // Import GROQ_VOICES from types
                 const { GROQ_VOICES } = await import('../types');
                 setAvailableVoices(GROQ_VOICES);
             } else {
@@ -156,7 +177,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
         loadVoices();
     }, [selectedProvider]);
 
-    // Filter voices based on language
     const filteredVoices = availableVoices.filter(v => {
         if (!selectedLanguage) return true;
         const langObj = AVAILABLE_LANGUAGES.find(l => l.label === selectedLanguage);
@@ -168,24 +188,14 @@ const ScriptView: React.FC<ScriptViewProps> = ({
         return true;
     });
 
-    // Ensure selected voice is valid when language/provider changes
-    // Ensure selected voice is valid when language/provider changes
     useEffect(() => {
         if (isLoadingVoices) return;
 
         if (filteredVoices.length > 0) {
-            // If current voice is not in the list, select the first one
             if (!filteredVoices.find(v => v.name === selectedVoice)) {
-                // Double check if we really want to reset. 
-                // Sometimes selectedVoice might be valid but not in the filtered list if language doesn't match?
-                // But here we are filtering by language.
-                // If the user changed language, we SHOULD reset.
-                // If the user changed provider, we SHOULD reset.
-                // But if we are just loading, we return early.
                 setSelectedVoice(filteredVoices[0].name);
             }
         } else {
-            // Only reset if we are not loading and truly have no voices
             if (!isLoadingVoices && availableVoices.length > 0) {
                 setSelectedVoice('');
             }
@@ -226,7 +236,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 relative">
-            {/* PAUSE / ERROR OVERLAY */}
             {isPaused && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
                     <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6">
@@ -258,10 +267,8 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 </div>
             )}
 
-            {/* HEADER */}
             <header className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 mb-8 backdrop-blur-sm shadow-xl">
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
-                    {/* Title Section */}
                     <div className="flex-1 min-w-0 space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">{projectStyle}</span>
@@ -271,7 +278,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                         <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight break-words" title={generatedTitle || projectTopic}>
                             {(() => {
                                 const text = generatedTitle || projectTopic || "Untitled Project";
-                                // Fallback if text looks like raw JSON or is too long (likely a raw prompt)
                                 if (text.trim().startsWith('{') || text.length > 200) {
                                     return "Untitled Project";
                                 }
@@ -280,13 +286,8 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                         </h2>
                     </div>
 
-                    {/* Controls Section */}
                     <div className="flex flex-col gap-4 w-full lg:w-auto">
-
-                        {/* Voice & Provider Settings */}
                         <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-700/60 backdrop-blur-md">
-
-                            {/* Provider Selection */}
                             <div className="flex items-center bg-slate-950/50 rounded-lg p-1 border border-slate-800 w-full sm:w-auto justify-center sm:justify-start">
                                 <button
                                     type="button"
@@ -326,10 +327,8 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 </button>
                             </div>
 
-                            {/* Divider (Hidden on mobile) */}
                             <div className="hidden sm:block w-px h-8 bg-slate-700/50"></div>
 
-                            {/* Language & Voice Selectors */}
                             <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
                                 <div className="flex items-center gap-2 px-2">
                                     <Globe className="w-4 h-4 text-slate-500" />
@@ -390,7 +389,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             </div>
                         </div>
 
-                        {/* Action Buttons Row */}
                         <div className="flex flex-wrap items-center justify-end gap-3">
                             <button
                                 type="button"
@@ -463,7 +461,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 )}
             </header>
 
-            {/* METADATA DROPDOWN */}
             <div className="mb-8 bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden transition-all duration-300 shadow-lg">
                 <button
                     onClick={() => setIsDetailsOpen(!isDetailsOpen)}
@@ -499,7 +496,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 )}
             </div>
 
-            {/* PROGRESS BAR */}
             {(isGeneratingImages || completedImages > 0) && (
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -522,34 +518,44 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 </div>
             )}
 
-            {/* SCENE GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {scenes.map((scene, index) => (
-                    <SceneCard
-                        key={`${scene.sceneNumber}-${index}`}
-                        scene={scene}
-                        sceneIndex={index}
-                        onRegenerateImage={onRegenerateSceneImage}
-                        onRegenerateAudio={(idx, force) => onRegenerateSceneAudio && onRegenerateSceneAudio(idx, force, { voice: selectedVoice, provider: selectedProvider, language: selectedLanguage })}
-                        onRegenerateVideo={onRegenerateSceneVideo}
-                        onUpdateScene={onUpdateScene}
-                        onRemoveScene={onRemoveScene}
-                    />
-                ))}
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+            >
+                <SortableContext
+                    items={scenes.map(s => s.id || `temp-${s.sceneNumber}`)}
+                    strategy={rectSortingStrategy}
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {scenes.map((scene, index) => (
+                            <SortableSceneCard
+                                key={scene.id || `temp-${scene.sceneNumber}`}
+                                id={scene.id || `temp-${scene.sceneNumber}`}
+                                scene={scene}
+                                sceneIndex={index}
+                                onRegenerateImage={onRegenerateSceneImage}
+                                onRegenerateAudio={(idx, force) => onRegenerateSceneAudio && onRegenerateSceneAudio(idx, force, { voice: selectedVoice, provider: selectedProvider, language: selectedLanguage })}
+                                onRegenerateVideo={onRegenerateSceneVideo}
+                                onUpdateScene={onUpdateScene}
+                                onRemoveScene={onRemoveScene}
+                            />
+                        ))}
 
-                {/* Add Scene Button */}
-                {onAddScene && (
-                    <button
-                        onClick={onAddScene}
-                        className="flex flex-col items-center justify-center h-full min-h-[400px] bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-2xl hover:bg-slate-800/50 hover:border-indigo-500/50 transition-all group"
-                    >
-                        <div className="p-4 bg-slate-800 rounded-full mb-4 group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
-                            <Plus className="w-8 h-8 text-slate-400 group-hover:text-indigo-400" />
-                        </div>
-                        <span className="text-slate-400 font-semibold group-hover:text-indigo-300">Add New Scene</span>
-                    </button>
-                )}
-            </div>
+                        {onAddScene && (
+                            <button
+                                onClick={onAddScene}
+                                className="flex flex-col items-center justify-center h-full min-h-[400px] bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-2xl hover:bg-slate-800/50 hover:border-indigo-500/50 transition-all group"
+                            >
+                                <div className="p-4 bg-slate-800 rounded-full mb-4 group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
+                                    <Plus className="w-8 h-8 text-slate-400 group-hover:text-indigo-400" />
+                                </div>
+                                <span className="text-slate-400 font-semibold group-hover:text-indigo-300">Add New Scene</span>
+                            </button>
+                        )}
+                    </div>
+                </SortableContext>
+            </DndContext>
         </div>
     );
 };

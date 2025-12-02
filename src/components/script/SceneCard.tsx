@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Scene } from '../../types';
-import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video } from 'lucide-react';
+import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video, GripVertical } from 'lucide-react';
 import AudioPlayerButton from '../common/AudioPlayerButton';
 import ConfirmModal from '../ConfirmModal';
 
@@ -13,9 +13,10 @@ interface SceneCardProps {
     onRegenerateVideo?: (index: number, force: boolean) => void;
     onUpdateScene: (index: number, updates: Partial<Scene>) => void;
     onRemoveScene: (index: number) => void;
+    dragHandleProps?: any;
 }
 
-const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateImage, onRegenerateAudio, onRegenerateVideo, onUpdateScene, onRemoveScene }) => {
+const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateImage, onRegenerateAudio, onRegenerateVideo, onUpdateScene, onRemoveScene, dragHandleProps }) => {
     const [isPromptOpen, setIsPromptOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [narrationText, setNarrationText] = useState(scene.narration);
@@ -158,7 +159,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         <div className="absolute inset-0 flex items-center justify-center text-slate-700 bg-slate-900"><ImageIcon className="w-16 h-16 opacity-10" /></div>
                     )}
 
-                    <div className="absolute top-2 left-2 flex gap-2 items-center">
+                    <div className="absolute top-2 left-2 flex gap-2 items-center z-10">
+                        {dragHandleProps && (
+                            <div {...dragHandleProps} className="bg-black/60 hover:bg-slate-700 backdrop-blur p-1 rounded-md text-slate-400 hover:text-white cursor-grab active:cursor-grabbing border border-white/10 shadow-sm transition-colors">
+                                <GripVertical className="w-4 h-4" />
+                            </div>
+                        )}
                         <div className="bg-black/60 backdrop-blur px-2.5 py-1 rounded-md text-xs font-mono text-white pointer-events-none border border-white/10 shadow-sm">
                             Scene {scene.sceneNumber}
                         </div>

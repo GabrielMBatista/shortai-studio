@@ -53,7 +53,8 @@ const App: React.FC = () => {
         regenerateMusic,
         removeScene,
         updateProjectSettings,
-        addScene
+        addScene,
+        reorderScenes
     } = useVideoGeneration({
         user: currentUser,
         onError: (msg) => showToast(msg, 'error'),
@@ -62,6 +63,8 @@ const App: React.FC = () => {
 
     // Autosave Ref to prevent loop
     const lastSavedProjectJson = useRef<string>("");
+
+    // --- Helpers ---
 
     // --- Helpers ---
     const showToast = (message: string, type: ToastType = 'info') => {
@@ -345,6 +348,7 @@ const App: React.FC = () => {
                         generationMessage={generationMessage}
                         onRemoveScene={removeScene}
                         onAddScene={addScene}
+                        onReorderScenes={reorderScenes}
                         onExport={handleExport}
                         onUpdateProjectSettings={updateProjectSettings}
                     />

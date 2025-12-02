@@ -401,6 +401,33 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
         console.error("Failed to add scene", e);
         onError("Failed to add scene.");
       }
+    },
+    reorderScenes: async (oldIndex: number, newIndex: number) => {
+      if (!project) return;
+
+      const newScenes = [...project.scenes];
+      const [movedScene] = newScenes.splice(oldIndex, 1);
+      newScenes.splice(newIndex, 0, movedScene);
+
+      // Recalculate scene numbers
+      const reorderedScenes = newScenes.map((scene, index) => ({
+        ...scene,
+        sceneNumber: index + 1
+      }));
+
+      const updatedProject = {
+        ...project,
+        scenes: reorderedScenes
+      };
+
+      setProject(updatedProject); // Optimistic
+
+      try {
+        await saveProject(updatedProject);
+      } catch (e) {
+        console.error("Failed to reorder scenes", e);
+        onError("Failed to save new order.");
+      }
     }
   };
 };
