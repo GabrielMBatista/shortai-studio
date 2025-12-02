@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { subscribeToQuota } from '../services/quotaService';
-import { Activity, Minimize2, Maximize2 } from 'lucide-react';
+import { Activity, Minimize2, Maximize2, Zap, Image as ImageIcon, Video, Mic } from 'lucide-react';
+import { VideoProject } from '../types';
 
-const QuotaHud: React.FC = () => {
+interface QuotaHudProps {
+    project?: VideoProject | null;
+}
+
+const QuotaHud: React.FC<QuotaHudProps> = ({ project }) => {
     const [stats, setStats] = useState({
         image: 0,
         text: 0,
@@ -10,7 +15,16 @@ const QuotaHud: React.FC = () => {
     });
     const [isMinimized, setIsMinimized] = useState(false);
 
-    const [dailyVideos, setDailyVideos] = useState<{ current: number, max: number } | null>(null);
+    const [quota, setQuota] = useState<{
+        limits: { maxVideos: number, maxTTSMinutes: number, maxImages: number, maxDailyVideos: number },
+        used: { currentVideos: number, currentTTSMinutes: number, currentImages: number, currentDailyVideos: number }
+    } | null>(null);
+
+    const [estimate, setEstimate] = useState<{
+        estimatedImages: number,
+        estimatedAudioMinutes: number,
+        estimatedVideo: number
+    } | null>(null);
 
     useEffect(() => {
         const unsubscribe = subscribeToQuota((data) => {
@@ -20,20 +34,16 @@ const QuotaHud: React.FC = () => {
             }));
         });
 
-        // Fetch Daily Quota
+        // Fetch Quota
         const fetchQuota = async () => {
             try {
                 const user = localStorage.getItem('shortsai_user_id');
                 if (!user) return;
-                const res = await fetch(`/api/users/quota?user_id=${user}`);
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+                const res = await fetch(`${apiUrl}/api/users/quota?user_id=${user}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.limits && data.used) {
-                        setDailyVideos({
-                            current: data.used.currentDailyVideos || 0,
-                            max: data.limits.maxDailyVideos || 1
-                        });
-                    }
+                    setQuota(data);
                 }
             } catch (e) { console.error(e); }
         };
@@ -47,28 +57,49 @@ const QuotaHud: React.FC = () => {
         };
     }, []);
 
-    // Limits based on Flash 2.5
-    const LIMITS = {
-        image: 500, // RPM
-        text: 1000,
-        audio: 10   // RPM (Low limit for TTS)
-    };
+    // Fetch Estimate when project changes
+    useEffect(() => {
+        const fetchEstimate = async () => {
+            if (!project) {
+                setEstimate(null);
+                return;
+            }
+            try {
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+                const res = await fetch(`${apiUrl}/api/workflow/estimate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projectId: project.id })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setEstimate(data);
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        if (project) {
+            fetchEstimate();
+            // Poll estimate occasionally or when project updates?
+            // For now, just on mount/project change.
+        }
+    }, [project]); // We might want to trigger this on scene updates too, but project object updates should trigger it.
 
     const getPercentage = (val: number, limit: number) => Math.min((val / limit) * 100, 100);
-    const getColor = (pct: number) => pct > 80 ? 'bg-red-500' : pct > 50 ? 'bg-yellow-500' : 'bg-emerald-500';
+    const getColor = (pct: number) => pct > 90 ? 'bg-red-500' : pct > 75 ? 'bg-yellow-500' : 'bg-emerald-500';
 
-    if (stats.image === 0 && stats.text === 0 && stats.audio === 0 && !dailyVideos) return null;
+    if (!quota) return null;
 
     return (
-        <div className={`fixed bottom-4 left-4 z-50 bg-black/80 backdrop-blur-md border border-slate-700 rounded-lg text-xs font-mono text-slate-300 shadow-xl transition-all duration-300 pointer-events-auto ${isMinimized ? 'w-auto p-2' : 'w-48 p-3'}`}>
+        <div className={`fixed bottom-4 left-4 z-50 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl text-xs font-sans text-slate-300 shadow-2xl transition-all duration-300 pointer-events-auto ${isMinimized ? 'w-auto p-2' : 'w-64 p-4'}`}>
             <div
-                className="flex items-center justify-between gap-2 cursor-pointer group"
+                className="flex items-center justify-between gap-2 cursor-pointer group mb-2"
                 onClick={() => setIsMinimized(!isMinimized)}
                 title={isMinimized ? "Expand HUD" : "Minimize HUD"}
             >
-                <div className="flex items-center gap-2 text-slate-400 group-hover:text-white transition-colors">
-                    <Activity className={`w-3 h-3 ${!isMinimized ? '' : (stats.image > 0 || stats.text > 0 || stats.audio > 0) ? 'text-indigo-400' : ''}`} />
-                    {!isMinimized && <span>API Usage</span>}
+                <div className="flex items-center gap-2 text-slate-100 font-bold">
+                    <Activity className={`w-4 h-4 ${!isMinimized ? '' : 'text-indigo-400'}`} />
+                    {!isMinimized && <span>Usage & Quota</span>}
                 </div>
                 <button className="text-slate-500 hover:text-white transition-colors">
                     {isMinimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}
@@ -76,48 +107,67 @@ const QuotaHud: React.FC = () => {
             </div>
 
             {!isMinimized && (
-                <div className="space-y-2 mt-2 pt-2 border-t border-slate-700">
-                    {dailyVideos && (
+                <div className="space-y-4">
+                    {/* Monthly Limits */}
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Monthly Limits</h4>
+
+                        {/* Videos */}
                         <div>
-                            <div className="flex justify-between mb-0.5 text-indigo-300 font-bold">
-                                <span>Daily Videos</span>
-                                <span>{dailyVideos.current}/{dailyVideos.max}</span>
+                            <div className="flex justify-between mb-1">
+                                <span className="flex items-center gap-1.5"><Video className="w-3 h-3 text-indigo-400" /> Videos</span>
+                                <span className="font-mono text-indigo-300">{quota.used.currentVideos}/{quota.limits.maxVideos}</span>
                             </div>
-                            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                <div className={`h-full transition-all duration-500 ${dailyVideos.current >= dailyVideos.max ? 'bg-red-500' : 'bg-indigo-500'}`} style={{ width: `${getPercentage(dailyVideos.current, dailyVideos.max)}%` }} />
+                            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div className={`h-full transition-all duration-500 ${getColor(getPercentage(quota.used.currentVideos, quota.limits.maxVideos))}`} style={{ width: `${getPercentage(quota.used.currentVideos, quota.limits.maxVideos)}%` }} />
+                            </div>
+                        </div>
+
+                        {/* TTS */}
+                        <div>
+                            <div className="flex justify-between mb-1">
+                                <span className="flex items-center gap-1.5"><Mic className="w-3 h-3 text-pink-400" /> Audio (Min)</span>
+                                <span className="font-mono text-pink-300">{quota.used.currentTTSMinutes.toFixed(1)}/{quota.limits.maxTTSMinutes}</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div className={`h-full transition-all duration-500 ${getColor(getPercentage(quota.used.currentTTSMinutes, quota.limits.maxTTSMinutes))}`} style={{ width: `${getPercentage(quota.used.currentTTSMinutes, quota.limits.maxTTSMinutes)}%` }} />
+                            </div>
+                        </div>
+
+                        {/* Images */}
+                        <div>
+                            <div className="flex justify-between mb-1">
+                                <span className="flex items-center gap-1.5"><ImageIcon className="w-3 h-3 text-emerald-400" /> Images</span>
+                                <span className="font-mono text-emerald-300">{quota.used.currentImages}/{quota.limits.maxImages}</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div className={`h-full transition-all duration-500 ${getColor(getPercentage(quota.used.currentImages, quota.limits.maxImages))}`} style={{ width: `${getPercentage(quota.used.currentImages, quota.limits.maxImages)}%` }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Project Estimate */}
+                    {estimate && (
+                        <div className="pt-3 border-t border-slate-700/50 space-y-2">
+                            <h4 className="text-[10px] uppercase tracking-wider font-bold text-slate-500 flex items-center gap-2">
+                                <Zap className="w-3 h-3 text-yellow-500" /> Est. Cost (This Project)
+                            </h4>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div className="bg-slate-800/50 rounded p-1.5">
+                                    <div className="text-[10px] text-slate-500">Images</div>
+                                    <div className="font-mono font-bold text-emerald-400">+{estimate.estimatedImages}</div>
+                                </div>
+                                <div className="bg-slate-800/50 rounded p-1.5">
+                                    <div className="text-[10px] text-slate-500">Audio</div>
+                                    <div className="font-mono font-bold text-pink-400">+{estimate.estimatedAudioMinutes}m</div>
+                                </div>
+                                <div className="bg-slate-800/50 rounded p-1.5">
+                                    <div className="text-[10px] text-slate-500">Video</div>
+                                    <div className="font-mono font-bold text-indigo-400">+{estimate.estimatedVideo}</div>
+                                </div>
                             </div>
                         </div>
                     )}
-
-                    <div className="pt-2 border-t border-slate-700/50">
-                        <div className="flex justify-between mb-0.5">
-                            <span>IMG (RPM)</span>
-                            <span>{stats.image}/{LIMITS.image}</span>
-                        </div>
-                        <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
-                            <div className={`h-full transition-all duration-500 ${getColor(getPercentage(stats.image, LIMITS.image))}`} style={{ width: `${getPercentage(stats.image, LIMITS.image)}%` }} />
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="flex justify-between mb-0.5">
-                            <span>TXT (RPM)</span>
-                            <span>{stats.text}/{LIMITS.text}</span>
-                        </div>
-                        <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
-                            <div className={`h-full transition-all duration-500 ${getColor(getPercentage(stats.text, LIMITS.text))}`} style={{ width: `${getPercentage(stats.text, LIMITS.text)}%` }} />
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="flex justify-between mb-0.5">
-                            <span>TTS (RPM)</span>
-                            <span>{stats.audio}/{LIMITS.audio}</span>
-                        </div>
-                        <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
-                            <div className={`h-full transition-all duration-500 ${getColor(getPercentage(stats.audio, LIMITS.audio))}`} style={{ width: `${getPercentage(stats.audio, LIMITS.audio)}%` }} />
-                        </div>
-                    </div>
                 </div>
             )}
         </div>

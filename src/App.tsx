@@ -364,7 +364,7 @@ const App: React.FC = () => {
                 )}
             </main>
 
-            <QuotaHud />
+            <QuotaHud project={project} />
         </div>
     );
 };

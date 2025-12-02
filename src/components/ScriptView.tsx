@@ -290,10 +290,15 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                                 <Clock className="w-3 h-3 mr-1" />
                                 {(() => {
-                                    const totalSeconds = scenes.reduce((acc, s) => acc + Number(s.durationSeconds || 0), 0);
+                                    const totalSeconds = scenes.reduce((acc, s) => {
+                                        if (s.durationSeconds) return acc + Number(s.durationSeconds);
+                                        // Estimate based on word count (avg 150 wpm = 2.5 words/sec)
+                                        const wordCount = s.narration ? s.narration.split(/\s+/).length : 0;
+                                        return acc + (wordCount / 2.5);
+                                    }, 0);
                                     const minutes = Math.floor(totalSeconds / 60);
                                     const seconds = Math.round(totalSeconds % 60);
-                                    return `${minutes}:${seconds.toString().padStart(2, '0')} Est.`;
+                                    return `${minutes}:${seconds.toString().padStart(2, '0')} ${scenes.some(s => !s.durationSeconds) ? '(Est.)' : ''}`;
                                 })()}
                             </span>
                         </div>
