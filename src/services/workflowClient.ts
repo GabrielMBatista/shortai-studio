@@ -136,6 +136,9 @@ class WorkflowClient {
                     if (url) updatedScene.audioUrl = url;
                     if (timings) updatedScene.wordTimings = timings;
                     if (duration) updatedScene.durationSeconds = duration;
+                } else if (field === 'video') {
+                    updatedScene.videoStatus = status;
+                    if (url) updatedScene.videoUrl = url;
                 }
 
                 if (error) updatedScene.errorMessage = error;
@@ -222,6 +225,8 @@ class WorkflowClient {
                 imageStatus: s.image_status || s.imageStatus || (s.image_url ? 'completed' : 'pending'),
                 audioStatus: s.audio_status || s.audioStatus || (s.audio_url ? 'completed' : 'pending'),
                 sfxStatus: s.sfx_status || s.sfxStatus || (s.sfx_url ? 'completed' : 'pending'),
+                videoStatus: s.video_status || s.videoStatus || (s.video_url ? 'completed' : 'pending'),
+                videoUrl: s.video_url || s.videoUrl,
                 imageAttempts: s.image_attempts || 0,
                 audioAttempts: s.audio_attempts || 0,
                 errorMessage: s.error_message,

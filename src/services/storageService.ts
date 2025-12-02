@@ -281,13 +281,15 @@ const fromApiProject = (apiP: any): VideoProject => {
                     imageUrl: s.image_url,
                     audioUrl: s.audio_url,
                     sfxUrl: s.sfx_url,
+                    videoUrl: s.video_url,
                     // Use status from backend as-is
                     imageStatus: s.image_status,
                     audioStatus: s.audio_status,
                     sfxStatus: s.sfx_status,
                     imageAttempts: s.image_attempts || 0,
                     audioAttempts: s.audio_attempts || 0,
-                    errorMessage: s.error_message
+                    errorMessage: s.error_message,
+                    videoStatus: s.video_status || 'pending'
                 });
             }
 
@@ -332,7 +334,7 @@ export const getProject = async (projectId: string): Promise<VideoProject | null
     }
 };
 
-export const lockSceneAsset = async (projectId: string, sceneId: string, assetType: 'image' | 'audio', force: boolean = false): Promise<Scene> => {
+export const lockSceneAsset = async (projectId: string, sceneId: string, assetType: 'image' | 'audio' | 'video', force: boolean = false): Promise<Scene> => {
     const payload = {
         type: assetType,
         asset_type: assetType,
@@ -353,13 +355,23 @@ export const lockSceneAsset = async (projectId: string, sceneId: string, assetTy
         imageUrl: res.image_url,
         audioUrl: res.audio_url,
         sfxUrl: res.sfx_url,
-        sfxStatus: res.sfx_status
+        sfxStatus: res.sfx_status,
+        videoUrl: res.video_url,
+        videoStatus: res.video_status
     } as Scene;
 };
 
-export const saveSceneAsset = async (projectId: string, sceneId: string, assetType: 'image' | 'audio', dataUrl: string): Promise<Scene> => {
-    const urlField = assetType === 'image' ? 'image_url' : 'audio_url';
-    const statusField = assetType === 'image' ? 'image_status' : 'audio_status';
+export const saveSceneAsset = async (projectId: string, sceneId: string, assetType: 'image' | 'audio' | 'video', dataUrl: string): Promise<Scene> => {
+    let urlField = 'image_url';
+    let statusField = 'image_status';
+
+    if (assetType === 'audio') {
+        urlField = 'audio_url';
+        statusField = 'audio_status';
+    } else if (assetType === 'video') {
+        urlField = 'video_url';
+        statusField = 'video_status';
+    }
 
     const payload = {
         type: assetType,
@@ -382,7 +394,9 @@ export const saveSceneAsset = async (projectId: string, sceneId: string, assetTy
         imageUrl: res.image_url,
         audioUrl: res.audio_url,
         sfxUrl: res.sfx_url,
-        sfxStatus: res.sfx_status
+        sfxStatus: res.sfx_status,
+        videoUrl: res.video_url,
+        videoStatus: res.video_status
     } as Scene;
 };
 
@@ -405,12 +419,17 @@ export const saveSceneSFX = async (projectId: string, sceneId: string, sfxUrl: s
         imageUrl: res.image_url,
         audioUrl: res.audio_url,
         sfxUrl: res.sfx_url,
-        sfxStatus: res.sfx_status
+        sfxStatus: res.sfx_status,
+        videoUrl: res.video_url,
+        videoStatus: res.video_status
     } as Scene;
 };
 
-export const reportSceneError = async (projectId: string, sceneId: string, assetType: 'image' | 'audio', errorMessage: string): Promise<void> => {
-    const statusField = assetType === 'image' ? 'image_status' : 'audio_status';
+
+export const reportSceneError = async (projectId: string, sceneId: string, assetType: 'image' | 'audio' | 'video', errorMessage: string): Promise<void> => {
+    let statusField = 'image_status';
+    if (assetType === 'audio') statusField = 'audio_status';
+    else if (assetType === 'video') statusField = 'video_status';
     const payload = {
         [statusField]: 'error',
         error_message: errorMessage
