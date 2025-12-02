@@ -127,7 +127,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [selectedProvider, setSelectedProvider] = useState<TTSProvider>(projectProvider);
     const [selectedVoice, setSelectedVoice] = useState(projectVoice);
     const [selectedLanguage, setSelectedLanguage] = useState(projectLanguage);
-    const [selectedVideoModel, setSelectedVideoModel] = useState(projectVideoModel || 'veo');
+    const [selectedVideoModel, setSelectedVideoModel] = useState(projectVideoModel || 'veo-2.0-generate-001');
 
     const [previewState, setPreviewState] = useState<{ status: 'idle' | 'loading' | 'playing' }>({ status: 'idle' });
     const [showMusicPrompt, setShowMusicPrompt] = useState(false);
@@ -378,8 +378,9 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                     disabled={isGeneratingImages}
                                     className="bg-transparent text-slate-200 text-sm py-1 outline-none cursor-pointer hover:text-white transition-colors appearance-none font-medium min-w-[80px]"
                                 >
-                                    <option value="veo" className="bg-slate-900">Veo</option>
-                                    <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2.0</option>
+                                    <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2.0 (High Quality)</option>
+                                    <option value="veo-3.0-generate-preview" className="bg-slate-900">Veo 3.0 Preview</option>
+                                    <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">Veo 3.0 Fast Preview</option>
                                 </select>
                             </div>
 
