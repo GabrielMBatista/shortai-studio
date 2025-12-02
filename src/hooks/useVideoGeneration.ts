@@ -192,6 +192,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
       const savedProject = await saveProject(newProject);
       setProject(savedProject);
+      localStorage.setItem('shortsai_last_project_id', savedProject.id); // Persist ID for reload
       queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
 
       onStepChange(AppStep.SCRIPTING);

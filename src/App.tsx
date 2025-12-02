@@ -94,8 +94,33 @@ const App: React.FC = () => {
 
                 // Restore last step if available
                 const savedStep = localStorage.getItem('shortsai_last_step') as AppStep;
+                const savedProjectId = localStorage.getItem('shortsai_last_project_id');
+
                 if (savedStep && Object.values(AppStep).includes(savedStep)) {
-                    setStep(savedStep);
+                    // If step requires a project, try to load it
+                    if ([AppStep.SCRIPTING, AppStep.GENERATING_IMAGES, AppStep.PREVIEW].includes(savedStep) && savedProjectId) {
+                        try {
+                            const fullProject = await getProject(savedProjectId);
+                            if (fullProject) {
+                                const sanitizedProject = {
+                                    ...fullProject,
+                                    scenes: Array.isArray(fullProject.scenes) ? fullProject.scenes : []
+                                };
+                                lastSavedProjectJson.current = JSON.stringify(sanitizedProject);
+                                setProject(sanitizedProject);
+                                setStep(savedStep);
+                            } else {
+                                // Project not found, fallback to dashboard
+                                setStep(AppStep.DASHBOARD);
+                            }
+                        } catch (e) {
+                            console.error("Failed to restore project", e);
+                            setStep(AppStep.DASHBOARD);
+                        }
+                    } else {
+                        // Step doesn't require project or no project ID saved
+                        setStep(savedStep);
+                    }
                 } else {
                     setStep(AppStep.DASHBOARD);
                 }
@@ -132,6 +157,7 @@ const App: React.FC = () => {
         setCurrentUser(null);
         handleSetStep(AppStep.AUTH);
         localStorage.removeItem('shortsai_last_step'); // Clear saved step on logout
+        localStorage.removeItem('shortsai_last_project_id'); // Clear saved project
         setIsLoggingOut(false);
         showToast("Logged out successfully.", 'info');
     };
@@ -140,6 +166,7 @@ const App: React.FC = () => {
     const handleNewProject = () => {
         setProject(null);
         lastSavedProjectJson.current = "";
+        localStorage.removeItem('shortsai_last_project_id');
         handleSetStep(AppStep.INPUT);
     };
 
@@ -154,6 +181,7 @@ const App: React.FC = () => {
                 };
                 lastSavedProjectJson.current = JSON.stringify(sanitizedProject);
                 setProject(sanitizedProject);
+                localStorage.setItem('shortsai_last_project_id', fullProject.id); // Persist ID
                 handleSetStep(AppStep.SCRIPTING);
             } else {
                 showToast("Failed to load project details.", 'error');
