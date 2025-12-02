@@ -283,23 +283,24 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 </div>
             )}
 
-            <header className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 mb-8 backdrop-blur-sm shadow-xl">
-                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
-                    <div className="flex-1 min-w-0 space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">{projectStyle}</span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-500/10 text-blue-300 border border-blue-500/20">{projectLanguage}</span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                                <Clock className="w-3 h-3 mr-1" />
+            <header className="mb-8 space-y-6">
+                {/* 1. Global Settings Bar */}
+                <div className="bg-slate-900/60 backdrop-blur-md border border-slate-700/60 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 text-sm">
+                    <div className="flex items-center gap-4 flex-wrap">
+                        {/* Style Badge */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-indigo-300">
+                            <LayoutTemplate className="w-4 h-4" />
+                            <span className="font-medium">{projectStyle}</span>
+                        </div>
+
+                        {/* Duration Badge */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-300">
+                            <Clock className="w-4 h-4" />
+                            <span className="font-medium">
                                 {(() => {
                                     const totalSeconds = scenes.reduce((acc, s) => {
-                                        // Use actual duration if audio is generated
-                                        if (s.durationSeconds && Number(s.durationSeconds) > 0) {
-                                            return acc + Number(s.durationSeconds);
-                                        }
-                                        // Fallback estimate: 150 wpm = 2.5 words/sec
+                                        if (s.durationSeconds && Number(s.durationSeconds) > 0) return acc + Number(s.durationSeconds);
                                         const wordCount = s.narration ? s.narration.split(/\s+/).length : 0;
-                                        // Minimum 3 seconds per scene for pacing
                                         return acc + Math.max(3, wordCount / 2.5);
                                     }, 0);
                                     const minutes = Math.floor(totalSeconds / 60);
@@ -309,213 +310,179 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             </span>
                         </div>
 
-                        <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight break-words" title={generatedTitle || projectTopic}>
-                            {(() => {
-                                const text = generatedTitle || projectTopic || "Untitled Project";
-                                if (text.trim().startsWith('{') || text.length > 200) {
-                                    return "Untitled Project";
-                                }
-                                return text;
-                            })()}
-                        </h2>
+                        <div className="w-px h-6 bg-slate-700/50 hidden sm:block"></div>
+
+                        {/* Language Selector */}
+                        <div className="flex items-center gap-2">
+                            <Globe className="w-4 h-4 text-slate-500" />
+                            <select
+                                value={selectedLanguage}
+                                onChange={(e) => {
+                                    const newVal = e.target.value;
+                                    setSelectedLanguage(newVal);
+                                    localStorage.setItem('shortsai_pref_language', newVal);
+                                    onUpdateProjectSettings({ language: newVal });
+                                }}
+                                disabled={isGeneratingImages}
+                                className="bg-transparent text-slate-200 outline-none cursor-pointer hover:text-white transition-colors font-medium"
+                            >
+                                {AVAILABLE_LANGUAGES.map(lang => <option key={lang.code} value={lang.label} className="bg-slate-900">{lang.label}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="w-px h-6 bg-slate-700/50 hidden sm:block"></div>
+
+                        {/* Video Model Selector */}
+                        <div className="flex items-center gap-2">
+                            <Video className="w-4 h-4 text-slate-500" />
+                            <select
+                                value={selectedVideoModel}
+                                onChange={(e) => {
+                                    const newVal = e.target.value;
+                                    setSelectedVideoModel(newVal);
+                                    localStorage.setItem('shortsai_pref_video_model', newVal);
+                                    onUpdateProjectSettings({ videoModel: newVal });
+                                }}
+                                disabled={isGeneratingImages}
+                                className="bg-transparent text-slate-200 outline-none cursor-pointer hover:text-white transition-colors font-medium"
+                            >
+                                <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2.0 (High Quality)</option>
+                                <option value="veo-3.0-generate-preview" className="bg-slate-900">Veo 3.0 Preview</option>
+                                <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">Veo 3.0 Fast Preview</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col gap-4 w-full lg:w-auto">
-                        {/* Top Row: Providers & Video Model */}
-                        <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-700/60 backdrop-blur-md justify-between">
-                            <div className="flex items-center bg-slate-950/50 rounded-lg p-1 border border-slate-800 w-full sm:w-auto justify-center sm:justify-start">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedProvider('gemini');
-                                        localStorage.setItem('shortsai_pref_provider', 'gemini');
-                                        onUpdateProjectSettings({ ttsProvider: 'gemini' });
-                                    }}
-                                    className={`p-2 rounded-md transition-all duration-200 ${selectedProvider === 'gemini' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-                                    title="Gemini"
-                                >
-                                    <Sparkles className="w-4 h-4" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedProvider('elevenlabs');
-                                        localStorage.setItem('shortsai_pref_provider', 'elevenlabs');
-                                        onUpdateProjectSettings({ ttsProvider: 'elevenlabs' });
-                                    }}
-                                    className={`p-2 rounded-md transition-all duration-200 ${selectedProvider === 'elevenlabs' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-                                    title="ElevenLabs"
-                                >
-                                    <Waves className="w-4 h-4" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedProvider('groq');
-                                        localStorage.setItem('shortsai_pref_provider', 'groq');
-                                        onUpdateProjectSettings({ ttsProvider: 'groq' });
-                                    }}
-                                    className={`px-3 py-2 rounded-md transition-all duration-200 flex items-center justify-center ${selectedProvider === 'groq' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-                                    title="Groq (PlayAI)"
-                                >
-                                    <span className="font-bold text-[10px] uppercase tracking-wider font-mono">GROQ</span>
-                                </button>
-                            </div>
-
-                            <div className="hidden sm:block w-px h-8 bg-slate-700/50"></div>
-
-                            <div className="flex items-center gap-2 px-2 flex-1 min-w-[200px]">
-                                <Video className="w-4 h-4 text-slate-500" />
-                                <select
-                                    id="videoModel"
-                                    name="videoModel"
-                                    value={selectedVideoModel}
-                                    onChange={(e) => {
-                                        const newVal = e.target.value;
-                                        setSelectedVideoModel(newVal);
-                                        localStorage.setItem('shortsai_pref_video_model', newVal);
-                                        onUpdateProjectSettings({ videoModel: newVal });
-                                    }}
-                                    disabled={isGeneratingImages}
-                                    className="bg-transparent text-slate-200 text-sm py-1 outline-none cursor-pointer hover:text-white transition-colors appearance-none font-medium w-full"
-                                >
-                                    <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2.0 (High Quality)</option>
-                                    <option value="veo-3.0-generate-preview" className="bg-slate-900">Veo 3.0 Preview</option>
-                                    <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">Veo 3.0 Fast Preview</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Bottom Row: Language & Voice */}
-                        <div className="flex flex-col sm:flex-row items-center gap-3 bg-slate-900/60 p-2 rounded-xl border border-slate-700/60 backdrop-blur-md">
-                            <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start flex-1">
-                                <div className="flex items-center gap-2 px-2">
-                                    <Globe className="w-4 h-4 text-slate-500" />
-                                    <select
-                                        id="scriptLanguage"
-                                        name="scriptLanguage"
-                                        value={selectedLanguage}
-                                        onChange={(e) => {
-                                            const newVal = e.target.value;
-                                            setSelectedLanguage(newVal);
-                                            localStorage.setItem('shortsai_pref_language', newVal);
-                                            onUpdateProjectSettings({ language: newVal });
-                                        }}
-                                        disabled={isGeneratingImages}
-                                        className="bg-transparent text-slate-200 text-sm py-1 outline-none cursor-pointer hover:text-white transition-colors appearance-none font-medium min-w-[80px]"
-                                    >
-                                        {AVAILABLE_LANGUAGES.map(lang => <option key={lang.code} value={lang.label} className="bg-slate-900">{lang.label}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="h-4 w-px bg-slate-700/50 hidden sm:block"></div>
-
-                                <div className="flex items-center gap-2 flex-1">
-                                    {isLoadingVoices ? (
-                                        <div className="px-2 py-1 text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> <span className="hidden sm:inline">Loading...</span></div>
-                                    ) : (
-                                        <select
-                                            id="scriptVoice"
-                                            name="scriptVoice"
-                                            value={selectedVoice}
-                                            onChange={(e) => {
-                                                const newVal = e.target.value;
-                                                setSelectedVoice(newVal);
-                                                localStorage.setItem('shortsai_pref_voice', newVal);
-                                                onUpdateProjectSettings({ voiceName: newVal });
-                                            }}
-                                            disabled={isGeneratingImages || filteredVoices.length === 0}
-                                            className="bg-transparent text-white text-sm py-1 outline-none cursor-pointer hover:text-indigo-300 transition-colors appearance-none w-full truncate font-medium"
-                                        >
-                                            {filteredVoices.length > 0 ? (
-                                                filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)
-                                            ) : (
-                                                <option value="" disabled className="bg-slate-900 text-slate-500">No voices available</option>
-                                            )}
-                                        </select>
-                                    )}
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={handlePreviewVoice}
-                                    disabled={isGeneratingImages || isLoadingVoices}
-                                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ml-1"
-                                    title="Preview Voice"
-                                >
-                                    {previewState.status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : previewState.status === 'playing' ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage)}
-                                disabled={isGeneratingImages || !isSettingsChanged}
-                                className={`flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border ${isSettingsChanged ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/20' : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'}`}
-                                title="Apply new voice settings to all scenes"
-                            >
-                                <RefreshCw className={`w-4 h-4 mr-2 ${isGeneratingImages ? 'animate-spin' : ''}`} />
-                                <span>Apply Voice</span>
-                            </button>
-
-                            {isGeneratingImages && onCancelGeneration ? (
-                                <button type="button" onClick={onCancelGeneration} className="flex items-center px-5 py-2.5 rounded-xl text-sm font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/50 shadow-lg shadow-red-500/10 active:scale-95 transition-all animate-pulse">
-                                    <StopCircle className="w-4 h-4 mr-2" /> Stop
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={onStartImageGeneration}
-                                    className="flex items-center px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-95"
-                                    title="Generate All Assets"
-                                >
-                                    <Sparkles className="w-4 h-4 mr-2" /> Generate All
-                                </button>
-                            )}
-                            <button type="button" onClick={onPreview} disabled={!canPreview} className={`flex items-center px-6 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${canPreview ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40' : 'bg-slate-800 border border-slate-700 text-slate-600 cursor-not-allowed'}`}>
-                                <PlayCircle className="w-4 h-4 mr-2" /> Preview
-                            </button>
-                            {onExport && (
-                                <button
-                                    type="button"
-                                    onClick={onExport}
-                                    className="flex items-center px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-all shadow-sm active:scale-95"
-                                    title="Export Assets (ZIP)"
-                                >
-                                    <Download className="w-4 h-4 mr-2" /> Export Assets
-                                </button>
-                            )}
-                        </div>
+                    {/* AI Engine (TTS Provider) */}
+                    <div className="flex items-center gap-1 bg-slate-950/50 rounded-lg p-1 border border-slate-800">
+                        <button
+                            onClick={() => { setSelectedProvider('gemini'); onUpdateProjectSettings({ ttsProvider: 'gemini' }); }}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${selectedProvider === 'gemini' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            Gemini
+                        </button>
+                        <button
+                            onClick={() => { setSelectedProvider('elevenlabs'); onUpdateProjectSettings({ ttsProvider: 'elevenlabs' }); }}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${selectedProvider === 'elevenlabs' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            ElevenLabs
+                        </button>
+                        <button
+                            onClick={() => { setSelectedProvider('groq'); onUpdateProjectSettings({ ttsProvider: 'groq' }); }}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${selectedProvider === 'groq' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            Groq
+                        </button>
                     </div>
                 </div>
 
+                {/* 2. Title */}
+                <div className="text-center py-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight" title={generatedTitle || projectTopic}>
+                        {(() => {
+                            const text = generatedTitle || projectTopic || "Untitled Project";
+                            return text.trim().startsWith('{') ? "Untitled Project" : text;
+                        })()}
+                    </h1>
+                </div>
+
+                {/* 3. Voice & Narration Block */}
+                <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Narration</span>
+                        <div className="h-4 w-px bg-slate-700/50 hidden sm:block"></div>
+
+                        {/* Voice Selector */}
+                        <div className="relative min-w-[200px]">
+                            {isLoadingVoices ? (
+                                <div className="flex items-center gap-2 text-slate-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading voices...</div>
+                            ) : (
+                                <select
+                                    value={selectedVoice}
+                                    onChange={(e) => {
+                                        const newVal = e.target.value;
+                                        setSelectedVoice(newVal);
+                                        localStorage.setItem('shortsai_pref_voice', newVal);
+                                        onUpdateProjectSettings({ voiceName: newVal });
+                                    }}
+                                    disabled={isGeneratingImages || filteredVoices.length === 0}
+                                    className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500 transition-colors appearance-none"
+                                >
+                                    {filteredVoices.length > 0 ? (
+                                        filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)
+                                    ) : (
+                                        <option value="" disabled>No voices available</option>
+                                    )}
+                                </select>
+                            )}
+                        </div>
+
+                        {/* Preview Button */}
+                        <button
+                            onClick={handlePreviewVoice}
+                            disabled={isGeneratingImages || isLoadingVoices}
+                            className="p-2 bg-slate-700/50 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                            title="Preview Voice"
+                        >
+                            {previewState.status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : previewState.status === 'playing' ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                        </button>
+                    </div>
+
+                    {/* Apply Button (Only if changed) */}
+                    <button
+                        onClick={() => onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage)}
+                        disabled={isGeneratingImages || !isSettingsChanged}
+                        className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all ${isSettingsChanged ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20' : 'bg-transparent text-slate-600 cursor-not-allowed'}`}
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isGeneratingImages ? 'animate-spin' : ''}`} />
+                        Apply to All Scenes
+                    </button>
+                </div>
+
+                {/* 4. Main Actions (CTA) */}
+                <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                    {isGeneratingImages && onCancelGeneration ? (
+                        <button onClick={onCancelGeneration} className="flex items-center px-8 py-3 rounded-xl text-base font-bold bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 transition-all animate-pulse">
+                            <StopCircle className="w-5 h-5 mr-2" /> Stop Generation
+                        </button>
+                    ) : (
+                        <button
+                            onClick={onStartImageGeneration}
+                            className="flex items-center px-8 py-3 rounded-xl text-base font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-95 transition-all"
+                        >
+                            <Sparkles className="w-5 h-5 mr-2" /> Generate All
+                        </button>
+                    )}
+
+                    <button
+                        onClick={onPreview}
+                        disabled={!canPreview}
+                        className={`flex items-center px-6 py-3 rounded-xl text-base font-bold transition-all active:scale-95 ${canPreview ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/25' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
+                    >
+                        <PlayCircle className="w-5 h-5 mr-2" /> Preview Video
+                    </button>
+
+                    {onExport && (
+                        <button
+                            onClick={onExport}
+                            className="flex items-center px-6 py-3 rounded-xl text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-all active:scale-95"
+                        >
+                            <Download className="w-4 h-4 mr-2" /> Export Assets
+                        </button>
+                    )}
+                </div>
+
+                {/* Music Section (Optional/Collapsible) */}
                 {includeMusic && IS_SUNO_ENABLED && (
-                    <div className="border-t border-slate-700/50 pt-4 flex flex-col md:flex-row items-center gap-4 bg-slate-900/30 p-4 rounded-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-pink-500/20 text-pink-400 rounded-lg"><Music className="w-5 h-5" /></div>
-                            <div>
-                                <h3 className="text-sm font-semibold text-white">Background Music</h3>
-                                {(musicStatus === 'loading' || musicStatus === 'queued') ? <span className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> {musicStatus === 'queued' ? 'Queued...' : 'Generating...'}</span> : (musicStatus === 'error' || musicStatus === 'failed') ? <span className="text-xs text-red-400">Failed</span> : musicStatus === 'completed' ? <span className="text-xs text-emerald-400">Ready</span> : <span className="text-xs text-slate-500">Pending...</span>}
-                            </div>
-                        </div>
-                        <div className="flex-1 w-full md:w-auto">
-                            {musicPrompt && (
-                                <div className="relative group">
-                                    <p onClick={() => setShowMusicPrompt(!showMusicPrompt)} className="text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded px-3 py-2 cursor-pointer hover:border-pink-500/30 truncate max-w-md">
-                                        <span className="font-mono text-pink-500/70 mr-2">PROMPT:</span>{musicPrompt}
-                                    </p>
-                                    {showMusicPrompt && <div className="absolute top-full left-0 mt-2 p-3 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-300 shadow-xl z-20 w-96">{musicPrompt}</div>}
-                                </div>
-                            )}
-                        </div>
+                    <div className="mt-6 border-t border-slate-700/50 pt-4 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-slate-400">
                         <div className="flex items-center gap-2">
-                            {musicUrl && <AudioPlayerButton audioUrl={musicUrl} status={musicStatus || 'pending'} label="Preview Track" icon={<Play className="w-3 h-3 fill-current" />} />}
-                            {onRegenerateMusic && musicStatus !== 'loading' && (
-                                <button type="button" onClick={onRegenerateMusic} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors" title="Regenerate Music"><RefreshCw className="w-4 h-4" /></button>
-                            )}
+                            <Music className="w-4 h-4 text-pink-400" />
+                            <span>Background Music:</span>
+                            <span className={musicStatus === 'completed' ? 'text-emerald-400' : 'text-slate-300'}>
+                                {musicStatus === 'completed' ? 'Ready' : musicStatus || 'Pending'}
+                            </span>
                         </div>
+                        {musicUrl && <AudioPlayerButton audioUrl={musicUrl} status={musicStatus || 'pending'} label="Preview" icon={<Play className="w-3 h-3 fill-current" />} />}
                     </div>
                 )}
             </header>
