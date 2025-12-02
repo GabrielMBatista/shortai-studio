@@ -129,15 +129,15 @@ class WorkflowClient {
                 const updatedScene = { ...scene };
 
                 if (field === 'image') {
-                    updatedScene.imageStatus = status;
+                    updatedScene.imageStatus = error ? 'failed' : status;
                     if (url) updatedScene.imageUrl = url;
                 } else if (field === 'audio') {
-                    updatedScene.audioStatus = status;
+                    updatedScene.audioStatus = error ? 'failed' : status;
                     if (url) updatedScene.audioUrl = url;
                     if (timings) updatedScene.wordTimings = timings;
                     if (duration) updatedScene.durationSeconds = duration;
                 } else if (field === 'video') {
-                    updatedScene.videoStatus = status;
+                    updatedScene.videoStatus = error ? 'failed' : status;
                     if (url) updatedScene.videoUrl = url;
                 }
 
@@ -175,7 +175,7 @@ class WorkflowClient {
             return;
         }
 
-        const { status, url } = data;
+        const { status, url, error } = data;
 
         let projectStatus = this.lastState.projectStatus;
         if (status === 'loading' || status === 'processing') {
@@ -184,7 +184,7 @@ class WorkflowClient {
 
         this.updateLocalState({
             ...this.lastState,
-            music_status: status,
+            music_status: error ? 'failed' : status,
             music_url: url || this.lastState.music_url,
             projectStatus
         });
