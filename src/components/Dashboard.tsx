@@ -5,6 +5,7 @@ import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import ProjectCard from './ProjectCard';
 import { exportProjectContext, patchProjectMetadata, getFolders } from '../services/storageService';
 
@@ -38,8 +39,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
 
     const formatDate = (ts: number) => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+    const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, Partial<VideoProject>>>({});
+
+    // Clear optimistic updates when projects are refreshed from backend
+    useEffect(() => {
+        setOptimisticUpdates({});
+    }, [projects]);
+
     const filteredProjects = useMemo(() => {
-        return projects.filter(p => {
+        return projects.map(p => ({ ...p, ...optimisticUpdates[p.id] })).filter(p => {
             if (showArchived) {
                 return p.isArchived;
             }
@@ -56,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
 
             return true;
         });
-    }, [projects, selectedFolderId, showArchived, filterTag]);
+    }, [projects, selectedFolderId, showArchived, filterTag, optimisticUpdates]);
 
     const handleExportContext = async () => {
         try {
@@ -77,22 +85,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
     };
 
     const handleArchive = async (projectId: string, currentStatus: boolean) => {
+        const newStatus = !currentStatus;
+        setOptimisticUpdates(prev => ({ ...prev, [projectId]: { ...prev[projectId], isArchived: newStatus } }));
+        setContextMenu(null);
+
         try {
-            await patchProjectMetadata(projectId, { is_archived: !currentStatus });
-            setContextMenu(null);
+            await patchProjectMetadata(projectId, { is_archived: newStatus });
             onRefreshProjects();
         } catch (e) {
             console.error(e);
+            // Revert
+            setOptimisticUpdates(prev => {
+                const next = { ...prev };
+                delete next[projectId];
+                return next;
+            });
         }
     };
 
     const handleMoveToFolder = async (projectId: string, folderId: string | null) => {
+        setOptimisticUpdates(prev => ({ ...prev, [projectId]: { ...prev[projectId], folderId } }));
+        setContextMenu(null);
+
         try {
             await patchProjectMetadata(projectId, { folder_id: folderId });
-            setContextMenu(null);
             onRefreshProjects();
         } catch (e) {
             console.error(e);
+            // Revert
+            setOptimisticUpdates(prev => {
+                const next = { ...prev };
+                delete next[projectId];
+                return next;
+            });
         }
     };
 
@@ -273,16 +298,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                     </div>
                 </div>
             </div>
-            <DragOverlay>
+            <DragOverlay modifiers={[snapCenterToCursor]} dropAnimation={null}>
                 {activeProject ? (
-                    <div className="w-64 bg-slate-800 border border-indigo-500/50 rounded-xl shadow-2xl overflow-hidden opacity-90 pointer-events-none transform rotate-2">
+                    <div className="w-32 bg-slate-800 border border-indigo-500/50 rounded-lg shadow-2xl overflow-hidden opacity-90 pointer-events-none cursor-grabbing">
                         <div className="aspect-video bg-slate-900 relative">
                             {activeProject.scenes[0]?.imageUrl && (
                                 <img src={activeProject.scenes[0].imageUrl} className="w-full h-full object-cover" />
                             )}
                         </div>
-                        <div className="p-3">
-                            <h3 className="font-bold text-white text-sm line-clamp-1">
+                        <div className="p-2">
+                            <h3 className="font-bold text-white text-[10px] line-clamp-1 leading-tight">
                                 {activeProject.generatedTitle || activeProject.topic}
                             </h3>
                         </div>
