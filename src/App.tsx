@@ -20,7 +20,7 @@ import { useProjects } from './hooks/useProjects';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const App: React.FC = () => {
-    const { t } = useTranslation(); // Initialize hook
+    const { t, i18n } = useTranslation(); // Initialize hook
     // Global State
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [step, setStep] = useState<AppStep>(AppStep.AUTH);
@@ -310,6 +310,23 @@ const App: React.FC = () => {
 
                     {currentUser && (
                         <div className="flex items-center gap-3 border-l border-slate-800 pl-4">
+                            {/* Language Selector (Mini) */}
+                            <div className="flex items-center gap-1 mr-2">
+                                <button
+                                    onClick={() => { i18n.changeLanguage('en'); localStorage.setItem('i18nextLng', 'en'); }}
+                                    className={`text-xs font-bold px-2 py-1 rounded transition-colors ${i18n.language === 'en' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                                >
+                                    EN
+                                </button>
+                                <span className="text-slate-700">|</span>
+                                <button
+                                    onClick={() => { i18n.changeLanguage('pt-BR'); localStorage.setItem('i18nextLng', 'pt-BR'); }}
+                                    className={`text-xs font-bold px-2 py-1 rounded transition-colors ${i18n.language === 'pt-BR' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+                                >
+                                    PT
+                                </button>
+                            </div>
+
                             {currentUser.role === 'ADMIN' && (
                                 <button
                                     onClick={() => handleSetStep(AppStep.ADMIN)}

@@ -7,6 +7,7 @@ import { useCharacterLibrary } from '../hooks/useCharacterLibrary';
 import Loader from './Loader';
 import { ToastType } from './Toast';
 import ConfirmModal from './ConfirmModal';
+import { useTranslation } from 'react-i18next';
 
 const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provider: TTSProvider, voices: Voice[] }) => {
     const [status, setStatus] = useState<'idle' | 'loading' | 'playing'>('idle');
@@ -96,6 +97,7 @@ interface InputSectionProps {
 }
 
 const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading, loadingMessage, showToast }) => {
+    const { t } = useTranslation();
     const { characters, addCharacter, removeCharacter, isLoading: isCharLoading } = useCharacterLibrary(user);
 
     // Local Loading State for "Create Project" button
@@ -295,10 +297,10 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
             <div className="text-center mb-12 animate-fade-in-up">
                 <h1 className="text-4xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight pb-2">
-                    Create Your Story
+                    {t('input.title')}
                 </h1>
-                <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto">
-                    AI Director, Cinematographer, and Narrator. <br />All in one place.
+                <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto whitespace-pre-line">
+                    {t('input.subtitle')}
                 </p>
             </div>
 
@@ -308,7 +310,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 <div className="lg:col-span-7 space-y-8">
                     {/* SCRIPT INPUT */}
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:border-slate-600 transition-colors">
-                        <SectionTitle icon={LayoutTemplate} title="Concept & Script" subtitle="What's this video about?" />
+                        <SectionTitle icon={LayoutTemplate} title={t('input.concept_title')} subtitle={t('input.concept_subtitle')} />
                         <div className="space-y-4">
                             <div className="relative group">
                                 <label htmlFor="topic" className="sr-only">Topic</label>
@@ -317,18 +319,18 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     name="topic"
                                     value={topic}
                                     onChange={(e) => setTopic(e.target.value)}
-                                    placeholder="e.g. A cyberpunk detective searching for his lost android cat in Neo-Tokyo..."
+                                    placeholder={t('input.topic_placeholder')}
                                     className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-4 text-white text-lg placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none h-32 resize-none transition-all group-hover:bg-slate-900"
                                     disabled={isBusy}
                                 />
                                 <div className="absolute bottom-3 right-3 text-xs text-slate-600 font-mono">
-                                    {topic.length} chars
+                                    {t('input.chars_count', { count: topic.length })}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="language" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Output Language</label>
+                                    <label htmlFor="language" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">{t('input.output_language')}</label>
                                     <div className="relative">
                                         <select
                                             id="language"
@@ -347,7 +349,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                 {/* DURATION CONFIG */}
                                 <div className="flex flex-col">
                                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" /> Target Duration (Sec)
+                                        <Clock className="w-3 h-3" /> {t('input.target_duration')}
                                     </label>
                                     <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-3">
                                         <label htmlFor="minDuration" className="sr-only">Min Duration</label>
@@ -387,7 +389,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                             <div className="bg-indigo-500/5 rounded-xl p-3 border border-indigo-500/10 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Layers className="w-4 h-4 text-indigo-400" />
-                                    <label htmlFor="targetScenes" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Scene Count</label>
+                                    <label htmlFor="targetScenes" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('input.scene_count')}</label>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -397,10 +399,10 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                         value={targetScenes}
                                         onChange={(e) => setTargetScenes(e.target.value)}
                                         className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-center text-sm outline-none focus:border-indigo-500"
-                                        placeholder="Auto"
+                                        placeholder={t('input.auto')}
                                         disabled={isBusy}
                                     />
-                                    <span className="text-[10px] text-slate-500">(Leave empty for Auto)</span>
+                                    <span className="text-[10px] text-slate-500">{t('input.leave_empty_auto')}</span>
                                 </div>
                             </div>
                         </div>
@@ -408,7 +410,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
                     {/* STYLE & CHARACTERS */}
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
-                        <SectionTitle icon={ImageIcon} title="Visual Style" subtitle="Choose the aesthetic for your storyboard." />
+                        <SectionTitle icon={ImageIcon} title={t('input.visual_style')} subtitle={t('input.visual_style_subtitle')} />
 
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                             {VIDEO_STYLES.map((s) => {
@@ -437,7 +439,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         <div className="mt-8 border-t border-slate-700/50 pt-6">
                             <div className="flex justify-between items-center mb-4">
                                 <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                    <UserIcon className="w-4 h-4 text-indigo-400" /> Character Consistency
+                                    <UserIcon className="w-4 h-4 text-indigo-400" /> {t('input.character_consistency')}
                                 </label>
                                 <button
                                     type="button"
@@ -445,20 +447,20 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     disabled={isBusy}
                                     className="text-xs font-bold bg-indigo-500/10 text-indigo-400 px-3 py-1.5 rounded-lg border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
                                 >
-                                    <Plus className="w-3 h-3" /> New Character
+                                    <Plus className="w-3 h-3" /> {t('input.new_character')}
                                 </button>
                             </div>
 
                             {isAddingChar && (
                                 <div className="bg-slate-800 rounded-xl p-4 mb-4 border border-indigo-500/50 shadow-2xl animate-fade-in-up">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h4 className="text-xs font-bold text-white uppercase">Add New Character</h4>
+                                        <h4 className="text-xs font-bold text-white uppercase">{t('input.add_char_title')}</h4>
                                         <button type="button" onClick={() => setIsAddingChar(false)} className="text-slate-500 hover:text-white"><X className="w-4 h-4" /></button>
                                     </div>
                                     <input
                                         id="charName"
                                         name="charName"
-                                        type="text" placeholder="Character Name (e.g. Neo)" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-2 focus:border-indigo-500 outline-none"
+                                        type="text" placeholder={t('input.char_name_placeholder')} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-2 focus:border-indigo-500 outline-none"
                                         value={newCharName} onChange={e => setNewCharName(e.target.value)}
                                     />
 
@@ -466,7 +468,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                         <textarea
                                             id="charDesc"
                                             name="charDesc"
-                                            placeholder="Visual Description (e.g. A tall man in a black trench coat...)" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-2 h-20 focus:border-indigo-500 outline-none resize-none pr-10"
+                                            placeholder={t('input.char_desc_placeholder')} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-2 h-20 focus:border-indigo-500 outline-none resize-none pr-10"
                                             value={newCharDesc} onChange={e => setNewCharDesc(e.target.value)}
                                         />
                                         {newCharImages.length > 0 && (
@@ -491,7 +493,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                             <img key={i} src={img} className="w-14 h-14 rounded-lg object-cover border border-slate-700 shadow-md" />
                                         ))}
                                     </div>
-                                    <button type="button" onClick={handleSaveChar} disabled={isCharLoading || !newCharName} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 rounded-lg transition-colors">Save Character</button>
+                                    <button type="button" onClick={handleSaveChar} disabled={isCharLoading || !newCharName} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 rounded-lg transition-colors">{t('input.save_character')}</button>
                                 </div>
                             )}
 
@@ -504,7 +506,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center bg-slate-900 ${selectedCharIds.length === 0 ? 'border-indigo-500 text-indigo-400' : 'border-slate-700 text-slate-600'}`}>
                                         <X className="w-5 h-5" />
                                     </div>
-                                    <span className={`text-[10px] font-bold uppercase ${selectedCharIds.length === 0 ? 'text-indigo-300' : 'text-slate-500'}`}>No Char</span>
+                                    <span className={`text-[10px] font-bold uppercase ${selectedCharIds.length === 0 ? 'text-indigo-300' : 'text-slate-500'}`}>{t('input.no_char')}</span>
                                 </div>
 
                                 {isCharLoading ? (
@@ -543,7 +545,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 {/* RIGHT COLUMN */}
                 <div className="lg:col-span-5 space-y-8">
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl h-full flex flex-col">
-                        <SectionTitle icon={Mic} title="Audio Studio" subtitle="Select the narrator and soundtrack." />
+                        <SectionTitle icon={Mic} title={t('input.audio_studio')} subtitle={t('input.audio_subtitle')} />
 
                         {/* Provider Selector */}
                         <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1.5 rounded-xl mb-6">
@@ -552,14 +554,14 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                             <button type="button" onClick={() => setTtsProvider('groq')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'groq' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Groq (PlayAI)</button>
                         </div>
 
-                        <label htmlFor="voice" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Voice Model</label>
+                        <label htmlFor="voice" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.voice_model')}</label>
                         <div className="flex gap-3 mb-8">
                             <div className="relative flex-1">
                                 <select id="voice" name="voice" value={voice} onChange={(e) => setVoice(e.target.value)} disabled={isBusy || filteredVoices.length === 0} className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-3 text-white appearance-none cursor-pointer hover:border-slate-500 transition-colors h-12">
                                     {filteredVoices.length > 0 ? (
                                         filteredVoices.map(v => <option key={v.name} value={v.name}>{v.label} ({v.gender})</option>)
                                     ) : (
-                                        <option value="" disabled>No voices available for this language</option>
+                                        <option value="" disabled>{t('input.no_voices')}</option>
                                     )}
                                 </select>
                                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
@@ -577,8 +579,8 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     <Music className="w-6 h-6" />
                                 </div>
                                 <div className="flex-1 z-10">
-                                    <h4 className={`font-bold text-base ${includeMusic ? 'text-pink-100' : 'text-slate-300'}`}>Background Music</h4>
-                                    <p className="text-xs text-slate-500 mt-1">AI Generated soundtrack (Instrumental)</p>
+                                    <h4 className={`font-bold text-base ${includeMusic ? 'text-pink-100' : 'text-slate-300'}`}>{t('input.background_music')}</h4>
+                                    <p className="text-xs text-slate-500 mt-1">{t('input.music_subtitle')}</p>
                                 </div>
                                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${includeMusic ? 'bg-pink-500 border-pink-500' : 'border-slate-600'}`}>
                                     {includeMusic && <Zap className="w-3 h-3 text-white" />}
@@ -598,19 +600,19 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         {isBusy ? (
                             <div className="flex items-center gap-4 py-2">
                                 <Loader size="sm" />
-                                <span className="animate-pulse">{isSubmitting ? "Generating Script & Scenes..." : (loadingMessage || "Processing...")}</span>
+                                <span className="animate-pulse">{isSubmitting ? t('input.generating') : (loadingMessage || t('input.processing'))}</span>
                             </div>
                         ) : (
                             <>
                                 <Sparkles className="w-7 h-7 text-indigo-200 group-hover:text-white transition-colors" />
-                                <span>Generate Video Workflow</span>
+                                <span>{t('input.generate_button')}</span>
                                 <ArrowRight className="w-7 h-7 opacity-60 group-hover:translate-x-1 transition-transform" />
                             </>
                         )}
                     </button>
                     <p className="text-center text-slate-500 text-xs mt-4">
                         Generates a detailed storyboard, script, and audio assets. <br />
-                        <span className="text-indigo-400 font-semibold">Daily Limit: 1 Video for Free Plan</span>
+                        <span className="text-indigo-400 font-semibold">{t('input.daily_limit')}</span>
                     </p>
                 </div>
             </form>

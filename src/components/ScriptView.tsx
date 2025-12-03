@@ -7,6 +7,7 @@ import AudioPlayerButton from './common/AudioPlayerButton';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { SortableSceneCard } from './script/SortableSceneCard';
+import { useTranslation } from 'react-i18next';
 
 interface ScriptViewProps {
     projectTopic: string;
@@ -48,6 +49,7 @@ interface ScriptViewProps {
 }
 
 const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ title, description }) => {
+    const { t } = useTranslation();
     const [isCopiedTitle, setIsCopiedTitle] = useState(false);
     const [isCopiedDesc, setIsCopiedDesc] = useState(false);
 
@@ -68,26 +70,26 @@ const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ titl
         <div className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-5 h-full flex flex-col">
             <div className="flex items-center gap-2 text-red-400 mb-4 pb-2 border-b border-white/5">
                 <Youtube className="w-5 h-5" />
-                <span className="font-semibold text-sm">YouTube Shorts Metadata</span>
+                <span className="font-semibold text-sm">{t('script.metadata_title')}</span>
             </div>
             <div className="space-y-4 flex-1">
                 <div>
                     <div className="flex justify-between items-center mb-1">
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Viral Title</label>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">{t('script.viral_title')}</label>
                         <button onClick={() => title && copyToClipboard(title, true)} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
-                            {isCopiedTitle ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedTitle ? 'Copied' : 'Copy'}
+                            {isCopiedTitle ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedTitle ? t('script.copied') : t('script.copy')}
                         </button>
                     </div>
-                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm shadow-inner min-h-[40px]">{title || "Generating title..."}</div>
+                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm shadow-inner min-h-[40px]">{title || t('script.generating_title')}</div>
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Description & Hashtags</label>
+                        <label className="text-xs font-semibold text-slate-500 uppercase">{t('script.description_hashtags')}</label>
                         <button onClick={() => description && copyToClipboard(description, false)} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
-                            {isCopiedDesc ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedDesc ? 'Copied' : 'Copy'}
+                            {isCopiedDesc ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedDesc ? t('script.copied') : t('script.copy')}
                         </button>
                     </div>
-                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap shadow-inner min-h-[100px]">{description || "Generating description..."}</div>
+                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap shadow-inner min-h-[100px]">{description || t('script.generating_desc')}</div>
                 </div>
             </div>
         </div>
@@ -95,19 +97,20 @@ const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ titl
 };
 
 const OriginalConceptCard: React.FC<{ topic: string; style: string }> = ({ topic, style }) => {
+    const { t } = useTranslation();
     return (
         <div className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-5 h-full flex flex-col">
             <div className="flex items-center gap-2 text-indigo-400 mb-4 pb-2 border-b border-white/5">
                 <LayoutTemplate className="w-5 h-5" />
-                <span className="font-semibold text-sm">Original Concept & Prompt</span>
+                <span className="font-semibold text-sm">{t('script.original_concept')}</span>
             </div>
             <div className="flex-1 flex flex-col">
                 <div className="mb-4">
-                    <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Selected Style</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">{t('script.selected_style')}</label>
                     <span className="inline-block px-2.5 py-1 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 shadow-sm">{style}</span>
                 </div>
                 <div className="flex-1 flex flex-col">
-                    <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">User Prompt</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">{t('script.user_prompt')}</label>
                     <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap font-mono leading-relaxed max-h-60 overflow-y-auto scrollbar-hide shadow-inner flex-1">
                         {topic}
                     </div>
@@ -124,6 +127,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic,
     isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings, onReorderScenes
 }) => {
+    const { t } = useTranslation();
     const [selectedProvider, setSelectedProvider] = useState<TTSProvider>(projectProvider);
     const [selectedVoice, setSelectedVoice] = useState(projectVoice);
     const [selectedLanguage, setSelectedLanguage] = useState(projectLanguage);
@@ -259,23 +263,23 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             <div className="p-3 bg-yellow-500/10 text-yellow-500 rounded-full">
                                 <AlertTriangle className="w-6 h-6" />
                             </div>
-                            <h3 className="text-xl font-bold text-white">Workflow Paused</h3>
+                            <h3 className="text-xl font-bold text-white">{t('script.workflow_paused')}</h3>
                         </div>
                         <p className="text-slate-300 mb-6">
                             {fatalError ? (
                                 <span className="text-red-300 block bg-red-500/10 p-3 rounded-lg border border-red-500/20">{fatalError}</span>
-                            ) : "The backend has paused processing."}
+                            ) : t('script.backend_paused')}
                         </p>
                         <div className="flex gap-3 justify-end">
-                            <button onClick={onCancelGeneration} className="px-4 py-2 text-slate-400 hover:text-white transition-colors text-sm font-semibold">Abort</button>
+                            <button onClick={onCancelGeneration} className="px-4 py-2 text-slate-400 hover:text-white transition-colors text-sm font-semibold">{t('script.abort')}</button>
                             {onSkip && fatalError && (
                                 <button onClick={onSkip} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-600 flex items-center gap-2 text-sm font-semibold">
-                                    <SkipForward className="w-4 h-4" /> Skip
+                                    <SkipForward className="w-4 h-4" /> {t('script.skip')}
                                 </button>
                             )}
                             {onResume && (
                                 <button onClick={onResume} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg flex items-center gap-2 text-sm font-semibold">
-                                    <PlayIcon className="w-4 h-4 fill-current" /> Resume
+                                    <PlayIcon className="w-4 h-4 fill-current" /> {t('script.resume')}
                                 </button>
                             )}
                         </div>
@@ -312,8 +316,8 @@ const ScriptView: React.FC<ScriptViewProps> = ({
 
                         <h1 className="text-3xl font-bold text-white leading-tight tracking-tight" title={generatedTitle || projectTopic}>
                             {(() => {
-                                const text = generatedTitle || projectTopic || "Untitled Project";
-                                return text.trim().startsWith('{') ? "Untitled Project" : text;
+                                const text = generatedTitle || projectTopic || t('script.untitled_project');
+                                return text.trim().startsWith('{') ? t('script.untitled_project') : text;
                             })()}
                         </h1>
                     </div>
@@ -375,7 +379,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
 
                                 <div className="flex-1 relative">
                                     {isLoadingVoices ? (
-                                        <span className="text-slate-500 text-xs flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-2" />Loading...</span>
+                                        <span className="text-slate-500 text-xs flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-2" />{t('script.loading_voices')}</span>
                                     ) : (
                                         <select
                                             value={selectedVoice}
@@ -391,7 +395,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             {filteredVoices.length > 0 ? (
                                                 filteredVoices.map(v => <option key={v.name} value={v.name} className="bg-slate-900">{v.label} ({v.gender})</option>)
                                             ) : (
-                                                <option value="" disabled>No voices</option>
+                                                <option value="" disabled>{t('script.no_voices')}</option>
                                             )}
                                         </select>
                                     )}
@@ -423,9 +427,9 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                     disabled={isGeneratingImages}
                                     className="bg-transparent text-slate-300 text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none"
                                 >
-                                    <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2.0 (High Quality)</option>
-                                    <option value="veo-3.0-generate-preview" className="bg-slate-900">Veo 3.0 (Preview)</option>
-                                    <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">Veo 3.0 (Fast)</option>
+                                    <option value="veo-2.0-generate-001" className="bg-slate-900">{t('script.veo_high_quality')}</option>
+                                    <option value="veo-3.0-generate-preview" className="bg-slate-900">{t('script.veo_preview')}</option>
+                                    <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">{t('script.veo_fast')}</option>
                                 </select>
                             </div>
 
@@ -434,19 +438,19 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 disabled={isGeneratingImages || !isSettingsChanged}
                                 className={`px-4 py-2 rounded-lg border text-xs font-semibold transition-all flex items-center gap-2 ${isSettingsChanged ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20' : 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed'}`}
                             >
-                                <RefreshCw className="w-3.5 h-3.5" /> Apply Voice
+                                <RefreshCw className="w-3.5 h-3.5" /> {t('script.apply_voice')}
                             </button>
 
                             {isGeneratingImages && onCancelGeneration ? (
                                 <button onClick={onCancelGeneration} className="flex items-center px-5 py-2 rounded-lg text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 transition-all animate-pulse">
-                                    <StopCircle className="w-4 h-4 mr-2" /> Stop
+                                    <StopCircle className="w-4 h-4 mr-2" /> {t('script.stop')}
                                 </button>
                             ) : (
                                 <button
                                     onClick={onStartImageGeneration}
                                     className="flex items-center px-5 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                                 >
-                                    <Sparkles className="w-4 h-4 mr-2" /> Generate All
+                                    <Sparkles className="w-4 h-4 mr-2" /> {t('script.generate_all')}
                                 </button>
                             )}
 
@@ -455,7 +459,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 disabled={!canPreview}
                                 className={`flex items-center px-5 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 ${canPreview ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
                             >
-                                <PlayCircle className="w-4 h-4 mr-2" /> Preview
+                                <PlayCircle className="w-4 h-4 mr-2" /> {t('script.preview')}
                             </button>
 
                             {onExport && (
@@ -463,7 +467,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                     onClick={onExport}
                                     className="flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-all active:scale-95"
                                 >
-                                    <Download className="w-4 h-4 mr-2" /> Export Assets
+                                    <Download className="w-4 h-4 mr-2" /> {t('script.export_assets')}
                                 </button>
                             )}
                         </div>
@@ -475,14 +479,14 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                     <div className="mt-6 pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500">
                         <div className="flex items-center gap-2">
                             <Music className="w-3.5 h-3.5 text-pink-400" />
-                            <span className="font-medium text-slate-400">Background Music</span>
+                            <span className="font-medium text-slate-400">{t('script.background_music')}</span>
                             {musicStatus && (
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${musicStatus === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
                                     {musicStatus}
                                 </span>
                             )}
                         </div>
-                        {musicUrl && <AudioPlayerButton audioUrl={musicUrl} status={musicStatus || 'pending'} label="Play Music" />}
+                        {musicUrl && <AudioPlayerButton audioUrl={musicUrl} status={musicStatus || 'pending'} label={t('script.play_music')} />}
                     </div>
                 )}
             </header>
@@ -496,11 +500,11 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                         <div className="p-1.5 bg-indigo-500/20 rounded-md border border-indigo-500/30">
                             <LayoutTemplate className="w-4 h-4 text-indigo-400" />
                         </div>
-                        <span className="font-bold text-sm uppercase tracking-wide text-slate-200">Project Details & Metadata</span>
+                        <span className="font-bold text-sm uppercase tracking-wide text-slate-200">{t('script.project_details')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="text-xs text-slate-500 font-medium hidden md:inline">
-                            {isDetailsOpen ? 'Hide Details' : 'View Script Prompt & SEO Tags'}
+                            {isDetailsOpen ? t('script.hide_details') : t('script.view_details')}
                         </span>
                         {isDetailsOpen ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
                     </div>
@@ -526,7 +530,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                         <div className="flex items-center gap-2">
-                            <span>Workflow Progress</span>
+                            <span>{t('script.workflow_progress')}</span>
                             {generationMessage && (
                                 <span className="text-indigo-400 normal-case ml-2 border-l border-slate-600 pl-2 hidden md:inline animate-pulse">
                                     {generationMessage}
@@ -579,7 +583,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 <div className="p-4 bg-slate-800 rounded-full mb-4 group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
                                     {isAddingScene ? <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" /> : <Plus className="w-8 h-8 text-slate-400 group-hover:text-indigo-400" />}
                                 </div>
-                                <span className="text-slate-400 font-semibold group-hover:text-indigo-300">{isAddingScene ? 'Adding Scene...' : 'Add New Scene'}</span>
+                                <span className="text-slate-400 font-semibold group-hover:text-indigo-300">{isAddingScene ? t('script.adding_scene') : t('script.add_new_scene')}</span>
                             </button>
                         )}
                     </div>

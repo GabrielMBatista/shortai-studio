@@ -4,6 +4,7 @@ import { Scene } from '../../types';
 import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video, GripVertical } from 'lucide-react';
 import AudioPlayerButton from '../common/AudioPlayerButton';
 import ConfirmModal from '../ConfirmModal';
+import { useTranslation } from 'react-i18next';
 
 interface SceneCardProps {
     scene: Scene;
@@ -17,6 +18,7 @@ interface SceneCardProps {
 }
 
 const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateImage, onRegenerateAudio, onRegenerateVideo, onUpdateScene, onRemoveScene, dragHandleProps }) => {
+    const { t } = useTranslation();
     const [isPromptOpen, setIsPromptOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [narrationText, setNarrationText] = useState(scene.narration);
@@ -142,9 +144,9 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         <>
             <ConfirmModal
                 isOpen={modalConfig.isOpen}
-                title={`Regenerate ${modalConfig.type === 'image' ? 'Image' : modalConfig.type === 'audio' ? 'Audio' : 'Video'}?`}
-                message="This will overwrite the existing file. Are you sure you want to continue?"
-                confirmText="Regenerate"
+                title={t('scene.regenerate_title', { type: modalConfig.type ? t(`scene.type_${modalConfig.type}`) : '' })}
+                message={t('scene.regenerate_confirm')}
+                confirmText={t('scene.regenerate_action')}
                 onConfirm={() => modalConfig.type && triggerRegeneration(modalConfig.type)}
                 onCancel={() => setModalConfig({ isOpen: false, type: null })}
             />
@@ -162,13 +164,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                             playsInline
                         />
                     ) : showVideo && isVideoLoading ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">Generating Video...</span></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_video')}</span></div>
                     ) : hasImage ? (
                         <img src={scene.imageUrl} alt={`Scene ${scene.sceneNumber}`} className="w-full h-full object-cover transition-opacity duration-500" />
                     ) : isImageLoading ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">Generating Image...</span></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_image')}</span></div>
                     ) : scene.imageStatus === 'error' || scene.videoStatus === 'error' ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center text-sm bg-slate-900/80"><AlertCircle className="w-8 h-8 mb-2 mx-auto opacity-80" /><span>{scene.errorMessage || "Failed to load media."}</span></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center text-sm bg-slate-900/80"><AlertCircle className="w-8 h-8 mb-2 mx-auto opacity-80" /><span>{scene.errorMessage || t('scene.failed_load')}</span></div>
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-slate-700 bg-slate-900"><ImageIcon className="w-16 h-16 opacity-10" /></div>
                     )}
@@ -181,7 +183,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                             </div>
                         )}
                         <div className="bg-black/60 backdrop-blur px-2.5 py-1 rounded-md text-xs font-mono text-white pointer-events-none border border-white/10 shadow-sm">
-                            Scene {scene.sceneNumber}
+                            {t('scene.scene_number', { number: scene.sceneNumber })}
                         </div>
                     </div>
 
@@ -190,7 +192,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         <button
                             onClick={(e) => { e.stopPropagation(); onRemoveScene(sceneIndex); }}
                             className="bg-black/60 hover:bg-red-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm cursor-pointer hover:scale-105"
-                            title="Remove Scene"
+                            title={t('scene.remove_scene')}
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -207,14 +209,14 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                                     onUpdateScene(sceneIndex, { mediaType: newShowVideo ? 'video' : 'image' });
                                 }}
                                 className="bg-black/60 hover:bg-purple-600/80 backdrop-blur px-2 py-1 rounded-md text-xs font-bold text-white transition-all border border-white/10 shadow-sm hover:scale-105"
-                                title={showVideo ? "Switch to Image" : "Switch to Video"}
+                                title={showVideo ? t('scene.switch_to_image') : t('scene.switch_to_video')}
                             >
-                                {showVideo ? '📹 VIDEO' : '🖼️ IMAGE'}
+                                {showVideo ? `📹 ${t('scene.video_label')}` : `🖼️ ${t('scene.image_label')}`}
                             </button>
                         )}
                         {hasVideo && showVideo && (
                             <div className="bg-purple-500/80 backdrop-blur px-2 py-1 rounded-md text-xs font-bold text-white pointer-events-none border border-purple-400/30 shadow-sm flex items-center gap-1">
-                                <Video className="w-3 h-3" /> VEO 2
+                                <Video className="w-3 h-3" /> {t('scene.veo_label')}
                             </div>
                         )}
                     </div>
@@ -229,7 +231,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                             onClick={(e) => { e.stopPropagation(); handleRegenClick('image'); }}
                             className={`bg-black/60 hover:bg-indigo-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm ${isImageLoading || localLoading.image ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}`}
                             disabled={isImageLoading || localLoading.image}
-                            title="Regenerate Image"
+                            title={t('scene.regenerate_image')}
                         >
                             <RefreshCw className={`w-3.5 h-3.5 ${isImageLoading || localLoading.image ? 'animate-spin' : ''}`} />
                         </button>
@@ -239,7 +241,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                                 onClick={(e) => { e.stopPropagation(); handleRegenClick('video'); }}
                                 className={`bg-black/60 hover:bg-purple-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm ${isVideoLoading || localLoading.video ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}`}
                                 disabled={isVideoLoading || localLoading.video}
-                                title="Animate with Veo 2"
+                                title={t('scene.animate_veo')}
                             >
                                 {isVideoLoading || localLoading.video ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Video className="w-3.5 h-3.5" />}
                             </button>
@@ -253,7 +255,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5">
-                                    <Mic className="w-3 h-3" /> Narration
+                                    <Mic className="w-3 h-3" /> {t('scene.narration')}
                                 </h4>
                                 <button
                                     onClick={toggleEdit}
@@ -269,7 +271,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                                         onClick={() => handleRegenClick('audio')}
                                         disabled={isAudioLoading || isEditing || localLoading.audio}
                                         className={`p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors ${isAudioLoading || isEditing || localLoading.audio ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        title="Regenerate Audio"
+                                        title={t('scene.regenerate_audio')}
                                     >
                                         <RefreshCw className={`w-3.5 h-3.5 ${isAudioLoading || localLoading.audio ? 'animate-spin' : ''}`} />
                                     </button>
@@ -297,7 +299,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     <div className="mt-auto border-t border-slate-700/50 pt-3">
                         <div className="flex items-center justify-between mb-2">
                             <button onClick={() => setIsPromptOpen(!isPromptOpen)} className="flex items-center text-left text-[10px] uppercase tracking-wider text-slate-500 font-bold hover:text-indigo-400 transition-colors">
-                                <span>Visual Prompt</span>{isPromptOpen ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
+                                <span>{t('scene.visual_prompt')}</span>{isPromptOpen ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
                             </button>
                             <button
                                 onClick={toggleEditPrompt}

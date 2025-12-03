@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -12,15 +13,16 @@ interface ConfirmModalProps {
   confirmText?: string;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ 
-  isOpen, 
-  title, 
-  message, 
-  onConfirm, 
-  onCancel, 
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  isOpen,
+  title,
+  message,
+  onConfirm,
+  onCancel,
   isDestructive = false,
-  confirmText 
+  confirmText
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -40,17 +42,17 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </div>
         </div>
         <div className="bg-slate-900/50 p-4 flex justify-end gap-3 border-t border-slate-800">
-          <button 
+          <button
             onClick={onCancel}
             className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
-          <button 
+          <button
             onClick={onConfirm}
             className={`px-4 py-2 rounded-lg text-sm font-bold text-white shadow-lg transition-all transform hover:scale-105 ${isDestructive ? 'bg-red-600 hover:bg-red-500 shadow-red-500/20' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'}`}
           >
-            {confirmText || (isDestructive ? 'Delete' : 'Confirm')}
+            {confirmText || (isDestructive ? t('common.delete') : t('common.confirm'))}
           </button>
         </div>
       </div>

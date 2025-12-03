@@ -3,6 +3,7 @@ import React from 'react';
 import { User, VideoProject } from '../types';
 import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight } from 'lucide-react';
 import Loader from './Loader';
+import { useTranslation } from 'react-i18next';
 
 interface DashboardProps {
     user: User;
@@ -14,6 +15,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onOpenProject, onDeleteProject, isLoading = false }) => {
+    const { t } = useTranslation();
     const formatDate = (ts: number) => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     return (
@@ -22,9 +24,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 animate-fade-in-up">
                 <div>
                     <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                        Hello, {user.name.split(' ')[0]} <span className="animate-pulse">👋</span>
+                        {t('dashboard.hello', { name: user.name.split(' ')[0] })} <span className="animate-pulse">👋</span>
                     </h1>
-                    <p className="text-slate-400 text-lg">Ready to create your next viral video?</p>
+                    <p className="text-slate-400 text-lg">{t('dashboard.subtitle')}</p>
                 </div>
 
                 <button
@@ -32,7 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                     className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5"
                 >
                     <Sparkles className="w-5 h-5 mr-2 text-indigo-200 group-hover:text-white transition-colors" />
-                    <span>Create Magic</span>
+                    <span>{t('dashboard.create_magic')}</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-60 group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>
@@ -40,16 +42,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
             <div>
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-slate-200 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-indigo-400" /> Recent Projects
+                        <Clock className="w-5 h-5 text-indigo-400" /> {t('dashboard.recent_projects')}
                     </h2>
                     <div className="text-sm text-slate-500">
-                        {isLoading ? 'Syncing...' : `${projects.length} project${projects.length !== 1 ? 's' : ''}`}
+                        {isLoading ? t('dashboard.syncing') : t('dashboard.projects_count_plural', { count: projects.length })}
                     </div>
                 </div>
 
                 {isLoading ? (
                     <div className="w-full h-64 flex items-center justify-center bg-slate-800/30 rounded-3xl border border-slate-700/50">
-                        <Loader text="Loading your projects..." />
+                        <Loader text={t('dashboard.loading_projects')} />
                     </div>
                 ) : projects.length === 0 ? (
                     <div className="relative overflow-hidden bg-slate-800/30 rounded-3xl border-2 border-dashed border-slate-700/50 p-12 text-center group hover:border-indigo-500/30 transition-colors">
@@ -58,12 +60,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl ring-4 ring-slate-800 group-hover:scale-110 transition-transform duration-300">
                                 <Film className="w-10 h-10 text-slate-600 group-hover:text-indigo-400 transition-colors" />
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-3">No projects yet</h3>
+                            <h3 className="text-2xl font-bold text-white mb-3">{t('dashboard.no_projects_title')}</h3>
                             <p className="text-slate-400 mb-8 max-w-md mx-auto">
-                                Your studio is empty. Start your first automated workflow to generate scripts, images, and voiceovers in seconds.
+                                {t('dashboard.no_projects_desc')}
                             </p>
                             <button onClick={onNewProject} className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline flex items-center justify-center gap-2 mx-auto">
-                                <Plus className="w-4 h-4" /> Start your first project
+                                <Plus className="w-4 h-4" /> {t('dashboard.start_project')}
                             </button>
                         </div>
                     </div>
@@ -144,7 +146,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
 
                                         <div className="mt-auto pt-4 border-t border-slate-700/50">
                                             <div className="flex justify-between items-end mb-2">
-                                                <span className="text-xs font-semibold text-slate-400">Progress</span>
+                                                <span className="text-xs font-semibold text-slate-400">{t('dashboard.progress')}</span>
                                                 <span className="text-xs font-bold text-indigo-400">{progress}%</span>
                                             </div>
                                             <div className="h-1.5 bg-slate-700/50 rounded-full w-full overflow-hidden">
