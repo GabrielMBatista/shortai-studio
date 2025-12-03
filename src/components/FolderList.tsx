@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen } from 'lucide-react';
 import { Folder as FolderType } from '../types';
 import { createFolder, updateFolder, deleteFolder, getFolders } from '../services/storageService';
+import { useTranslation } from 'react-i18next';
 
 interface FolderListProps {
     selectedFolderId: string | null;
@@ -10,6 +11,7 @@ interface FolderListProps {
 }
 
 const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolder, onFoldersChange }) => {
+    const { t } = useTranslation();
     const [folders, setFolders] = useState<FolderType[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
@@ -52,7 +54,7 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this folder? Projects will be moved to "All Projects".')) return;
+        if (!confirm(t('folders.delete_confirm'))) return;
         try {
             await deleteFolder(id);
             if (selectedFolderId === id) onSelectFolder(null);
@@ -67,7 +69,7 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
     return (
         <div className={`bg-slate-900/50 border-r border-slate-800 flex flex-col gap-2 h-full transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-64'}`}>
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 mb-2`}>
-                {!isCollapsed && <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Folders</h3>}
+                {!isCollapsed && <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">{t('folders.title')}</h3>}
                 <div className="flex gap-1">
                     {!isCollapsed && (
                         <button
@@ -92,10 +94,10 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
                     ? 'bg-indigo-500/20 text-indigo-400'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                     } ${isCollapsed ? 'justify-center' : ''}`}
-                title={isCollapsed ? "All Projects" : undefined}
+                title={isCollapsed ? t('folders.all_projects') : undefined}
             >
                 <FolderOpen className="w-4 h-4 flex-shrink-0" />
-                {!isCollapsed && "All Projects"}
+                {!isCollapsed && t('folders.all_projects')}
             </button>
 
             {!isCollapsed && isCreating && (
@@ -107,7 +109,7 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
                         onChange={(e) => setNewFolderName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                         onBlur={() => setIsCreating(false)}
-                        placeholder="Folder name..."
+                        placeholder={t('folders.new_folder_placeholder')}
                         className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-indigo-500"
                     />
                 </div>
@@ -172,7 +174,7 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
                                                     }}
                                                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                 >
-                                                    <Edit2 className="w-3 h-3" /> Rename
+                                                    <Edit2 className="w-3 h-3" /> {t('folders.rename')}
                                                 </button>
                                                 <button
                                                     onClick={(e) => {
@@ -181,7 +183,7 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
                                                     }}
                                                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-slate-700 hover:text-red-300"
                                                 >
-                                                    <Trash2 className="w-3 h-3" /> Delete
+                                                    <Trash2 className="w-3 h-3" /> {t('folders.delete')}
                                                 </button>
                                             </div>
                                         )}

@@ -11,6 +11,16 @@
         "settings": "Settings",
         "logout": "Logout"
     },
+    "folders": {
+        "title": "Folders",
+        "all_projects": "All Projects",
+        "new_folder_placeholder": "Folder name...",
+        "rename": "Rename",
+        "delete": "Delete",
+        "delete_confirm": "Delete this folder? Projects will be moved to \"All Projects\".",
+        "move_to_folder": "Move to Folder",
+        "root_folder": "All Projects (Root)"
+    },
     "dashboard": {
         "title": "Your Projects",
         "new_project": "New Project",

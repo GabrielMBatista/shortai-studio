@@ -118,14 +118,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                         </button>
 
                         <div className="border-t border-slate-700 my-1" />
-                        <div className="px-3 py-1 text-xs text-slate-500 font-semibold uppercase">Move to Folder</div>
+                        <div className="px-3 py-1 text-xs text-slate-500 font-semibold uppercase">{t('folders.move_to_folder')}</div>
 
                         <button
                             onClick={() => handleMoveToFolder(contextMenu.projectId, null)}
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
                         >
                             <FolderInput className="w-4 h-4" />
-                            All Projects (Root)
+                            {t('folders.root_folder')}
                         </button>
 
                         {folders.map(f => (
