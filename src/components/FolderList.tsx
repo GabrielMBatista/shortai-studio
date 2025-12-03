@@ -107,14 +107,14 @@ const FolderList: React.FC<FolderListProps> = ({ selectedFolderId, onSelectFolde
                         ? 'bg-indigo-500/20 text-indigo-400'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         } ${isCollapsed ? 'justify-center flex-col gap-1 py-3' : ''}`}
-                    title={isCollapsed ? t('folders.all_projects') : undefined}
+                    title={isCollapsed ? t('folders.home') : undefined}
                 >
                     {selectedFolderId === null ? (
                         <FolderOpen className="w-4 h-4 flex-shrink-0" />
                     ) : (
                         <Folder className="w-4 h-4 flex-shrink-0" />
                     )}
-                    {!isCollapsed ? t('folders.all_projects') : <span className="text-[10px] font-bold">ALL</span>}
+                    {!isCollapsed ? t('folders.home') : <span className="text-[10px] font-bold">ALL</span>}
                 </button>
             </DroppableFolder>
 

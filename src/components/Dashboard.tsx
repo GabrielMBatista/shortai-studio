@@ -4,7 +4,7 @@ import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Do
 import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
-import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import ProjectCard from './ProjectCard';
 import { exportProjectContext, patchProjectMetadata, getFolders } from '../services/storageService';
 
@@ -45,7 +45,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
             }
             if (p.isArchived) return false; // Hide archived by default
 
-            if (selectedFolderId && p.folderId !== selectedFolderId) return false;
+            if (selectedFolderId) {
+                if (p.folderId !== selectedFolderId) return false;
+            } else {
+                // Home/Root view: Only show projects NOT in any folder
+                if (p.folderId) return false;
+            }
+
             if (filterTag && !p.tags?.some(t => t.toLowerCase().includes(filterTag.toLowerCase()))) return false;
 
             return true;
@@ -90,6 +96,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
         }
     };
 
+    const [activeId, setActiveId] = useState<string | null>(null);
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -98,21 +106,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
         })
     );
 
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
+
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
         if (over) {
             const projectId = active.id as string;
             const folderId = over.id === 'root' ? null : (over.id as string);
-            // Only move if folder changed (though handleMoveToFolder might handle it, good to check)
-            // But we don't easily know the current folder of the project here without looking it up.
-            // handleMoveToFolder handles the API call.
             handleMoveToFolder(projectId, folderId);
         }
+        setActiveId(null);
     };
 
+    const activeProject = useMemo(() => projects.find(p => p.id === activeId), [projects, activeId]);
+
     return (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex h-[calc(100vh-64px)]" onClick={() => setContextMenu(null)}>
                 {/* Sidebar */}
                 <FolderList
@@ -261,6 +273,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                     </div>
                 </div>
             </div>
+            <DragOverlay>
+                {activeProject ? (
+                    <div className="w-64 bg-slate-800 border border-indigo-500/50 rounded-xl shadow-2xl overflow-hidden opacity-90 pointer-events-none transform rotate-2">
+                        <div className="aspect-video bg-slate-900 relative">
+                            {activeProject.scenes[0]?.imageUrl && (
+                                <img src={activeProject.scenes[0].imageUrl} className="w-full h-full object-cover" />
+                            )}
+                        </div>
+                        <div className="p-3">
+                            <h3 className="font-bold text-white text-sm line-clamp-1">
+                                {activeProject.generatedTitle || activeProject.topic}
+                            </h3>
+                        </div>
+                    </div>
+                ) : null}
+            </DragOverlay>
         </DndContext>
     );
 };

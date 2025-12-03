@@ -16,12 +16,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
         id: project.id,
     });
 
-    const style = transform ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: isDragging ? 1000 : undefined,
-        opacity: isDragging ? 0.8 : 1,
+    const style = {
+        // transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined, // Disable transform on original
+        opacity: isDragging ? 0.3 : 1,
         position: 'relative' as const,
-    } : undefined;
+    };
 
     const formatDate = (ts: number) => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
