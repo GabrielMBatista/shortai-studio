@@ -357,6 +357,7 @@ const App: React.FC = () => {
                         onNewProject={handleNewProject}
                         onOpenProject={handleOpenProject}
                         onDeleteProject={handleRequestDelete}
+                        onRefreshProjects={refreshProjects}
                         isLoading={isLoadingProjects}
                     />
                 )}

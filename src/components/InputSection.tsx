@@ -89,7 +89,8 @@ interface InputSectionProps {
         language: string,
         refs: any[],
         includeMusic: boolean,
-        durationConfig: { min: number, max: number, targetScenes?: number }
+        durationConfig: { min: number, max: number, targetScenes?: number },
+        audioModel?: string
     ) => Promise<void>; // Make this return a Promise
     isLoading: boolean;
     loadingMessage?: string;
@@ -121,6 +122,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     // TTS State
     const [ttsProvider, setTtsProvider] = useState<TTSProvider>(() => (localStorage.getItem('shortsai_pref_provider') as TTSProvider) || 'gemini');
     const [voice, setVoice] = useState(() => localStorage.getItem('shortsai_pref_voice') || '');
+    const [audioModel, setAudioModel] = useState<string>(() => localStorage.getItem('shortsai_pref_audio_model') || 'eleven_multilingual_v2');
 
     // Persist Provider & Voice
     useEffect(() => {
@@ -130,6 +132,11 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     useEffect(() => {
         if (voice) localStorage.setItem('shortsai_pref_voice', voice);
     }, [voice]);
+
+    useEffect(() => {
+        localStorage.setItem('shortsai_pref_audio_model', audioModel);
+    }, [audioModel]);
+
     const [dynamicVoices, setDynamicVoices] = useState<Voice[]>(AVAILABLE_VOICES);
 
     const [isLoadingVoices, setIsLoadingVoices] = useState(false);
@@ -272,7 +279,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         };
 
         try {
-            await onGenerate(topic, style, voice, ttsProvider, language, selectedRefs, includeMusic && IS_SUNO_ENABLED, config);
+            await onGenerate(topic, style, voice, ttsProvider, language, selectedRefs, includeMusic && IS_SUNO_ENABLED, config, audioModel);
         } catch (e) {
             // If error, unlock button. If success, component unmounts anyway.
             setIsSubmitting(false);
@@ -553,6 +560,33 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                             <button type="button" onClick={() => setTtsProvider('elevenlabs')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'elevenlabs' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>ElevenLabs</button>
                             <button type="button" onClick={() => setTtsProvider('groq')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'groq' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Groq (PlayAI)</button>
                         </div>
+
+                        {/* ElevenLabs Model Selector */}
+                        {ttsProvider === 'elevenlabs' && (
+                            <div className="mb-6 animate-fade-in-up">
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Model</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAudioModel('eleven_multilingual_v2')}
+                                        disabled={isBusy}
+                                        className={`p-3 rounded-xl border text-left transition-all ${audioModel === 'eleven_multilingual_v2' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                    >
+                                        <div className="font-bold text-sm mb-0.5">Multilingual v2</div>
+                                        <div className="text-[10px] opacity-70">High Quality</div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setAudioModel('eleven_flash_v2_5')}
+                                        disabled={isBusy}
+                                        className={`p-3 rounded-xl border text-left transition-all ${audioModel === 'eleven_flash_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                    >
+                                        <div className="font-bold text-sm mb-0.5">Flash v2.5</div>
+                                        <div className="text-[10px] opacity-70">Fast & Cheap</div>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <label htmlFor="voice" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.voice_model')}</label>
                         <div className="flex gap-3 mb-8">

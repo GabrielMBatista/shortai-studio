@@ -165,7 +165,8 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     language: string,
     references: ReferenceCharacter[],
     includeMusic: boolean,
-    durationConfig: { min: number; max: number; targetScenes?: number } = { min: 55, max: 65 }
+    durationConfig: { min: number; max: number; targetScenes?: number } = { min: 55, max: 65 },
+    audioModel?: string
   ): Promise<void> => {
     if (!user) { onError("User not authenticated."); return; }
 
@@ -191,6 +192,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
         userId: user.id,
         createdAt: Date.now(),
         topic, style, voiceName: voice, ttsProvider: provider, language,
+        audioModel,
         referenceCharacters: references,
         scenes,
         generatedTitle: metadata.title,

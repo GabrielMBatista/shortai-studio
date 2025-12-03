@@ -134,6 +134,7 @@ export interface VideoProject {
   // Voice Settings
   voiceName: string;
   ttsProvider: TTSProvider;
+  audioModel?: string;
 
   language: string;
 
@@ -167,6 +168,22 @@ export interface VideoProject {
   bgMusicPrompt?: string;
   bgMusicUrl?: string;
   bgMusicStatus?: 'pending' | 'queued' | 'loading' | 'completed' | 'failed' | 'error';
+
+  // Organization
+  folderId?: string | null;
+  isArchived?: boolean;
+  tags?: string[];
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    projects: number;
+  };
 }
 
 export interface UsageLog {
