@@ -49,7 +49,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
             narration: localScene.narration, // Keep local edit
             visualDescription: localScene.visualDescription, // Keep local edit
             sceneNumber: localScene.sceneNumber, // Keep local order preference
-            mediaType: localScene.mediaType || backendScene.mediaType, // Prefer local edit
+            mediaType: backendScene.mediaType || localScene.mediaType, // Prefer backend for media type
           };
         });
 

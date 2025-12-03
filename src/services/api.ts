@@ -10,8 +10,19 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
         headers['Content-Type'] = 'application/json';
     }
 
+    // Ensure endpoint starts with /
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    // Construct URL. If API_BASE_URL is absolute, use it. If relative, use it.
+    // If API_BASE_URL is just a host (e.g. http://localhost:3333) and endpoint is /folders,
+    // we might need to append /api if the backend expects it.
+    // However, we assume API_BASE_URL is configured correctly (e.g. http://localhost:3333/api).
+    // If VITE_API_URL is missing, it defaults to '/api'.
+
+    const url = `${API_BASE_URL}${normalizedEndpoint}`;
+
     try {
-        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const res = await fetch(url, {
             ...options,
             headers,
             credentials: 'include', // Ensure cookies are sent
@@ -19,7 +30,18 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
         if (!res.ok) {
             const errorText = await res.text();
-            const error = new Error(`API Error ${res.status}: ${errorText}`);
+            let errorMessage = `API Error ${res.status}: ${res.statusText}`;
+            try {
+                // Try to parse JSON error
+                const jsonError = JSON.parse(errorText);
+                if (jsonError.error) errorMessage = jsonError.error;
+                if (jsonError.details) errorMessage += ` - ${JSON.stringify(jsonError.details)}`;
+            } catch (e) {
+                // If not JSON, use text (truncated)
+                errorMessage += ` - ${errorText.substring(0, 100)}`;
+            }
+
+            const error = new Error(errorMessage);
             (error as any).status = res.status;
             throw error;
         }
@@ -30,7 +52,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
         if (endpoint === '/usage') {
             throw error;
         }
-        console.warn(`API Request failed for ${endpoint}:`, error);
+        console.warn(`API Request failed for ${endpoint} (${url}):`, error);
         throw error;
     }
 }

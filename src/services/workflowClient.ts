@@ -122,11 +122,13 @@ class WorkflowClient {
             return;
         }
 
-        const { sceneId, field, status, url, error, timings, duration } = data;
+        const { sceneId, field, status, url, error, timings, duration, mediaType } = data;
 
         const updatedScenes = this.lastState.scenes.map(scene => {
             if (scene.id === sceneId) {
                 const updatedScene = { ...scene };
+
+                if (mediaType) updatedScene.mediaType = mediaType;
 
                 if (field === 'image') {
                     updatedScene.imageStatus = error ? 'failed' : status;

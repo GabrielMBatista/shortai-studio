@@ -66,7 +66,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
     if (isPlaying) {
       // Play audio
       if (audioRef.current) {
-        audioRef.current.play().catch(e => console.error("Audio play error:", e));
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            console.error("Audio play error:", e);
+            // If autoplay blocked, we might need to mute or show UI
+          });
+        }
       }
       if (musicRef.current) {
         musicRef.current.play().catch(e => console.error("Music play error:", e));
@@ -175,8 +181,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
             className="w-full h-full object-cover"
             autoPlay
             loop
-            muted
+            muted={true} // Always mute video to allow separate audio track
             playsInline
+            onPlay={() => {
+              // Ensure audio is synced when video starts
+              if (audioRef.current && Math.abs(audioRef.current.currentTime - (activeScene.videoUrl ? 0 : 0)) > 0.5) {
+                audioRef.current.currentTime = 0;
+              }
+            }}
           />
         ) : (
           <img
