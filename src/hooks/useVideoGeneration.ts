@@ -32,25 +32,37 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
       setProject(prev => {
         if (!prev) return null;
 
+        // Create a map of local scenes for easier lookup
+        const localScenesMap = new Map(prev.scenes.map(s => [s.id, s]));
+
         // Merge backend scene updates with local edits
-        const mergedScenes = state.scenes.map((backendScene, idx) => {
-          const localScene = prev.scenes[idx];
+        // We iterate over backend scenes to get the latest status/urls
+        // But we match by ID to ensure we are updating the correct scene
+        const mergedScenes = state.scenes.map((backendScene) => {
+          const localScene = backendScene.id ? localScenesMap.get(backendScene.id) : undefined;
+
           if (!localScene) return backendScene;
 
-          // Preserve local edits for narration and visualDescription
-          // Only update status fields and URLs from backend
+          // Preserve local edits for narration, visualDescription, AND sceneNumber (for reordering)
           return {
             ...backendScene,
             narration: localScene.narration, // Keep local edit
             visualDescription: localScene.visualDescription, // Keep local edit
-            mediaType: localScene.mediaType || backendScene.mediaType, // Prefer local edit if exists (for optimistic UI), else backend
+            sceneNumber: localScene.sceneNumber, // Keep local order preference
+            mediaType: localScene.mediaType || backendScene.mediaType, // Prefer local edit
           };
         });
+
+        // Keep optimistic scenes (those without ID yet)
+        const optimisticScenes = prev.scenes.filter(s => !s.id);
+
+        // Combine and sort by sceneNumber
+        const finalScenes = [...mergedScenes, ...optimisticScenes].sort((a, b) => a.sceneNumber - b.sceneNumber);
 
         return {
           ...prev,
           status: state.projectStatus,
-          scenes: mergedScenes,
+          scenes: finalScenes,
           bgMusicStatus: state.music_status as any,
           bgMusicUrl: state.music_url
         };
