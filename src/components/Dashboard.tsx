@@ -4,6 +4,8 @@ import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Do
 import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
+import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import ProjectCard from './ProjectCard';
 import { exportProjectContext, patchProjectMetadata, getFolders } from '../services/storageService';
 
 interface DashboardProps {
@@ -88,236 +90,178 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
         }
     };
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over) {
+            const projectId = active.id as string;
+            const folderId = over.id === 'root' ? null : (over.id as string);
+            // Only move if folder changed (though handleMoveToFolder might handle it, good to check)
+            // But we don't easily know the current folder of the project here without looking it up.
+            // handleMoveToFolder handles the API call.
+            handleMoveToFolder(projectId, folderId);
+        }
+    };
+
     return (
-        <div className="flex h-[calc(100vh-64px)]" onClick={() => setContextMenu(null)}>
-            {/* Sidebar */}
-            <FolderList
-                selectedFolderId={selectedFolderId}
-                onSelectFolder={setSelectedFolderId}
-                onFoldersChange={handleRefreshFolders}
-            />
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <div className="flex h-[calc(100vh-64px)]" onClick={() => setContextMenu(null)}>
+                {/* Sidebar */}
+                <FolderList
+                    selectedFolderId={selectedFolderId}
+                    onSelectFolder={setSelectedFolderId}
+                    onFoldersChange={handleRefreshFolders}
+                />
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-y-auto bg-[#0f172a] relative">
-                {/* Context Menu */}
-                {contextMenu && (
-                    <div
-                        className="fixed bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1 w-48"
-                        style={{ top: contextMenu.y, left: contextMenu.x }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => {
-                                const p = projects.find(p => p.id === contextMenu.projectId);
-                                if (p) handleArchive(p.id, !!p.isArchived);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                {/* Main Content */}
+                <div className="flex-1 overflow-y-auto bg-[#0f172a] relative">
+                    {/* Context Menu */}
+                    {contextMenu && (
+                        <div
+                            className="fixed bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1 w-48"
+                            style={{ top: contextMenu.y, left: contextMenu.x }}
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <Archive className="w-4 h-4" />
-                            {projects.find(p => p.id === contextMenu.projectId)?.isArchived ? 'Unarchive' : 'Archive'}
-                        </button>
-
-                        <div className="border-t border-slate-700 my-1" />
-                        <div className="px-3 py-1 text-xs text-slate-500 font-semibold uppercase">{t('folders.move_to_folder')}</div>
-
-                        <button
-                            onClick={() => handleMoveToFolder(contextMenu.projectId, null)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
-                        >
-                            <FolderInput className="w-4 h-4" />
-                            {t('folders.root_folder')}
-                        </button>
-
-                        {folders.map(f => (
                             <button
-                                key={f.id}
-                                onClick={() => handleMoveToFolder(contextMenu.projectId, f.id)}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white truncate"
+                                onClick={() => {
+                                    const p = projects.find(p => p.id === contextMenu.projectId);
+                                    if (p) handleArchive(p.id, !!p.isArchived);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
                             >
-                                <Folder className="w-4 h-4" />
-                                {f.name}
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    {/* Header Section */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-in-up">
-                        <div>
-                            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                                {t('dashboard.hello', { name: user.name.split(' ')[0] })} <span className="animate-pulse">👋</span>
-                            </h1>
-                            <p className="text-slate-400 text-lg">{t('dashboard.subtitle')}</p>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleExportContext}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors border border-slate-700"
-                                title="Export context for AI reference"
-                            >
-                                <Download className="w-4 h-4" />
-                                <span className="hidden sm:inline">Export Context</span>
+                                <Archive className="w-4 h-4" />
+                                {projects.find(p => p.id === contextMenu.projectId)?.isArchived ? 'Unarchive' : 'Archive'}
                             </button>
 
+                            <div className="border-t border-slate-700 my-1" />
+                            <div className="px-3 py-1 text-xs text-slate-500 font-semibold uppercase">{t('folders.move_to_folder')}</div>
+
                             <button
-                                onClick={onNewProject}
-                                className="group relative inline-flex items-center justify-center px-6 py-2 font-bold text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5"
+                                onClick={() => handleMoveToFolder(contextMenu.projectId, null)}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
                             >
-                                <Sparkles className="w-5 h-5 mr-2 text-indigo-200 group-hover:text-white transition-colors" />
-                                <span>{t('dashboard.create_magic')}</span>
+                                <FolderInput className="w-4 h-4" />
+                                {t('folders.root_folder')}
                             </button>
+
+                            {folders.map(f => (
+                                <button
+                                    key={f.id}
+                                    onClick={() => handleMoveToFolder(contextMenu.projectId, f.id)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white truncate"
+                                >
+                                    <Folder className="w-4 h-4" />
+                                    {f.name}
+                                </button>
+                            ))}
                         </div>
-                    </div>
+                    )}
 
-                    {/* Filters Bar */}
-                    <div className="flex items-center gap-4 mb-6 bg-slate-800/30 p-2 rounded-lg border border-slate-700/50">
-                        <div className="flex items-center gap-2 text-slate-400 px-2">
-                            <Filter className="w-4 h-4" />
-                            <span className="text-sm font-medium">Filters:</span>
-                        </div>
+                    <div className="max-w-7xl mx-auto px-4 py-8">
+                        {/* Header Section */}
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-in-up">
+                            <div>
+                                <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                                    {t('dashboard.hello', { name: user.name.split(' ')[0] })} <span className="animate-pulse">👋</span>
+                                </h1>
+                                <p className="text-slate-400 text-lg">{t('dashboard.subtitle')}</p>
+                            </div>
 
-                        <input
-                            type="text"
-                            placeholder="Filter by tag..."
-                            value={filterTag}
-                            onChange={(e) => setFilterTag(e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-indigo-500"
-                        />
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleExportContext}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors border border-slate-700"
+                                    title="Export context for AI reference"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Export Context</span>
+                                </button>
 
-                        <button
-                            onClick={() => setShowArchived(!showArchived)}
-                            className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition-colors ${showArchived ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            <Archive className="w-4 h-4" />
-                            {showArchived ? 'Showing Archived' : 'Show Archived'}
-                        </button>
-
-                        <div className="ml-auto text-sm text-slate-500">
-                            {isLoading ? t('dashboard.syncing') : t('dashboard.projects_count_plural', { count: filteredProjects.length })}
-                        </div>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="w-full h-64 flex items-center justify-center bg-slate-800/30 rounded-3xl border border-slate-700/50">
-                            <Loader text={t('dashboard.loading_projects')} />
-                        </div>
-                    ) : filteredProjects.length === 0 ? (
-                        <div className="relative overflow-hidden bg-slate-800/30 rounded-3xl border-2 border-dashed border-slate-700/50 p-12 text-center group hover:border-indigo-500/30 transition-colors">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="relative z-10">
-                                <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl ring-4 ring-slate-800 group-hover:scale-110 transition-transform duration-300">
-                                    <Film className="w-10 h-10 text-slate-600 group-hover:text-indigo-400 transition-colors" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-white mb-3">{t('dashboard.no_projects_title')}</h3>
-                                <p className="text-slate-400 mb-8 max-w-md mx-auto">
-                                    {t('dashboard.no_projects_desc')}
-                                </p>
-                                <button onClick={onNewProject} className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline flex items-center justify-center gap-2 mx-auto">
-                                    <Plus className="w-4 h-4" /> {t('dashboard.start_project')}
+                                <button
+                                    onClick={onNewProject}
+                                    className="group relative inline-flex items-center justify-center px-6 py-2 font-bold text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5"
+                                >
+                                    <Sparkles className="w-5 h-5 mr-2 text-indigo-200 group-hover:text-white transition-colors" />
+                                    <span>{t('dashboard.create_magic')}</span>
                                 </button>
                             </div>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredProjects.map((project) => {
-                                const completedImages = project.scenes.filter(s => s.imageStatus === 'completed').length;
-                                const completedAudio = project.scenes.filter(s => s.audioStatus === 'completed').length;
-                                const totalTasks = (project.scenes.length || 6) * 2; // Images + Audio
-                                const progress = totalTasks > 0 ? Math.round(((completedImages + completedAudio) / totalTasks) * 100) : 0;
 
-                                // Prefer the generated title (clean) over the raw topic (which might be a JSON blob)
-                                let displayTitle = project.generatedTitle || project.topic;
+                        {/* Filters Bar */}
+                        <div className="flex items-center gap-4 mb-6 bg-slate-800/30 p-2 rounded-lg border border-slate-700/50">
+                            <div className="flex items-center gap-2 text-slate-400 px-2">
+                                <Filter className="w-4 h-4" />
+                                <span className="text-sm font-medium">Filters:</span>
+                            </div>
 
-                                // Fallback: If title still looks like JSON (recovery failed or not happened yet), try to clean it for UI
-                                if (typeof displayTitle === 'string' && (displayTitle.trim().startsWith('{') || displayTitle.trim().startsWith('['))) {
-                                    try {
-                                        const p = JSON.parse(displayTitle);
-                                        displayTitle = p.projectTitle || p.videoTitle || p.title || p.scriptTitle || "Untitled Project";
-                                    } catch (e) { }
-                                }
+                            <input
+                                type="text"
+                                placeholder="Filter by tag..."
+                                value={filterTag}
+                                onChange={(e) => setFilterTag(e.target.value)}
+                                className="bg-slate-900 border border-slate-700 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-indigo-500"
+                            />
 
-                                return (
-                                    <div
-                                        key={project.id}
-                                        onClick={() => onOpenProject(project)}
-                                        onContextMenu={(e) => {
-                                            e.preventDefault();
-                                            setContextMenu({ x: e.clientX, y: e.clientY, projectId: project.id });
-                                        }}
-                                        className="group bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all cursor-pointer flex flex-col h-full relative"
-                                    >
-                                        {/* Thumbnail */}
-                                        <div className="aspect-video bg-slate-900 relative overflow-hidden">
-                                            {project.scenes[0]?.imageUrl ? (
-                                                <img
-                                                    src={project.scenes[0].imageUrl}
-                                                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-slate-800/80">
-                                                    <Zap className="w-12 h-12 text-slate-700 group-hover:text-indigo-500/50 transition-colors" />
-                                                </div>
-                                            )}
+                            <button
+                                onClick={() => setShowArchived(!showArchived)}
+                                className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition-colors ${showArchived ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                <Archive className="w-4 h-4" />
+                                {showArchived ? 'Showing Archived' : 'Show Archived'}
+                            </button>
 
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
-
-                                            <div className="absolute top-3 right-3 flex gap-2">
-                                                <span className="bg-black/60 backdrop-blur px-2.5 py-1 rounded-lg text-xs font-bold text-white uppercase tracking-wider border border-white/10">
-                                                    {project.language}
-                                                </span>
-                                            </div>
-
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, projectId: project.id }); }}
-                                                className="absolute top-3 left-3 p-2 bg-slate-900/80 text-white rounded-lg opacity-0 group-hover:opacity-100 hover:bg-slate-800 transition-all transform hover:scale-110 backdrop-blur-sm shadow-lg"
-                                            >
-                                                <MoreVertical className="w-4 h-4" />
-                                            </button>
-
-                                            {/* Play Overlay */}
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                                                <div className="bg-white/20 backdrop-blur-md p-3 rounded-full border border-white/30 shadow-2xl transform scale-75 group-hover:scale-100 transition-transform">
-                                                    <Play className="w-6 h-6 text-white fill-current" />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="p-5 flex-1 flex flex-col">
-                                            <div className="mb-3">
-                                                <h3 className="font-bold text-white text-lg line-clamp-1 group-hover:text-indigo-300 transition-colors" title={displayTitle}>
-                                                    {displayTitle}
-                                                </h3>
-                                                <div className="flex items-center gap-2 mt-1 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                                    <span className="bg-slate-700/50 px-2 py-0.5 rounded border border-slate-700">{project.style}</span>
-                                                    <span>•</span>
-                                                    <span>{formatDate(project.createdAt)}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-auto pt-4 border-t border-slate-700/50">
-                                                <div className="flex justify-between items-end mb-2">
-                                                    <span className="text-xs font-semibold text-slate-400">{t('dashboard.progress')}</span>
-                                                    <span className="text-xs font-bold text-indigo-400">{progress}%</span>
-                                                </div>
-                                                <div className="h-1.5 bg-slate-700/50 rounded-full w-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                                                        style={{ width: `${progress}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            <div className="ml-auto text-sm text-slate-500">
+                                {isLoading ? t('dashboard.syncing') : t('dashboard.projects_count_plural', { count: filteredProjects.length })}
+                            </div>
                         </div>
-                    )}
+
+                        {isLoading ? (
+                            <div className="w-full h-64 flex items-center justify-center bg-slate-800/30 rounded-3xl border border-slate-700/50">
+                                <Loader text={t('dashboard.loading_projects')} />
+                            </div>
+                        ) : filteredProjects.length === 0 ? (
+                            <div className="relative overflow-hidden bg-slate-800/30 rounded-3xl border-2 border-dashed border-slate-700/50 p-12 text-center group hover:border-indigo-500/30 transition-colors">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="relative z-10">
+                                    <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl ring-4 ring-slate-800 group-hover:scale-110 transition-transform duration-300">
+                                        <Film className="w-10 h-10 text-slate-600 group-hover:text-indigo-400 transition-colors" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-3">{t('dashboard.no_projects_title')}</h3>
+                                    <p className="text-slate-400 mb-8 max-w-md mx-auto">
+                                        {t('dashboard.no_projects_desc')}
+                                    </p>
+                                    <button onClick={onNewProject} className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline flex items-center justify-center gap-2 mx-auto">
+                                        <Plus className="w-4 h-4" /> {t('dashboard.start_project')}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredProjects.map((project) => (
+                                    <ProjectCard
+                                        key={project.id}
+                                        project={project}
+                                        onOpenProject={onOpenProject}
+                                        onContextMenu={(e, id) => {
+                                            e.preventDefault();
+                                            setContextMenu({ x: e.clientX, y: e.clientY, projectId: id });
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+        </DndContext>
     );
 };
 
