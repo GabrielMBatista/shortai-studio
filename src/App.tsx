@@ -17,7 +17,10 @@ import { useVideoGeneration } from './hooks/useVideoGeneration';
 import { useProjects } from './hooks/useProjects';
 
 
+import { useTranslation } from 'react-i18next'; // Import useTranslation
+
 const App: React.FC = () => {
+    const { t } = useTranslation(); // Initialize hook
     // Global State
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [step, setStep] = useState<AppStep>(AppStep.AUTH);
@@ -143,7 +146,7 @@ const App: React.FC = () => {
             const loggedUser = await loginUser(user.email, user.name, user.avatar, user.id);
             setCurrentUser(loggedUser);
             handleSetStep(AppStep.DASHBOARD);
-            showToast(`Welcome back, ${loggedUser.name.split(' ')[0]}!`, 'success');
+            showToast(t('app.welcome', { name: loggedUser.name.split(' ')[0] }), 'success');
         } catch (err) {
             showToast("Failed to login. Please try again.", 'error');
         }
@@ -159,7 +162,7 @@ const App: React.FC = () => {
         localStorage.removeItem('shortsai_last_step'); // Clear saved step on logout
         localStorage.removeItem('shortsai_last_project_id'); // Clear saved project
         setIsLoggingOut(false);
-        showToast("Logged out successfully.", 'info');
+        showToast(t('app.logout'), 'info');
     };
 
     // --- Project Flow Handlers ---
@@ -171,7 +174,7 @@ const App: React.FC = () => {
     };
 
     const handleOpenProject = async (p: VideoProject) => {
-        showToast("Loading project...", 'info');
+        showToast(t('common.loading'), 'info');
         try {
             const fullProject = await getProject(p.id);
             if (fullProject) {
@@ -205,7 +208,7 @@ const App: React.FC = () => {
 
         try {
             await deleteProject(id);
-            showToast("Project deleted successfully.", 'success');
+            showToast(t('dashboard.delete_success'), 'success');
         } catch (e) {
             showToast("Failed to delete project.", 'error');
         }
@@ -259,7 +262,7 @@ const App: React.FC = () => {
     }, [project?.status, step]);
 
     if (isInitializing) {
-        return <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-slate-400">Loading Session...</div>;
+        return <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-slate-400">{t('app.loading')}</div>;
     }
 
     // --- Render ---
@@ -283,12 +286,12 @@ const App: React.FC = () => {
             {/* Modals */}
             <ConfirmModal
                 isOpen={deleteModal.isOpen}
-                title="Delete Project?"
-                message="This action cannot be undone. This will permanently delete the script, images, and audio files associated with this project."
+                title={t('dashboard.delete_confirm')}
+                message={t('dashboard.delete_message')}
                 onConfirm={handleConfirmDelete}
                 onCancel={() => setDeleteModal({ isOpen: false, projectId: null })}
                 isDestructive={true}
-                confirmText="Delete Project"
+                confirmText={t('dashboard.delete_button')}
             />
 
 
@@ -302,7 +305,7 @@ const App: React.FC = () => {
                                 <ChevronLeft className="w-6 h-6" />
                             </button>
                         ) : <Film className="h-8 w-8 text-indigo-500" />}
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">ShortsAI</span>
+                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">{t('app.name')}</span>
                     </div>
 
                     {currentUser && (
@@ -313,7 +316,7 @@ const App: React.FC = () => {
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${step === AppStep.ADMIN ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
                                 >
                                     <Shield className="w-4 h-4" />
-                                    <span className="text-sm font-bold">Admin</span>
+                                    <span className="text-sm font-bold">{t('nav.admin')}</span>
                                 </button>
                             )}
                             <button onClick={() => handleSetStep(AppStep.SETTINGS)} className="flex items-center gap-2 group">

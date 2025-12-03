@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { User, ApiKeys, IS_SUNO_ENABLED } from '../types';
-import { Save, Key, User as UserIcon, ShieldAlert, Music, Loader2 } from 'lucide-react';
+import { Save, Key, User as UserIcon, ShieldAlert, Music, Loader2, Globe } from 'lucide-react';
 import { updateUserApiKeys } from '../services/storageService';
+import { useTranslation } from 'react-i18next';
 
 interface SettingsScreenProps {
   user: User;
@@ -10,6 +11,7 @@ interface SettingsScreenProps {
 }
 
 const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) => {
+  const { t, i18n } = useTranslation();
   const [geminiKey, setGeminiKey] = useState('');
   const [elevenLabsKey, setElevenLabsKey] = useState('');
   const [sunoKey, setSunoKey] = useState('');
@@ -37,26 +39,51 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) =
       const updatedUser = await updateUserApiKeys(user.id, newKeys);
       if (updatedUser) {
         onUpdateUser(updatedUser);
-        setMessage({ text: "Settings saved successfully (Synced to Cloud)", type: 'success' });
+        setMessage({ text: t('common.success'), type: 'success' });
         setTimeout(() => setMessage(null), 3000);
       } else {
-        setMessage({ text: "Failed to save settings.", type: 'error' });
+        setMessage({ text: t('common.error'), type: 'error' });
       }
     } catch (err) {
-      setMessage({ text: "Failed to save settings.", type: 'error' });
+      setMessage({ text: t('common.error'), type: 'error' });
     } finally {
       setIsSaving(false);
     }
   };
 
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem('i18nextLng', lng); // Force persist
+  };
+
   return (
     <div className="max-w-3xl mx-auto w-full px-4 py-8">
-      <div className="flex items-center justify-between mb-8"><h1 className="text-3xl font-bold text-white flex items-center gap-3"><UserIcon className="w-8 h-8 text-indigo-400" />User Settings</h1></div>
+      <div className="flex items-center justify-between mb-8"><h1 className="text-3xl font-bold text-white flex items-center gap-3"><UserIcon className="w-8 h-8 text-indigo-400" />{t('nav.settings')}</h1></div>
       <div className="grid gap-8">
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
           <img src={user.avatar} alt={user.name} className="w-20 h-20 rounded-full border-2 border-indigo-500" />
           <div className="text-center md:text-left flex-1"><h2 className="text-xl font-bold text-white">{user.name}</h2><p className="text-slate-400">{user.email}</p><span className={`inline-block mt-2 px-2 py-1 text-xs rounded border ${user.subscriptionPlan === 'PRO' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-slate-500/20 text-slate-300 border-slate-500/30'}`}>{user.subscriptionPlan === 'PRO' ? 'Pro Plan' : 'Free Plan'}</span></div>
         </div>
+
+        {/* Language Selector */}
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><Globe className="w-5 h-5 text-indigo-400" />Language / Idioma</h3>
+          <div className="flex gap-4">
+            <button
+              onClick={() => changeLanguage('en')}
+              className={`px-4 py-2 rounded-lg border transition-all ${i18n.language === 'en' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white'}`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => changeLanguage('pt-BR')}
+              className={`px-4 py-2 rounded-lg border transition-all ${i18n.language === 'pt-BR' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white'}`}
+            >
+              Português (Brasil)
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSave} className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
           <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2"><Key className="w-5 h-5 text-indigo-400" />API Configuration</h3>
           {message && <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30' : 'bg-red-500/20 text-red-200 border border-red-500/30'}`}>{message.text}</div>}
@@ -94,7 +121,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) =
             <div className="flex justify-end pt-4">
               <button type="submit" disabled={isSaving} className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-wait text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all">
                 {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                {isSaving ? 'Saving...' : 'Save Settings'}
+                {isSaving ? t('common.saving') : t('common.save')}
               </button>
             </div>
           </div>

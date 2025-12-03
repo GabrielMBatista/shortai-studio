@@ -1,0 +1,33 @@
+{
+    "app": {
+        "name": "ShortsAI",
+        "loading": "Carregando Sessão...",
+        "logout": "Logout realizado com sucesso.",
+        "welcome": "Bem-vindo de volta, {{name}}!"
+    },
+    "nav": {
+        "dashboard": "Painel",
+        "admin": "Admin",
+        "settings": "Configurações",
+        "logout": "Sair"
+    },
+    "dashboard": {
+        "title": "Seus Projetos",
+        "new_project": "Novo Projeto",
+        "empty_state": "Nenhum projeto encontrado. Crie seu primeiro vídeo!",
+        "search_placeholder": "Buscar projetos...",
+        "delete_confirm": "Excluir Projeto?",
+        "delete_message": "Esta ação não pode ser desfeita.",
+        "delete_button": "Excluir",
+        "delete_success": "Projeto excluído com sucesso."
+    },
+    "common": {
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "save": "Salvar",
+        "saving": "Salvando...",
+        "error": "Erro",
+        "success": "Sucesso",
+        "loading": "Carregando..."
+    }
+}

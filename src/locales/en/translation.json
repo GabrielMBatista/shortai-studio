@@ -1,0 +1,33 @@
+{
+    "app": {
+        "name": "ShortsAI",
+        "loading": "Loading Session...",
+        "logout": "Logged out successfully.",
+        "welcome": "Welcome back, {{name}}!"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "admin": "Admin",
+        "settings": "Settings",
+        "logout": "Logout"
+    },
+    "dashboard": {
+        "title": "Your Projects",
+        "new_project": "New Project",
+        "empty_state": "No projects found. Create your first video!",
+        "search_placeholder": "Search projects...",
+        "delete_confirm": "Delete Project?",
+        "delete_message": "This action cannot be undone.",
+        "delete_button": "Delete",
+        "delete_success": "Project deleted successfully."
+    },
+    "common": {
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "save": "Save",
+        "saving": "Saving...",
+        "error": "Error",
+        "success": "Success",
+        "loading": "Loading..."
+    }
+}
