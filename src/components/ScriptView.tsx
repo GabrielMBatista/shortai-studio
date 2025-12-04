@@ -99,6 +99,16 @@ const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ titl
 
 const OriginalConceptCard: React.FC<{ topic: string; style: string }> = ({ topic, style }) => {
     const { t } = useTranslation();
+    const [isCopied, setIsCopied] = useState(false);
+
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+        } catch (err) { console.error("Failed to copy", err); }
+    };
+
     return (
         <div className="bg-slate-900/40 border border-slate-700/50 rounded-xl p-5 h-full flex flex-col">
             <div className="flex items-center gap-2 text-indigo-400 mb-4 pb-2 border-b border-white/5">
@@ -111,7 +121,12 @@ const OriginalConceptCard: React.FC<{ topic: string; style: string }> = ({ topic
                     <span className="inline-block px-2.5 py-1 bg-slate-800 rounded-md border border-slate-700 text-xs text-slate-300 shadow-sm">{style}</span>
                 </div>
                 <div className="flex-1 flex flex-col">
-                    <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">{t('script.user_prompt')}</label>
+                    <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-semibold text-slate-500 uppercase">{t('script.user_prompt')}</label>
+                        <button onClick={() => topic && copyToClipboard(topic)} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
+                            {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopied ? t('script.copied') : t('script.copy')}
+                        </button>
+                    </div>
                     <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap font-mono leading-relaxed max-h-60 overflow-y-auto scrollbar-hide shadow-inner flex-1">
                         {topic}
                     </div>
