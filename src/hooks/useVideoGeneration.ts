@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AppStep, User, VideoProject, ReferenceCharacter, TTSProvider, Scene } from '../types';
 import { workflowClient, WorkflowState } from '../services/workflowClient';
 import { generateScript, generateMusicPrompt } from '../services/geminiService';
@@ -15,6 +15,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
   const [project, setProject] = useState<VideoProject | null>(null);
   const [workflowState, setWorkflowState] = useState<WorkflowState | null>(null);
   const queryClient = useQueryClient();
+  const deletedSceneIds = useRef<Set<string>>(new Set());
 
   // 1. Connect to Backend via Client
   useEffect(() => {
@@ -38,20 +39,22 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
         // Merge backend scene updates with local edits
         // We iterate over backend scenes to get the latest status/urls
         // But we match by ID to ensure we are updating the correct scene
-        const mergedScenes = state.scenes.map((backendScene) => {
-          const localScene = backendScene.id ? localScenesMap.get(backendScene.id) : undefined;
+        const mergedScenes = state.scenes
+          .filter(s => !s.id || !deletedSceneIds.current.has(s.id))
+          .map((backendScene) => {
+            const localScene = backendScene.id ? localScenesMap.get(backendScene.id) : undefined;
 
-          if (!localScene) return backendScene;
+            if (!localScene) return backendScene;
 
-          // Preserve local edits for narration, visualDescription, AND sceneNumber (for reordering)
-          return {
-            ...backendScene,
-            narration: localScene.narration, // Keep local edit
-            visualDescription: localScene.visualDescription, // Keep local edit
-            sceneNumber: localScene.sceneNumber, // Keep local order preference
-            mediaType: backendScene.mediaType || localScene.mediaType, // Prefer backend for media type
-          };
-        });
+            // Preserve local edits for narration, visualDescription, AND sceneNumber (for reordering)
+            return {
+              ...backendScene,
+              narration: localScene.narration, // Keep local edit
+              visualDescription: localScene.visualDescription, // Keep local edit
+              sceneNumber: localScene.sceneNumber, // Keep local order preference
+              mediaType: backendScene.mediaType || localScene.mediaType, // Prefer backend for media type
+            };
+          });
 
         // Keep optimistic scenes (those without ID yet)
         const optimisticScenes = prev.scenes.filter(s => !s.id);
@@ -371,6 +374,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
       try {
         if (sceneToRemove.id) {
+          deletedSceneIds.current.add(sceneToRemove.id);
           await deleteScene(sceneToRemove.id);
         }
         // Save project to update scene numbers of remaining scenes

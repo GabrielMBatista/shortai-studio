@@ -289,7 +289,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
             )}
 
             <header className="mb-8 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
-                <div className="flex flex-col xl:flex-row gap-6 items-start justify-between">
+                <div className="flex flex-col lg:flex-row gap-6 items-start justify-between">
                     {/* Left Column: Title & Metadata */}
                     <div className="flex-1 min-w-0 space-y-4">
                         <div className="flex flex-wrap items-center gap-2">
@@ -403,14 +403,15 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 </div>
 
                                 {selectedProvider === 'elevenlabs' && (
-                                    <div className="flex items-center gap-2 text-slate-400 border-l border-slate-800 pl-3 ml-1">
+                                    <div className="flex items-center gap-2 text-slate-400 border-l border-slate-800 pl-3 ml-1 shrink-0">
                                         <select
                                             value={selectedAudioModel}
                                             onChange={(e) => {
                                                 const newVal = e.target.value;
                                                 setSelectedAudioModel(newVal);
                                             }}
-                                            className="bg-transparent text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none w-24"
+                                            className="bg-transparent text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none max-w-[100px]"
+                                            title="ElevenLabs Model"
                                         >
                                             <option value="eleven_flash_v2_5" className="bg-slate-900">Flash v2.5</option>
                                             <option value="eleven_multilingual_v2" className="bg-slate-900">Multilingual v2</option>
