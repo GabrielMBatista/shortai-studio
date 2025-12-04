@@ -145,14 +145,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                 generateVideo({
                     sceneId: scene.id,
                     projectId,
-                    payload: {
-                        userId,
-                        // imageUrl: scene.imageUrl, // Removed to avoid 413 payload too large. Fetched server-side.
-                        prompt: scene.visualDescription,
-                        keys: apiKeys,
-                        modelId: videoModel,
-                        withAudio: false
-                    }
+                    userId,
+                    // imageUrl: scene.imageUrl, // Removed to avoid 413 payload too large. Fetched server-side.
+                    prompt: scene.visualDescription,
+                    keys: apiKeys,
+                    modelId: videoModel,
+                    withAudio: false
                 });
             } else if (onRegenerateVideo) {
                 onRegenerateVideo(sceneIndex, force);
