@@ -472,13 +472,14 @@ const App: React.FC = () => {
                         projectVoice={project.voiceName}
                         projectProvider={project.ttsProvider}
                         projectLanguage={project.language}
+                        projectAudioModel={project.audioModel}
                         scenes={Array.isArray(project.scenes) ? project.scenes : []}
                         generatedTitle={project.generatedTitle}
                         generatedDescription={project.generatedDescription}
                         onStartImageGeneration={generateAssets}
                         onGenerateImagesOnly={generateImagesOnly}
                         onGenerateAudioOnly={generateAudioOnly}
-                        onRegenerateAudio={(v, p, l) => { regenerateAllAudio(v, p, l); showToast("Regenerating audio...", 'info'); }}
+                        onRegenerateAudio={(v, p, l, m) => { regenerateAllAudio(v, p, l, m); showToast("Regenerating audio...", 'info'); }}
                         onRegenerateSceneImage={regenerateSceneImage}
                         onRegenerateSceneAudio={regenerateSceneAudio}
                         onRegenerateSceneVideo={regenerateSceneVideo}

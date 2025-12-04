@@ -16,13 +16,14 @@ interface ScriptViewProps {
     projectProvider: TTSProvider;
     projectLanguage: string;
     projectVideoModel?: string;
+    projectAudioModel?: string;
     scenes: Scene[];
     generatedTitle?: string;
     generatedDescription?: string;
     onStartImageGeneration: () => void;
     onGenerateImagesOnly: () => void;
     onGenerateAudioOnly: () => void;
-    onRegenerateAudio: (newVoice: string, newProvider: TTSProvider, newLanguage: string) => void;
+    onRegenerateAudio: (newVoice: string, newProvider: TTSProvider, newLanguage: string, newAudioModel?: string) => void;
     onRegenerateSceneImage: (sceneIndex: number, force: boolean) => void;
     onRegenerateSceneAudio?: (sceneIndex: number, force: boolean, overrides?: { voice?: string, provider?: TTSProvider, language?: string }) => void;
     onRegenerateSceneVideo?: (sceneIndex: number, force: boolean) => void;
@@ -44,7 +45,7 @@ interface ScriptViewProps {
     onRemoveScene: (index: number) => void;
     onAddScene?: () => void;
     onExport?: () => void;
-    onUpdateProjectSettings: (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string; videoModel?: string }) => Promise<void>;
+    onUpdateProjectSettings: (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string; videoModel?: string; audioModel?: string }) => Promise<void>;
     onReorderScenes?: (oldIndex: number, newIndex: number) => void;
 }
 
@@ -121,7 +122,7 @@ const OriginalConceptCard: React.FC<{ topic: string; style: string }> = ({ topic
 };
 
 const ScriptView: React.FC<ScriptViewProps> = ({
-    projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, projectVideoModel, scenes,
+    projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, projectVideoModel, projectAudioModel, scenes,
     generatedTitle, generatedDescription,
     onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic,
@@ -132,7 +133,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [selectedVoice, setSelectedVoice] = useState(projectVoice);
     const [selectedLanguage, setSelectedLanguage] = useState(projectLanguage);
     const [selectedVideoModel, setSelectedVideoModel] = useState(projectVideoModel || 'veo-2.0-generate-001');
-    const [selectedAudioModel, setSelectedAudioModel] = useState('eleven_flash_v2_5');
+    const [selectedAudioModel, setSelectedAudioModel] = useState(projectAudioModel || 'eleven_flash_v2_5');
 
     const [previewState, setPreviewState] = useState<{ status: 'idle' | 'loading' | 'playing' }>({ status: 'idle' });
     const [showMusicPrompt, setShowMusicPrompt] = useState(false);
@@ -253,7 +254,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
         }
     };
 
-    const isSettingsChanged = selectedVoice !== projectVoice || selectedProvider !== projectProvider || selectedLanguage !== projectLanguage;
+    const isSettingsChanged = selectedVoice !== projectVoice || selectedProvider !== projectProvider || selectedLanguage !== projectLanguage || (selectedProvider === 'elevenlabs' && selectedAudioModel !== (projectAudioModel || 'eleven_flash_v2_5'));
 
     return (
         <div className="w-full px-6 py-8 relative">
@@ -409,6 +410,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             onChange={(e) => {
                                                 const newVal = e.target.value;
                                                 setSelectedAudioModel(newVal);
+                                                onUpdateProjectSettings({ audioModel: newVal });
                                             }}
                                             className="bg-transparent text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none max-w-[100px]"
                                             title="ElevenLabs Model"
@@ -454,7 +456,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             </div>
 
                             <button
-                                onClick={() => onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage)}
+                                onClick={() => onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage, selectedAudioModel)}
                                 disabled={isGeneratingImages || !isSettingsChanged}
                                 className={`px-4 py-2 rounded-lg border text-xs font-semibold transition-all flex items-center gap-2 ${isSettingsChanged ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20' : 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed'}`}
                             >

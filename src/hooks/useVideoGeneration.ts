@@ -229,11 +229,11 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     }
   };
 
-  const regenerateAllAudio = async (voice: string, provider: TTSProvider, language: string) => {
+  const regenerateAllAudio = async (voice: string, provider: TTSProvider, language: string, audioModel?: string) => {
     if (!project || !user) return;
 
     // Update settings in DB
-    const updated = { ...project, voiceName: voice, ttsProvider: provider, language };
+    const updated = { ...project, voiceName: voice, ttsProvider: provider, language, audioModel };
     await saveProject(updated);
     setProject(updated);
 
@@ -402,7 +402,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
         onError("Failed to remove scene");
       }
     },
-    updateProjectSettings: async (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string }) => {
+    updateProjectSettings: async (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string; videoModel?: string; audioModel?: string }) => {
       if (!project) return;
       const updated = { ...project, ...settings };
       setProject(updated); // Optimistic
