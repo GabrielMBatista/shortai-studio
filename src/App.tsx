@@ -87,6 +87,7 @@ const App: React.FC = () => {
     // UI State for Toasts & Modals
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; projectId: string | null }>({ isOpen: false, projectId: null });
+    const [isLoadingProject, setIsLoadingProject] = useState(false);
 
     // Use the Generation Logic Hook
     const {
@@ -237,7 +238,9 @@ const App: React.FC = () => {
     };
 
     const handleOpenProject = async (p: VideoProject) => {
-        showToast(t('common.loading'), 'info');
+        setIsLoadingProject(true);
+        handleSetStep(AppStep.SCRIPTING);
+        
         try {
             const fullProject = await getProject(p.id);
             if (fullProject) {
@@ -248,13 +251,16 @@ const App: React.FC = () => {
                 lastSavedProjectJson.current = JSON.stringify(sanitizedProject);
                 setProject(sanitizedProject);
                 localStorage.setItem('shortsai_last_project_id', fullProject.id); // Persist ID
-                handleSetStep(AppStep.SCRIPTING);
             } else {
                 showToast(t('app.project_load_failed'), 'error');
+                handleSetStep(AppStep.DASHBOARD);
             }
         } catch (e) {
             console.error(e);
             showToast(t('app.project_error'), 'error');
+            handleSetStep(AppStep.DASHBOARD);
+        } finally {
+            setIsLoadingProject(false);
         }
     };
 
@@ -492,49 +498,53 @@ const App: React.FC = () => {
                     />
                 )}
 
-                {(step === AppStep.SCRIPTING || step === AppStep.GENERATING_IMAGES) && project && (
-                    <ScriptView
-                        projectTopic={project.topic}
-                        projectStyle={project.style}
-                        projectVoice={project.voiceName}
-                        projectProvider={project.ttsProvider}
-                        projectLanguage={project.language}
-                        projectAudioModel={project.audioModel}
-                        scenes={Array.isArray(project.scenes) ? project.scenes : []}
-                        generatedTitle={project.generatedTitle}
-                        generatedDescription={project.generatedDescription}
-                        onStartImageGeneration={generateAssets}
-                        onGenerateImagesOnly={generateImagesOnly}
-                        onGenerateAudioOnly={generateAudioOnly}
-                        onRegenerateAudio={(v, p, l, m) => { regenerateAllAudio(v, p, l, m); showToast(t('script.regenerating_audio'), 'info'); }}
-                        onRegenerateSceneImage={regenerateSceneImage}
-                        onRegenerateSceneAudio={regenerateSceneAudio}
-                        onRegenerateSceneVideo={regenerateSceneVideo}
-                        onUpdateScene={updateScene}
-                        isGeneratingImages={isGenerating || step === AppStep.GENERATING_IMAGES}
-                        onCancelGeneration={() => { cancelGeneration(); showToast(t('script.generation_cancelled'), 'info'); }}
-                        canPreview={Array.isArray(project.scenes) && project.scenes.some(s => s.imageStatus === 'completed')}
-                        onPreview={() => handleSetStep(AppStep.PREVIEW)}
-                        includeMusic={project.includeMusic}
-                        musicStatus={project.bgMusicStatus}
-                        musicUrl={project.bgMusicUrl}
-                        musicPrompt={project.bgMusicPrompt}
-                        onRegenerateMusic={regenerateMusic}
-                        // Orchestration Props
-                        isPaused={isPaused}
-                        fatalError={fatalError}
-                        onResume={resumeGeneration}
-                        onSkip={skipCurrentScene}
-                        generationMessage={generationMessage}
-                        onRemoveScene={removeScene}
-                        onAddScene={addScene}
-                        onReorderScenes={reorderScenes}
-                        onExport={handleExport}
-                        onUpdateProjectSettings={updateProjectSettings}
-                        projectId={project.id}
-                        userId={currentUser?.id || ''}
-                        apiKeys={currentUser?.apiKeys || {}}
-                    />
+                {(step === AppStep.SCRIPTING || step === AppStep.GENERATING_IMAGES) && (
+                    isLoadingProject ? (
+                        <Loader fullScreen text={t('app.loading_project')} />
+                    ) : project ? (
+                        <ScriptView
+                            projectTopic={project.topic}
+                            projectStyle={project.style}
+                            projectVoice={project.voiceName}
+                            projectProvider={project.ttsProvider}
+                            projectLanguage={project.language}
+                            projectAudioModel={project.audioModel}
+                            scenes={Array.isArray(project.scenes) ? project.scenes : []}
+                            generatedTitle={project.generatedTitle}
+                            generatedDescription={project.generatedDescription}
+                            onStartImageGeneration={generateAssets}
+                            onGenerateImagesOnly={generateImagesOnly}
+                            onGenerateAudioOnly={generateAudioOnly}
+                            onRegenerateAudio={(v, p, l, m) => { regenerateAllAudio(v, p, l, m); showToast(t('script.regenerating_audio'), 'info'); }}
+                            onRegenerateSceneImage={regenerateSceneImage}
+                            onRegenerateSceneAudio={regenerateSceneAudio}
+                            onRegenerateSceneVideo={regenerateSceneVideo}
+                            onUpdateScene={updateScene}
+                            isGeneratingImages={isGenerating || step === AppStep.GENERATING_IMAGES}
+                            onCancelGeneration={() => { cancelGeneration(); showToast(t('script.generation_cancelled'), 'info'); }}
+                            canPreview={Array.isArray(project.scenes) && project.scenes.some(s => s.imageStatus === 'completed')}
+                            onPreview={() => handleSetStep(AppStep.PREVIEW)}
+                            includeMusic={project.includeMusic}
+                            musicStatus={project.bgMusicStatus}
+                            musicUrl={project.bgMusicUrl}
+                            musicPrompt={project.bgMusicPrompt}
+                            onRegenerateMusic={regenerateMusic}
+                            // Orchestration Props
+                            isPaused={isPaused}
+                            fatalError={fatalError}
+                            onResume={resumeGeneration}
+                            onSkip={skipCurrentScene}
+                            generationMessage={generationMessage}
+                            onRemoveScene={removeScene}
+                            onAddScene={addScene}
+                            onReorderScenes={reorderScenes}
+                            onExport={handleExport}
+                            onUpdateProjectSettings={updateProjectSettings}
+                            projectId={project.id}
+                            userId={currentUser?.id || ''}
+                            apiKeys={currentUser?.apiKeys || {}}
+                        />
+                    ) : null
                 )}
 
                 {step === AppStep.PREVIEW && project && (
