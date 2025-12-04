@@ -69,6 +69,11 @@ export const saveProject = async (project: VideoProject): Promise<VideoProject> 
                 let existing = scene.id ? existingScenes.find(s => s.id === scene.id) : null;
 
                 if (!existing) {
+                    if (scene.id) {
+                        console.warn(`Scene ${scene.id} not found in backend. Skipping recreation.`);
+                        return scene;
+                    }
+
                     if (!backendProjectId) {
                         console.warn("Skipping scene creation: No backendProjectId");
                         return scene;
