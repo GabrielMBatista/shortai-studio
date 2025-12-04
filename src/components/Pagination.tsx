@@ -44,7 +44,11 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`p-2 rounded-lg border transition-colors ${currentPage === 1
+                        ? 'opacity-0 pointer-events-none'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                aria-label="Previous Page"
             >
                 <ChevronLeft className="w-4 h-4" />
             </button>
@@ -52,12 +56,12 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
             {getPageNumbers().map((page, index) => (
                 <React.Fragment key={index}>
                     {page === '...' ? (
-                        <span className="text-slate-600 px-2">...</span>
+                        <span className="text-slate-600 px-2 select-none">...</span>
                     ) : (
                         <button
                             onClick={() => onPageChange(page as number)}
-                            className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
+                            className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${currentPage === page
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 scale-105'
                                 : 'bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
                                 }`}
                         >
@@ -70,7 +74,11 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`p-2 rounded-lg border transition-colors ${currentPage === totalPages
+                        ? 'opacity-0 pointer-events-none'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                aria-label="Next Page"
             >
                 <ChevronRight className="w-4 h-4" />
             </button>

@@ -78,6 +78,11 @@ const App: React.FC = () => {
         totalPages
     } = useProjects(currentUser?.id, selectedFolderId, showArchived);
 
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [selectedFolderId, showArchived, setPage]);
+
     // UI State for Toasts & Modals
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; projectId: string | null }>({ isOpen: false, projectId: null });
