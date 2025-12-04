@@ -33,3 +33,74 @@ export const getSettingsTourSteps = (t: TFunction): Step[] => [
         content: t('tour.settings.save'),
     }
 ];
+
+export const getCreationTourSteps = (t: TFunction): Step[] => [
+    {
+        target: '#topic',
+        content: t('tour.creation.topic'),
+        placement: 'bottom',
+    },
+    {
+        target: '#language',
+        content: t('tour.creation.language'),
+        placement: 'bottom',
+    },
+    {
+        target: '#minDuration',
+        content: t('tour.creation.duration'),
+        placement: 'bottom',
+    },
+    {
+        target: '#style-section',
+        content: t('tour.creation.style'),
+        placement: 'top',
+    },
+    {
+        target: '#character-section',
+        content: t('tour.creation.characters'),
+        placement: 'top',
+    },
+    {
+        target: '#audio-section',
+        content: t('tour.creation.audio'),
+        placement: 'left',
+    },
+    {
+        target: '#btn-generate',
+        content: t('tour.creation.generate'),
+        placement: 'top',
+    }
+];
+
+export const getScriptTourSteps = (t: TFunction): Step[] => [
+    {
+        target: '#script-header-controls',
+        content: t('tour.script.controls'),
+        placement: 'bottom',
+    },
+    {
+        target: '#scene-grid',
+        content: t('tour.script.scenes'),
+        placement: 'top',
+    },
+    {
+        target: '#btn-add-scene',
+        content: t('tour.script.add_scene'),
+        placement: 'left',
+    },
+    {
+        target: '#btn-generate-all',
+        content: t('tour.script.generate_all'),
+        placement: 'bottom',
+    },
+    {
+        target: '#btn-preview',
+        content: t('tour.script.preview'),
+        placement: 'bottom',
+    },
+    {
+        target: '#btn-export',
+        content: t('tour.script.export'),
+        placement: 'bottom',
+    }
+];

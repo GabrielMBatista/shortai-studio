@@ -343,7 +343,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                     </div>
 
                     {/* Right Column: Controls */}
-                    <div className="flex flex-col gap-4 w-full xl:w-auto shrink-0">
+                    <div id="script-header-controls" className="flex flex-col gap-4 w-full xl:w-auto shrink-0">
                         {/* Row 1: Provider & Voice */}
                         <div className="flex flex-col md:flex-row gap-3">
                             <div className="flex items-center bg-slate-950/50 border border-slate-800 rounded-lg p-1.5 gap-1 self-start md:self-auto">
@@ -487,6 +487,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 </button>
                             ) : (
                                 <button
+                                    id="btn-generate-all"
                                     onClick={onStartImageGeneration}
                                     className="flex items-center px-5 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                                 >
@@ -495,6 +496,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             )}
 
                             <button
+                                id="btn-preview"
                                 onClick={onPreview}
                                 disabled={!canPreview}
                                 className={`flex items-center px-5 py-2 rounded-lg text-sm font-bold transition-all active:scale-95 ${canPreview ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'}`}
@@ -504,6 +506,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
 
                             {onExport && (
                                 <button
+                                    id="btn-export"
                                     onClick={onExport}
                                     className="flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-all active:scale-95"
                                 >
@@ -597,7 +600,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                     items={scenes.map(s => s.id || `temp-${s.sceneNumber}`)}
                     strategy={rectSortingStrategy}
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                    <div id="scene-grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {scenes.map((scene, index) => (
                             <SortableSceneCard
                                 key={scene.id || `temp-${scene.sceneNumber}`}
@@ -620,6 +623,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
 
                         {onAddScene && (
                             <button
+                                id="btn-add-scene"
                                 onClick={handleAddScene}
                                 disabled={isAddingScene}
                                 className={`flex flex-col items-center justify-center h-full min-h-[400px] bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-2xl transition-all group ${isAddingScene ? 'cursor-not-allowed opacity-50' : 'hover:bg-slate-800/50 hover:border-indigo-500/50'}`}

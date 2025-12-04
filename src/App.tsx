@@ -11,7 +11,7 @@ import MainLayout from './components/layout/MainLayout';
 import ScreenManager from './components/layout/ScreenManager';
 import { useAuth } from './hooks/useAuth';
 import { useAutosave } from './hooks/useAutosave';
-import { getSettingsTourSteps } from './constants/tourSteps';
+import { getSettingsTourSteps, getCreationTourSteps, getScriptTourSteps } from './constants/tourSteps';
 
 const App: React.FC = () => {
     const { t } = useTranslation();
@@ -108,12 +108,25 @@ const App: React.FC = () => {
         localStorage.setItem('shortsai_last_step', newStep);
     };
 
-    const handleStartTour = (tour: 'settings') => {
+    const handleStartTour = (tour: 'settings' | 'creation' | 'script') => {
         if (tour === 'settings') {
             handleSetStep(AppStep.SETTINGS);
             setTutorialSteps(getSettingsTourSteps(t));
-            setTimeout(() => setRunTutorial(true), 100);
+        } else if (tour === 'creation') {
+            handleSetStep(AppStep.INPUT);
+            setTutorialSteps(getCreationTourSteps(t));
+        } else if (tour === 'script') {
+            // We can only tour script if we are in scripting mode or have a project
+            if (step !== AppStep.SCRIPTING && !project) {
+                showToast(t('tour.script.no_project'), 'error');
+                return;
+            }
+            if (step !== AppStep.SCRIPTING) {
+                handleSetStep(AppStep.SCRIPTING);
+            }
+            setTutorialSteps(getScriptTourSteps(t));
         }
+        setTimeout(() => setRunTutorial(true), 100);
     };
 
     // --- Restoration Logic ---

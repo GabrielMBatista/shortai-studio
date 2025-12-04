@@ -417,7 +417,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     </div>
 
                     {/* STYLE & CHARACTERS */}
-                    <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
+                    <div id="style-section" className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
                         <SectionTitle icon={ImageIcon} title={t('input.visual_style')} subtitle={t('input.visual_style_subtitle')} />
 
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
@@ -444,7 +444,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         </div>
 
                         {/* Character Manager Section */}
-                        <div className="mt-8 border-t border-slate-700/50 pt-6">
+                        <div id="character-section" className="mt-8 border-t border-slate-700/50 pt-6">
                             <div className="flex justify-between items-center mb-4">
                                 <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
                                     <UserIcon className="w-4 h-4 text-indigo-400" /> {t('input.character_consistency')}
@@ -552,7 +552,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
                 {/* RIGHT COLUMN */}
                 <div className="lg:col-span-5 space-y-8">
-                    <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl h-full flex flex-col">
+                    <div id="audio-section" className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl h-full flex flex-col">
                         <SectionTitle icon={Mic} title={t('input.audio_studio')} subtitle={t('input.audio_subtitle')} />
 
                         {/* Provider Selector */}
@@ -647,6 +647,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
                 <div className="lg:col-span-12 mt-4 pb-12">
                     <button
+                        id="btn-generate"
                         type="submit"
                         disabled={!topic.trim() || isBusy}
                         className="group relative w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-size-200 hover:bg-pos-100 text-white text-xl font-bold py-6 rounded-2xl shadow-2xl shadow-indigo-900/40 flex items-center justify-center gap-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 transform"

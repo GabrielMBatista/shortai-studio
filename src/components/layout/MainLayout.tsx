@@ -21,7 +21,7 @@ interface MainLayoutProps {
     runTutorial: boolean;
     tutorialSteps: Step[];
     onFinishTutorial: () => void;
-    onStartTour: (tour: 'settings') => void;
+    onStartTour: (tour: 'settings' | 'creation' | 'script') => void;
     deleteModal: { isOpen: boolean; projectId: string | null };
     onConfirmDelete: () => void;
     onCancelDelete: () => void;
@@ -51,7 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     const { t, i18n } = useTranslation();
     const [isTourMenuOpen, setIsTourMenuOpen] = useState(false);
 
-    const handleStartTourInternal = (tour: 'settings') => {
+    const handleStartTourInternal = (tour: 'settings' | 'creation' | 'script') => {
         setIsTourMenuOpen(false);
         onStartTour(tour);
     };
@@ -114,6 +114,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                 className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                                             >
                                                 {t('nav.settings_tour')}
+                                            </button>
+                                            <button
+                                                onClick={() => handleStartTourInternal('creation')}
+                                                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                            >
+                                                {t('nav.creation_tour')}
+                                            </button>
+                                            <button
+                                                onClick={() => handleStartTourInternal('script')}
+                                                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                            >
+                                                {t('nav.script_tour')}
                                             </button>
                                         </div>
                                     )}
