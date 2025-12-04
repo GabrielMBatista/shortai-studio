@@ -133,7 +133,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [selectedVoice, setSelectedVoice] = useState(projectVoice);
     const [selectedLanguage, setSelectedLanguage] = useState(projectLanguage);
     const [selectedVideoModel, setSelectedVideoModel] = useState(projectVideoModel || 'veo-2.0-generate-001');
-    const [selectedAudioModel, setSelectedAudioModel] = useState(projectAudioModel || 'eleven_flash_v2_5');
+    const [selectedAudioModel, setSelectedAudioModel] = useState(projectAudioModel || 'eleven_turbo_v2_5');
 
     const [previewState, setPreviewState] = useState<{ status: 'idle' | 'loading' | 'playing' }>({ status: 'idle' });
     const [showMusicPrompt, setShowMusicPrompt] = useState(false);

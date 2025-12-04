@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AppStep, User, VideoProject, ReferenceCharacter, TTSProvider, Scene } from '../types';
 import { workflowClient, WorkflowState } from '../services/workflowClient';
 import { generateScript, generateMusicPrompt } from '../services/geminiService';
-import { saveProject, deleteScene } from '../services/storageService';
+import { saveProject, deleteScene, patchScene } from '../services/storageService';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface UseVideoGenerationProps {
@@ -355,9 +355,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
           // It expects sceneNumber to identify the scene if ID isn't passed directly, 
           // but our patchScene implementation looks up by sceneNumber.
           // Let's make sure we pass sceneNumber.
-          await import('../services/storageService').then(m =>
-            m.patchScene(project.id, { sceneNumber: scene.sceneNumber, ...updates })
-          );
+          await patchScene(project.id, { sceneNumber: scene.sceneNumber, ...updates });
         } catch (e) {
           console.error("Failed to update scene", e);
           onError("Failed to save changes.");
