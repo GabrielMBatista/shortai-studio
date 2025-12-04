@@ -64,7 +64,15 @@ const App: React.FC = () => {
     ];
 
     // Data Fetching (TanStack Query)
-    const { projects: userProjects, isLoading: isLoadingProjects, deleteProject, refreshProjects } = useProjects(currentUser?.id);
+    const {
+        projects: userProjects,
+        isLoading: isLoadingProjects,
+        deleteProject,
+        refreshProjects,
+        page,
+        setPage,
+        totalPages
+    } = useProjects(currentUser?.id);
 
     // UI State for Toasts & Modals
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
@@ -449,6 +457,9 @@ const App: React.FC = () => {
                         onRefreshProjects={refreshProjects}
                         isLoading={isLoadingProjects}
                         showToast={showToast}
+                        page={page}
+                        setPage={setPage}
+                        totalPages={totalPages}
                     />
                 )}
 

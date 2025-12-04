@@ -8,6 +8,7 @@ import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSe
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import ProjectCard from './ProjectCard';
 import { exportProjectContext, patchProjectMetadata, getFolders, createFolder, updateFolder, deleteFolder } from '../services/storageService';
+import Pagination from './Pagination';
 
 interface DashboardProps {
     user: User;
@@ -18,9 +19,12 @@ interface DashboardProps {
     onRefreshProjects: () => void;
     isLoading?: boolean;
     showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+    page?: number;
+    setPage?: (page: number) => void;
+    totalPages?: number;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onOpenProject, onDeleteProject, onRefreshProjects, isLoading = false, showToast }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onOpenProject, onDeleteProject, onRefreshProjects, isLoading = false, showToast, page, setPage, totalPages }) => {
     const { t } = useTranslation();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -362,18 +366,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                {filteredProjects.map((project) => (
-                                    <ProjectCard
-                                        key={project.id}
-                                        project={project}
-                                        onOpenProject={onOpenProject}
-                                        onContextMenu={(e, id) => {
-                                            e.preventDefault();
-                                            setContextMenu({ x: e.clientX, y: e.clientY, projectId: id });
-                                        }}
+                            <div className="flex flex-col gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                    {filteredProjects.map((project) => (
+                                        <ProjectCard
+                                            key={project.id}
+                                            project={project}
+                                            onOpenProject={onOpenProject}
+                                            onContextMenu={(e, id) => {
+                                                e.preventDefault();
+                                                setContextMenu({ x: e.clientX, y: e.clientY, projectId: id });
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                                {totalPages && totalPages > 1 && (
+                                    <Pagination
+                                        currentPage={page || 1}
+                                        totalPages={totalPages}
+                                        onPageChange={(p) => setPage && setPage(p)}
                                     />
-                                ))}
+                                )}
                             </div>
                         )}
                     </div>

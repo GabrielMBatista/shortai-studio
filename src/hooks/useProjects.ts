@@ -1,30 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUserProjects, deleteProject } from '../services/storageService';
-import { VideoProject } from '../types';
+import { useState } from 'react';
 
 export const useProjects = (userId?: string) => {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12); // Default to 12 items per page
 
   const projectsQuery = useQuery({
-    queryKey: ['projects', userId],
-    queryFn: () => getUserProjects(userId!),
+    queryKey: ['projects', userId, page, limit],
+    queryFn: () => getUserProjects(userId!, limit, page),
     enabled: !!userId,
-    // Optimization: Keep data fresh for 30s to prevent rapid re-fetches
-    staleTime: 30 * 1000, 
-    // Optimization: Background polling to keep sync active
+    staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new page
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteProject,
     onSuccess: () => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['projects', userId] });
     },
   });
 
+  const data = projectsQuery.data || { projects: [], total: 0 };
+
   return {
-    projects: projectsQuery.data || [],
+    projects: data.projects,
+    total: data.total,
+    totalPages: Math.ceil(data.total / limit),
+    page,
+    setPage,
+    limit,
+    setLimit,
     isLoading: projectsQuery.isLoading,
     isError: projectsQuery.isError,
     deleteProject: deleteMutation.mutateAsync,

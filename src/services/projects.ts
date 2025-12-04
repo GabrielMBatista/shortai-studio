@@ -1,7 +1,6 @@
 import { VideoProject, BackendProjectStatus } from '../types';
 import { apiFetch, API_BASE_URL } from './api';
 import { fromApiProject, toApiProject } from './mappers';
-import { getUserCharacters } from './characters';
 
 export const getProject = async (projectId: string): Promise<VideoProject | null> => {
     try {
@@ -125,32 +124,32 @@ export const patchProjectMetadata = async (projectId: string, updates: { folder_
     }
 };
 
-export const getUserProjects = async (userId: string): Promise<VideoProject[]> => {
+export const getUserProjects = async (userId: string, limit: number = 100, page: number = 1): Promise<{ projects: VideoProject[], total: number }> => {
     try {
-        const data = await apiFetch(`/projects?user_id=${userId}`);
-        const characters = await getUserCharacters(userId);
+        const offset = (page - 1) * limit;
+        const response = await apiFetch(`/projects?user_id=${userId}&limit=${limit}&offset=${offset}`);
 
-        if (Array.isArray(data)) {
-            const mappedProjects = data.map((p: any) => {
-                const mapped = fromApiProject(p);
-                if (mapped.characterIds && mapped.characterIds.length > 0) {
-                    mapped.referenceCharacters = characters
-                        .filter(c => mapped.characterIds!.includes(c.id))
-                        .map(c => ({
-                            id: c.id,
-                            name: c.name,
-                            description: c.description,
-                            images: c.images
-                        }));
-                }
-                return mapped;
-            }).sort((a, b) => b.createdAt - a.createdAt);
+        let data = [];
+        let total = 0;
 
-            return mappedProjects;
+        if (Array.isArray(response)) {
+            data = response;
+            total = response.length;
+        } else if (response.data && Array.isArray(response.data)) {
+            data = response.data;
+            total = response.meta?.total || 0;
         }
-    } catch (e) { }
 
-    return [];
+        const mappedProjects = data.map((p: any) => fromApiProject(p))
+            .sort((a, b) => b.createdAt - a.createdAt);
+
+        return { projects: mappedProjects, total };
+
+    } catch (e) {
+        console.error("Failed to fetch projects", e);
+    }
+
+    return { projects: [], total: 0 };
 };
 
 export const deleteProject = async (projectId: string) => {
