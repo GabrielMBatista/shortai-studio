@@ -18,6 +18,7 @@ interface DashboardProps {
     onDeleteProject: (projectId: string) => void;
     onRefreshProjects: () => void;
     isLoading?: boolean;
+    isFetching?: boolean;
     showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
     page?: number;
     setPage?: (page: number) => void;
@@ -47,6 +48,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     onDeleteProject,
     onRefreshProjects,
     isLoading = false,
+    isFetching = false,
     showToast,
     page,
     setPage,
@@ -117,21 +119,21 @@ const Dashboard: React.FC<DashboardProps> = ({
         setOptimisticUpdates({});
     }, [projects]);
 
-    // Infinite Scroll Logic for Mobile
+    // Infinite Scroll Logic
     const [allProjects, setAllProjects] = useState<VideoProject[]>([]);
     const observerTarget = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (page === 1) {
             setAllProjects(projects);
-        } else if (isMobile) {
+        } else {
             setAllProjects(prev => {
                 const existingIds = new Set(prev.map(p => p.id));
                 const newProjects = projects.filter(p => !existingIds.has(p.id));
                 return [...prev, ...newProjects];
             });
         }
-    }, [projects, page, isMobile]);
+    }, [projects, page]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -143,7 +145,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             { threshold: 0.1 }
         );
 
-        if (observerTarget.current && isMobile) {
+        if (observerTarget.current) {
             observer.observe(observerTarget.current);
         }
 
@@ -152,9 +154,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 observer.unobserve(observerTarget.current);
             }
         };
-    }, [isLoading, page, totalPages, setPage, isMobile]);
+    }, [isLoading, page, totalPages, setPage]);
 
-    const projectsSource = isMobile ? allProjects : projects;
+    const projectsSource = allProjects;
 
     const filteredProjects = useMemo(() => {
         return projectsSource.map(p => ({ ...p, ...optimisticUpdates[p.id] })).filter(p => {
@@ -398,24 +400,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                         {/* Filters Bar */}
                         <div className="flex items-center gap-4 mb-6 bg-slate-800/30 p-2 rounded-lg border border-slate-700/50">
-                            {totalPages && totalPages > 1 && (
-                                <div className="hidden md:flex">
-                                    <Pagination
-                                        currentPage={page || 1}
-                                        totalPages={totalPages}
-                                        onPageChange={(p) => setPage && setPage(p)}
-                                    />
-                                </div>
-                            )}
-
-                            <button
-                                onClick={() => setShowArchived(!showArchived)}
-                                className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition-colors ${showArchived ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white'}`}
-                            >
-                                <Archive className="w-4 h-4" />
-                                {showArchived ? t('dashboard.showing_archived') : t('dashboard.show_archived')}
-                            </button>
-
                             <div className="ml-auto text-sm text-slate-500">
                                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> : t('dashboard.projects_count_plural', { count: filteredProjects.length })}
                             </div>
@@ -457,9 +441,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     ))}
                                 </div>
 
-                                {isMobile && totalPages && page && page < totalPages && (
+                                {totalPages && page && page < totalPages && (
                                     <div ref={observerTarget} className="h-20 flex items-center justify-center w-full">
-                                        {isLoading && <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />}
+                                        {isFetching && <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />}
                                     </div>
                                 )}
                             </div>

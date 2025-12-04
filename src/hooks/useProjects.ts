@@ -13,7 +13,17 @@ export const useProjects = (userId?: string, folderId?: string | null, isArchive
     enabled: !!userId,
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching new page
+    placeholderData: (previousData, previousQuery) => {
+      const oldKey = previousQuery?.queryKey;
+      // Key structure: ['projects', userId, page, limit, folderId, isArchived]
+      // Indices: 0, 1, 2, 3, 4, 5
+
+      // If folderId (4) or isArchived (5) changed, do NOT use placeholder data.
+      if (oldKey && (oldKey[4] !== folderId || oldKey[5] !== isArchived)) {
+        return undefined;
+      }
+      return previousData;
+    },
   });
 
   const deleteMutation = useMutation({
@@ -34,6 +44,7 @@ export const useProjects = (userId?: string, folderId?: string | null, isArchive
     limit,
     setLimit,
     isLoading: projectsQuery.isLoading,
+    isFetching: projectsQuery.isFetching,
     isError: projectsQuery.isError,
     deleteProject: deleteMutation.mutateAsync,
     refreshProjects: projectsQuery.refetch,

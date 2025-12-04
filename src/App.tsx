@@ -71,6 +71,7 @@ const App: React.FC = () => {
     const {
         projects: userProjects,
         isLoading: isLoadingProjects,
+        isFetching: isFetchingProjects,
         deleteProject,
         refreshProjects,
         page,
@@ -465,6 +466,7 @@ const App: React.FC = () => {
                         onDeleteProject={handleRequestDelete}
                         onRefreshProjects={refreshProjects}
                         isLoading={isLoadingProjects}
+                        isFetching={isFetchingProjects}
                         showToast={showToast}
                         page={page}
                         setPage={setPage}
