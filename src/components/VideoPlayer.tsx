@@ -172,7 +172,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
       </button>
 
       {/* Main Player Container */}
-      <div className="relative h-[80vh] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
+      <div className="relative h-[80vh] max-w-full aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
 
         {/* Background Media - Video if available and preferred, otherwise Image */}
         {(activeScene.mediaType === 'video' || (!activeScene.mediaType && activeScene.videoUrl)) && activeScene.videoUrl && activeScene.videoStatus === 'completed' ? (

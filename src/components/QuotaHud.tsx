@@ -91,7 +91,7 @@ const QuotaHud: React.FC<QuotaHudProps> = ({ project }) => {
     if (!quota) return null;
 
     return (
-        <div className={`fixed bottom-4 left-4 z-50 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl text-xs font-sans text-slate-300 shadow-2xl transition-all duration-300 pointer-events-auto ${isMinimized ? 'w-auto p-2' : 'w-64 p-4'}`}>
+        <div className={`fixed bottom-4 left-4 z-50 bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl text-xs font-sans text-slate-300 shadow-2xl transition-all duration-300 pointer-events-auto max-w-[calc(100vw-2rem)] ${isMinimized ? 'w-auto p-2' : 'w-64 p-4'}`}>
             <div
                 className="flex items-center justify-between gap-2 cursor-pointer group mb-2"
                 onClick={() => setIsMinimized(!isMinimized)}

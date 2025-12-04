@@ -359,7 +359,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 </button>
                             </div>
 
-                            <div className="flex-1 bg-slate-950/50 border border-slate-800 rounded-lg px-3 flex items-center gap-3 min-w-[280px]">
+                            <div className="flex-1 bg-slate-950/50 border border-slate-800 rounded-lg px-3 flex items-center gap-3 w-full sm:w-auto sm:min-w-[280px]">
                                 <div className="flex items-center gap-2 text-slate-400 border-r border-slate-800 pr-3 mr-1">
                                     <Globe className="w-3.5 h-3.5" />
                                     <select
