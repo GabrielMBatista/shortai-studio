@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen } from 'lucide-react';
+import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen, Loader2 } from 'lucide-react';
 import { Folder as FolderType } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -15,6 +15,7 @@ interface FolderListProps {
     onToggleCollapse: () => void;
     className?: string;
     isLoading?: boolean;
+    updatingFolderId?: string | null;
 }
 
 const FolderList: React.FC<FolderListProps> = ({
@@ -27,7 +28,8 @@ const FolderList: React.FC<FolderListProps> = ({
     isCollapsed,
     onToggleCollapse,
     className,
-    isLoading
+    isLoading,
+    updatingFolderId
 }) => {
     const { t } = useTranslation();
     const [isCreating, setIsCreating] = useState(false);
@@ -175,7 +177,9 @@ const FolderList: React.FC<FolderListProps> = ({
                                             {!isCollapsed ? (
                                                 <>
                                                     <span className="truncate">{folder.name}</span>
-                                                    {folder._count?.projects ? (
+                                                    {updatingFolderId === folder.id ? (
+                                                        <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+                                                    ) : folder._count?.projects ? (
                                                         <span className="text-xs text-slate-500">({folder._count.projects})</span>
                                                     ) : null}
                                                 </>

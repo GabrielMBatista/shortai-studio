@@ -140,9 +140,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
         }
     };
 
+    const [updatingFolderId, setUpdatingFolderId] = useState<string | null>(null);
+
     const handleMoveToFolder = async (projectId: string, folderId: string | null) => {
         setOptimisticUpdates(prev => ({ ...prev, [projectId]: { ...prev[projectId], folderId } }));
         setContextMenu(null);
+        if (folderId) setUpdatingFolderId(folderId);
 
         try {
             await patchProjectMetadata(projectId, { folder_id: folderId });
@@ -158,6 +161,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                 return next;
             });
             if (showToast) showToast(t('common.error'), 'error');
+        } finally {
+            setUpdatingFolderId(null);
         }
     };
 
@@ -218,6 +223,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                     isCollapsed={isSidebarCollapsed}
                     onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     isLoading={isLoadingFolders}
+                    updatingFolderId={updatingFolderId}
                 />
 
                 {/* Main Content */}

@@ -19,6 +19,7 @@
         "delete": "Excluir",
         "delete_confirm": "Excluir esta pasta? Os projetos serão movidos para \"Todos os Projetos\".",
         "move_to_folder": "Mover para Pasta",
+        "move_success": "Projeto movido com sucesso!",
         "root_folder": "Todos os Projetos (Raiz)",
         "home": "Home",
         "archive": "Arquivar",
