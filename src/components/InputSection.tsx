@@ -290,7 +290,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     const isBusy = isLoading || isSubmitting;
 
     return (
-        <div className="max-w-6xl mx-auto w-full px-4 py-8 flex flex-col items-center">
+        <div className="max-w-6xl w-full px-6 py-8 flex flex-col items-center">
 
             <ConfirmModal
                 isOpen={deleteCharModal.isOpen}

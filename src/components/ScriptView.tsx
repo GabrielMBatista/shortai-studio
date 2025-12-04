@@ -255,7 +255,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const isSettingsChanged = selectedVoice !== projectVoice || selectedProvider !== projectProvider || selectedLanguage !== projectLanguage;
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-8 relative">
+        <div className="w-full px-6 py-8 relative">
             {isPaused && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in-up">
                     <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6">
@@ -557,7 +557,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                     items={scenes.map(s => s.id || `temp-${s.sceneNumber}`)}
                     strategy={rectSortingStrategy}
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {scenes.map((scene, index) => (
                             <SortableSceneCard
                                 key={scene.id || `temp-${scene.sceneNumber}`}

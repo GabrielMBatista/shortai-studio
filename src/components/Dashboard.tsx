@@ -253,7 +253,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                         </div>
                     )}
 
-                    <div className="max-w-7xl mx-auto px-4 py-8">
+                    <div className="w-full px-6 py-8">
                         {/* Header Section */}
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-in-up">
                             <div>
@@ -332,7 +332,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                                 {filteredProjects.map((project) => (
                                     <ProjectCard
                                         key={project.id}
