@@ -65,10 +65,12 @@ const SubtitleOverlay: React.FC<SubtitleOverlayProps> = ({ text, duration, curre
               key={absoluteIndex}
               className="transition-colors duration-200"
               style={{
-                color: isActive ? SUBTITLE_STYLES.activeColor : 'rgba(255, 255, 255, 0.8)',
-                opacity: isActive ? 1 : 0.1,
-                transform: 'scale(1)', // Explicitly no scale to prevent layout shifts
-                textShadow: isActive ? `0 0 10px ${SUBTITLE_STYLES.activeColor}` : 'none' // Glow instead of scale
+                color: isActive ? SUBTITLE_STYLES.activeColor : 'rgba(255, 255, 255, 0.85)',
+                opacity: isActive ? 1 : 0.6, // Increased opacity for better reading flow
+                transform: isActive ? 'scale(1.1)' : 'scale(1)', // Subtle pop for active word
+                textShadow: isActive ? `0 0 15px ${SUBTITLE_STYLES.activeColor}, 0 2px 4px rgba(0,0,0,0.8)` : `0 2px 4px rgba(0,0,0,0.8)`,
+                display: 'inline-block', // Required for transform
+                margin: '0 4px' // Consistent spacing
               }}
             >
               {t.word}
@@ -76,7 +78,7 @@ const SubtitleOverlay: React.FC<SubtitleOverlayProps> = ({ text, duration, curre
           );
         })}
       </div>
-    </div>
+    </div >
   );
 };
 
