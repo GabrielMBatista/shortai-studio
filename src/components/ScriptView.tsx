@@ -289,7 +289,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
             )}
 
             <header className="mb-8 bg-slate-900/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
-                <div className="flex flex-col lg:flex-row gap-6 items-start justify-between">
+                <div className="flex flex-col xl:flex-row gap-6 items-start justify-between">
                     {/* Left Column: Title & Metadata */}
                     <div className="flex-1 min-w-0 space-y-4">
                         <div className="flex flex-wrap items-center gap-2">
