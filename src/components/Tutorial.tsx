@@ -69,6 +69,8 @@ const Tutorial: React.FC<TutorialProps> = ({ run, steps, onFinish }) => {
             fontWeight: 600,
             padding: '0.5rem 1rem',
             outline: 'none',
+            border: '1px solid #475569', // Added border
+            marginRight: 'auto', // Push to left if needed, or just keep it
         },
     };
 

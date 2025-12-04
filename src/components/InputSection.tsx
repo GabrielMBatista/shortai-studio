@@ -517,8 +517,8 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                 </div>
 
                                 {isCharLoading ? (
-                                    <div className="flex items-center px-4 h-20">
-                                        <Loader size="sm" text="Syncing..." />
+                                    <div className="flex items-center px-4 h-20 justify-center">
+                                        <Loader size="sm" />
                                     </div>
                                 ) : (
                                     characters.map(c => {

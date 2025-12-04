@@ -434,7 +434,7 @@ const App: React.FC = () => {
                 </div>
             </nav>
 
-            <main className="flex-grow flex flex-col relative">
+            <main className="flex-grow flex flex-col relative overflow-y-auto overflow-x-hidden">
                 {step === AppStep.ADMIN && currentUser && currentUser.role === 'ADMIN' && (
                     <AdminDashboard currentUser={currentUser} />
                 )}

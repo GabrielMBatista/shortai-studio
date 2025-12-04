@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, VideoProject, Folder as FolderType } from '../types';
-import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Download, Filter, MoreVertical, FolderInput, Folder, Menu, X } from 'lucide-react';
+import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Download, Filter, MoreVertical, FolderInput, Folder, Menu, X, Loader2 } from 'lucide-react';
 import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
@@ -307,7 +307,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                             </button>
 
                             <div className="ml-auto text-sm text-slate-500">
-                                {isLoading ? t('dashboard.syncing') : t('dashboard.projects_count_plural', { count: filteredProjects.length })}
+                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> : t('dashboard.projects_count_plural', { count: filteredProjects.length })}
                             </div>
                         </div>
 
