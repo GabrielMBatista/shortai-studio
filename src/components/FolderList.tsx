@@ -234,7 +234,10 @@ interface DroppableFolderProps {
 const DroppableFolder: React.FC<DroppableFolderProps> = ({ id, children, className }) => {
     const { setNodeRef, isOver } = useDroppable({ id });
     return (
-        <div ref={setNodeRef} className={`${className || ''} ${isOver ? 'bg-indigo-500/30 ring-2 ring-indigo-500 ring-inset' : ''}`}>
+        <div
+            ref={setNodeRef}
+            className={`${className || ''} transition-all duration-200 ${isOver ? 'bg-indigo-500/40 ring-2 ring-indigo-400 ring-inset scale-[1.02] shadow-lg shadow-indigo-500/20 z-10' : ''}`}
+        >
             {children}
         </div>
     );

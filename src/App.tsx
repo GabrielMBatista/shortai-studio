@@ -321,7 +321,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#0f172a] text-slate-50 flex flex-col font-sans">
+        <div className="h-screen overflow-hidden bg-[#0f172a] text-slate-50 flex flex-col font-sans">
             {/* Notifications */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 

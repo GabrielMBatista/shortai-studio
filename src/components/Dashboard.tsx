@@ -4,7 +4,7 @@ import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Do
 import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, pointerWithin } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import ProjectCard from './ProjectCard';
 import { exportProjectContext, patchProjectMetadata, getFolders, createFolder, updateFolder, deleteFolder } from '../services/storageService';
@@ -166,7 +166,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
     const activeProject = useMemo(() => projects.find(p => p.id === activeId), [projects, activeId]);
 
     return (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex h-[calc(100vh-64px)]" onClick={() => setContextMenu(null)}>
                 {/* Mobile Menu Overlay */}
                 {isMobileMenuOpen && (
