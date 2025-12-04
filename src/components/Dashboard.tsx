@@ -156,7 +156,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         };
     }, [isLoading, page, totalPages, setPage]);
 
-    const projectsSource = allProjects;
+    const projectsSource = page === 1 ? projects : allProjects;
 
     const filteredProjects = useMemo(() => {
         return projectsSource.map(p => ({ ...p, ...optimisticUpdates[p.id] })).filter(p => {
@@ -280,7 +280,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
         <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="flex h-[calc(100vh-64px)]" onClick={() => setContextMenu(null)}>
+            <div className="flex min-h-[calc(100vh-64px)]" onClick={() => setContextMenu(null)}>
                 {/* Mobile Menu Overlay */}
                 {isMobileMenuOpen && (
                     <div
@@ -292,7 +292,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* Sidebar - Mobile Drawer & Desktop Static */}
                 <FolderList
                     className={`
-                        fixed md:relative z-50 h-full
+                        fixed md:sticky md:top-16 z-50 h-[calc(100vh-64px)]
                         transition-transform duration-300 ease-in-out
                         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                     `}
@@ -312,7 +312,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
 
                 {/* Main Content */}
-                <div className="flex-1 overflow-y-auto bg-[#0f172a] relative flex flex-col">
+                <div className="flex-1 bg-[#0f172a] relative flex flex-col">
                     {/* Mobile Header */}
                     <div className="md:hidden flex items-center p-4 border-b border-slate-800 bg-slate-900/50 flex-shrink-0">
                         <button
@@ -400,6 +400,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                         {/* Filters Bar */}
                         <div className="flex items-center gap-4 mb-6 bg-slate-800/30 p-2 rounded-lg border border-slate-700/50">
+                            <button
+                                onClick={() => setShowArchived(!showArchived)}
+                                className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition-colors ${showArchived ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                <Archive className="w-4 h-4" />
+                                {showArchived ? t('dashboard.showing_archived') : t('dashboard.show_archived')}
+                            </button>
+
                             <div className="ml-auto text-sm text-slate-500">
                                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> : t('dashboard.projects_count_plural', { count: filteredProjects.length })}
                             </div>
