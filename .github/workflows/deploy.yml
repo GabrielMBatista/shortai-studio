@@ -8,7 +8,32 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to VPS
+      - name: Deploy to VPS (Attempt 1)
+        id: deploy_1
+        uses: appleboy/ssh-action@v1.0.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            # Navigate to the Studio project folder
+            cd ${{ secrets.VPS_STUDIO_PATH }}
+            
+            # Pull latest changes
+            git pull origin main || git pull origin master
+            
+            # Restart Studio service using its own compose file
+            # docker rm -f shortsai-studio || true
+            docker-compose up -d --build studio
+
+      - name: Wait for retry
+        if: steps.deploy_1.outcome == 'failure'
+        run: sleep 10
+
+      - name: Deploy to VPS (Attempt 2)
+        if: steps.deploy_1.outcome == 'failure'
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}

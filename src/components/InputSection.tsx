@@ -565,24 +565,44 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         {ttsProvider === 'elevenlabs' && (
                             <div className="mb-6 animate-fade-in-up">
                                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Model</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAudioModel('eleven_turbo_v2_5')}
+                                        disabled={isBusy}
+                                        className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_turbo_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                    >
+                                        <div>
+                                            <div className="font-bold text-sm mb-0.5">Turbo v2.5</div>
+                                            <div className="text-[10px] opacity-70">Melhor custo-benefício</div>
+                                        </div>
+                                        {audioModel === 'eleven_turbo_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+                                    </button>
+
                                     <button
                                         type="button"
                                         onClick={() => setAudioModel('eleven_multilingual_v2')}
                                         disabled={isBusy}
-                                        className={`p-3 rounded-xl border text-left transition-all ${audioModel === 'eleven_multilingual_v2' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                        className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_multilingual_v2' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
                                     >
-                                        <div className="font-bold text-sm mb-0.5">Multilingual v2</div>
-                                        <div className="text-[10px] opacity-70">High Quality</div>
+                                        <div>
+                                            <div className="font-bold text-sm mb-0.5">Multilingual v2</div>
+                                            <div className="text-[10px] opacity-70">Modelo mais usado</div>
+                                        </div>
+                                        {audioModel === 'eleven_multilingual_v2' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                                     </button>
+
                                     <button
                                         type="button"
                                         onClick={() => setAudioModel('eleven_flash_v2_5')}
                                         disabled={isBusy}
-                                        className={`p-3 rounded-xl border text-left transition-all ${audioModel === 'eleven_flash_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                        className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_flash_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
                                     >
-                                        <div className="font-bold text-sm mb-0.5">Flash v2.5</div>
-                                        <div className="text-[10px] opacity-70">Fast & Cheap</div>
+                                        <div>
+                                            <div className="font-bold text-sm mb-0.5">Flash v2.5</div>
+                                            <div className="text-[10px] opacity-70">Pior custo-benefício (Rápido)</div>
+                                        </div>
+                                        {audioModel === 'eleven_flash_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                                     </button>
                                 </div>
                             </div>
