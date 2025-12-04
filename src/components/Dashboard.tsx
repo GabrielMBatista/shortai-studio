@@ -24,8 +24,20 @@ interface DashboardProps {
     totalPages?: number;
 }
 
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+    return isMobile;
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onOpenProject, onDeleteProject, onRefreshProjects, isLoading = false, showToast, page, setPage, totalPages }) => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -48,7 +60,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
     };
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
     const [showArchived, setShowArchived] = useState(false);
-    const [filterTag, setFilterTag] = useState('');
+    // const [filterTag, setFilterTag] = useState(''); // Removed as per request
     const [folders, setFolders] = useState<FolderType[]>([]);
     const [isLoadingFolders, setIsLoadingFolders] = useState(true);
 
@@ -84,8 +96,51 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
         setOptimisticUpdates({});
     }, [projects]);
 
+    useEffect(() => {
+        setOptimisticUpdates({});
+    }, [projects]);
+
+    // Infinite Scroll Logic for Mobile
+    const [allProjects, setAllProjects] = useState<VideoProject[]>([]);
+    const observerTarget = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (page === 1) {
+            setAllProjects(projects);
+        } else if (isMobile) {
+            setAllProjects(prev => {
+                const existingIds = new Set(prev.map(p => p.id));
+                const newProjects = projects.filter(p => !existingIds.has(p.id));
+                return [...prev, ...newProjects];
+            });
+        }
+    }, [projects, page, isMobile]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && !isLoading && page && totalPages && page < totalPages) {
+                    setPage && setPage(page + 1);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (observerTarget.current && isMobile) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => {
+            if (observerTarget.current) {
+                observer.unobserve(observerTarget.current);
+            }
+        };
+    }, [isLoading, page, totalPages, setPage, isMobile]);
+
+    const projectsSource = isMobile ? allProjects : projects;
+
     const filteredProjects = useMemo(() => {
-        return projects.map(p => ({ ...p, ...optimisticUpdates[p.id] })).filter(p => {
+        return projectsSource.map(p => ({ ...p, ...optimisticUpdates[p.id] })).filter(p => {
             if (showArchived) {
                 return p.isArchived;
             }
@@ -98,15 +153,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                 if (p.folderId) return false;
             }
 
-            if (filterTag && !p.tags?.some(t => t.toLowerCase().includes(filterTag.toLowerCase()))) return false;
+            // if (filterTag && !p.tags?.some(t => t.toLowerCase().includes(filterTag.toLowerCase()))) return false;
 
             return true;
         });
-    }, [projects, selectedFolderId, showArchived, filterTag, optimisticUpdates]);
+    }, [projectsSource, selectedFolderId, showArchived, optimisticUpdates]);
 
     const handleExportContext = async () => {
         try {
-            const data = await exportProjectContext(selectedFolderId, filterTag || undefined);
+            const data = await exportProjectContext(selectedFolderId, undefined);
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -321,23 +376,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                         <div className="flex items-center gap-4 mb-6 bg-slate-800/30 p-2 rounded-lg border border-slate-700/50">
                             <div className="flex items-center gap-2 text-slate-400 px-2">
                                 <Filter className="w-4 h-4" />
-                                <span className="text-sm font-medium">Filters:</span>
+                                <span className="text-sm font-medium">{t('dashboard.filters')}</span>
                             </div>
 
-                            <input
-                                type="text"
-                                placeholder="Filter by tag..."
-                                value={filterTag}
-                                onChange={(e) => setFilterTag(e.target.value)}
-                                className="bg-slate-900 border border-slate-700 rounded px-3 py-1 text-sm text-white focus:outline-none focus:border-indigo-500"
-                            />
+
 
                             <button
                                 onClick={() => setShowArchived(!showArchived)}
                                 className={`flex items-center gap-2 px-3 py-1 rounded text-sm transition-colors ${showArchived ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white'}`}
                             >
                                 <Archive className="w-4 h-4" />
-                                {showArchived ? 'Showing Archived' : 'Show Archived'}
+                                {showArchived ? t('dashboard.showing_archived') : t('dashboard.show_archived')}
                             </button>
 
                             <div className="ml-auto text-sm text-slate-500">
@@ -381,11 +430,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, projects, onNewProject, onO
                                     ))}
                                 </div>
                                 {totalPages && totalPages > 1 && (
-                                    <Pagination
-                                        currentPage={page || 1}
-                                        totalPages={totalPages}
-                                        onPageChange={(p) => setPage && setPage(p)}
-                                    />
+                                    <div className="hidden md:flex justify-center">
+                                        <Pagination
+                                            currentPage={page || 1}
+                                            totalPages={totalPages}
+                                            onPageChange={(p) => setPage && setPage(p)}
+                                        />
+                                    </div>
+                                )}
+                                {isMobile && totalPages && page && page < totalPages && (
+                                    <div ref={observerTarget} className="h-20 flex items-center justify-center w-full">
+                                        {isLoading && <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />}
+                                    </div>
                                 )}
                             </div>
                         )}

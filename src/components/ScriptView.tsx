@@ -268,7 +268,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
         } catch (e: any) {
             console.error("Preview failed", e);
             setPreviewState({ status: 'idle' });
-            alert(e.message || "Failed to generate preview audio.");
+            alert(e.message || t('script.preview_failed'));
         }
     };
 
@@ -466,9 +466,9 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                     disabled={isGeneratingImages}
                                     className="bg-transparent text-slate-300 text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none pr-4"
                                 >
-                                    <option value="veo-2.0-generate-001" className="bg-slate-900">Veo 2 (High Quality)</option>
-                                    <option value="veo-3.0-generate-preview" className="bg-slate-900">Veo 3 (Preview)</option>
-                                    <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">Veo 3 Fast (Preview)</option>
+                                    <option value="veo-2.0-generate-001" className="bg-slate-900">{t('script.veo_high_quality')}</option>
+                                    <option value="veo-3.0-generate-preview" className="bg-slate-900">{t('script.veo_preview')}</option>
+                                    <option value="veo-3.0-fast-generate-preview" className="bg-slate-900">{t('script.veo_fast')}</option>
                                 </select>
                                 <ChevronDown className="w-3 h-3 text-slate-500 absolute right-2 pointer-events-none group-hover:text-white transition-colors" />
                             </div>

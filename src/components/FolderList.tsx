@@ -116,7 +116,7 @@ const FolderList: React.FC<FolderListProps> = ({
                     ) : (
                         <Folder className="w-4 h-4 flex-shrink-0" />
                     )}
-                    {!isCollapsed ? t('folders.home') : <span className="text-[10px] font-bold">ALL</span>}
+                    {!isCollapsed ? t('folders.home') : <span className="text-[10px] font-bold">{t('folders.all')}</span>}
                 </button>
             </DroppableFolder>
 

@@ -3,13 +3,22 @@
         "name": "ShortsAI",
         "loading": "Loading Session...",
         "logout": "Logged out successfully.",
-        "welcome": "Welcome back, {{name}}!"
+        "welcome": "Welcome back, {{name}}!",
+        "untitled_project": "Untitled Project",
+        "login_failed": "Login failed. Please try again.",
+        "project_load_failed": "Failed to load project details.",
+        "project_error": "Error loading project.",
+        "delete_failed": "Failed to delete project.",
+        "signing_out": "Signing out..."
     },
     "nav": {
         "dashboard": "Dashboard",
         "admin": "Admin",
         "settings": "Settings",
-        "logout": "Logout"
+        "logout": "Logout",
+        "tours": "Interactive Tours",
+        "tours_title": "Tours & Help",
+        "settings_tour": "Settings & API Keys"
     },
     "folders": {
         "title": "Folders",
@@ -22,7 +31,8 @@
         "root_folder": "All Projects (Root)",
         "home": "Home",
         "archive": "Archive",
-        "unarchive": "Unarchive"
+        "unarchive": "Unarchive",
+        "all": "ALL"
     },
     "dashboard": {
         "title": "Your Projects",
@@ -45,7 +55,11 @@
         "no_projects_desc": "Your studio is empty. Start your first automated workflow to generate scripts, images, and voiceovers in seconds.",
         "start_project": "Start your first project",
         "export_context": "Export Context",
-        "progress": "Progress"
+        "progress": "Progress",
+        "filters": "Filters:",
+        "filter_placeholder": "Filter by tag...",
+        "showing_archived": "Showing Archived",
+        "show_archived": "Show Archived"
     },
     "input": {
         "title": "Create Your Story",
@@ -77,7 +91,25 @@
         "generating": "Generating Script & Scenes...",
         "processing": "Processing...",
         "daily_limit": "Daily Limit: 1 Video for Free Plan",
-        "chars_count": "{{count}} chars"
+        "chars_count": "{{count}} chars",
+        "voice_not_found": "Voice not found",
+        "no_preview": "No preview",
+        "char_described": "Character described by AI",
+        "analysis_failed": "Failed to analyze image",
+        "char_saved": "Character saved successfully",
+        "char_save_failed": "Failed to save character",
+        "char_deleted": "Character deleted",
+        "delete_char_title": "Delete Character?",
+        "delete_char_message": "This character will be removed from your library. This action cannot be undone.",
+        "delete_char_confirm": "Delete Character",
+        "to": "to",
+        "auto_describe_title": "Auto-Describe with AI",
+        "delete_char_tooltip": "Delete Character",
+        "model_label": "Model",
+        "model_turbo_desc": "Best value",
+        "model_multilingual_desc": "Most used model",
+        "model_flash_desc": "Worst value (Fast)",
+        "footer_desc": "Generates a detailed storyboard, script, and audio assets."
     },
     "script": {
         "metadata_title": "YouTube Shorts Metadata",
@@ -113,7 +145,10 @@
         "resume": "Resume",
         "veo_high_quality": "Veo 2.0 (High Quality)",
         "veo_preview": "Veo 3.0 (Preview)",
-        "veo_fast": "Veo 3.0 (Fast)"
+        "veo_fast": "Veo 3.0 (Fast)",
+        "regenerating_audio": "Regenerating audio...",
+        "generation_cancelled": "Generation cancelled.",
+        "preview_failed": "Failed to generate preview audio."
     },
     "scene": {
         "regenerate_title": "Regenerate {{type}}?",
@@ -183,7 +218,9 @@
         "groq_help": "Used for fast TTS via PlayAI models.",
         "suno_label": "Suno API Key (Optional)",
         "suno_help": "Uses SunoAPI.org structure.",
-        "security_note": "Keys are encrypted client-side and stored securely. They are only decrypted for API calls."
+        "security_note": "Keys are encrypted client-side and stored securely. They are only decrypted for API calls.",
+        "updated": "Settings updated!",
+        "get_key": "Get Key"
     },
     "auth": {
         "preparing_login": "Preparing login...",
@@ -194,5 +231,15 @@
         "continue_admin": "Continue as Admin User",
         "backend_connected": "Connected to Backend • Admin Mode",
         "secure_login": "Secure Login via Google"
+    },
+    "tour": {
+        "settings": {
+            "welcome": "Welcome to settings! Here you can manage your profile and API keys.",
+            "gemini": "Google Gemini key is required to generate scripts and video intelligence.",
+            "gemini_link": "Get key from Google AI Studio",
+            "elevenlabs": "Optional: Add your ElevenLabs key for ultra-realistic voiceovers.",
+            "elevenlabs_link": "Get key from ElevenLabs",
+            "save": "Don't forget to save your changes here!"
+        }
     }
 }

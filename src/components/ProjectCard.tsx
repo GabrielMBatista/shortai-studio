@@ -33,7 +33,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
     if (typeof displayTitle === 'string' && (displayTitle.trim().startsWith('{') || displayTitle.trim().startsWith('['))) {
         try {
             const p = JSON.parse(displayTitle);
-            displayTitle = p.projectTitle || p.videoTitle || p.title || p.scriptTitle || "Untitled Project";
+            displayTitle = p.projectTitle || p.videoTitle || p.title || p.scriptTitle || t('app.untitled_project');
         } catch (e) { }
     }
 

@@ -34,16 +34,16 @@ const App: React.FC = () => {
     const settingsTourSteps: Step[] = [
         {
             target: 'body',
-            content: 'Bem-vindo às configurações! Aqui você pode gerenciar seu perfil e chaves de API.',
+            content: t('tour.settings.welcome'),
             placement: 'center',
         },
         {
             target: '#geminiKey',
             content: (
                 <div>
-                    A chave do Google Gemini é obrigatória para gerar roteiros e inteligência do vídeo.
+                    {t('tour.settings.gemini')}
                     <br />
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline mt-2 block">Obter chave no Google AI Studio</a>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline mt-2 block">{t('tour.settings.gemini_link')}</a>
                 </div>
             ),
         },
@@ -51,15 +51,15 @@ const App: React.FC = () => {
             target: '#elevenLabsKey',
             content: (
                 <div>
-                    Opcional: Adicione sua chave ElevenLabs para narrações ultra-realistas.
+                    {t('tour.settings.elevenlabs')}
                     <br />
-                    <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline mt-2 block">Obter chave na ElevenLabs</a>
+                    <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline mt-2 block">{t('tour.settings.elevenlabs_link')}</a>
                 </div>
             ),
         },
         {
             target: 'button[type="submit"]',
-            content: 'Não esqueça de salvar suas alterações aqui!',
+            content: t('tour.settings.save'),
         }
     ];
 
@@ -122,9 +122,9 @@ const App: React.FC = () => {
         if (typeof title === 'string' && (title.trim().startsWith('{') || title.trim().startsWith('['))) {
             try {
                 const json = JSON.parse(title);
-                title = json.projectTitle || json.videoTitle || json.title || json.scriptTitle || "Untitled Project";
+                title = json.projectTitle || json.videoTitle || json.title || json.scriptTitle || t('app.untitled_project');
             } catch (e) {
-                title = "Untitled Project";
+                title = t('app.untitled_project');
             }
         }
         return title;
@@ -201,7 +201,7 @@ const App: React.FC = () => {
             handleSetStep(AppStep.DASHBOARD);
             showToast(t('app.welcome', { name: loggedUser.name.split(' ')[0] }), 'success');
         } catch (err) {
-            showToast("Failed to login. Please try again.", 'error');
+            showToast(t('app.login_failed'), 'error');
         }
     };
 
@@ -240,11 +240,11 @@ const App: React.FC = () => {
                 localStorage.setItem('shortsai_last_project_id', fullProject.id); // Persist ID
                 handleSetStep(AppStep.SCRIPTING);
             } else {
-                showToast("Failed to load project details.", 'error');
+                showToast(t('app.project_load_failed'), 'error');
             }
         } catch (e) {
             console.error(e);
-            showToast("Error loading project.", 'error');
+            showToast(t('app.project_error'), 'error');
         }
     };
 
@@ -263,7 +263,7 @@ const App: React.FC = () => {
             await deleteProject(id);
             showToast(t('dashboard.delete_success'), 'success');
         } catch (e) {
-            showToast("Failed to delete project.", 'error');
+            showToast(t('app.delete_failed'), 'error');
         }
     };
 
@@ -334,7 +334,7 @@ const App: React.FC = () => {
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             {/* Global Loader */}
-            {isLoggingOut && <Loader fullScreen text="Signing out..." />}
+            {isLoggingOut && <Loader fullScreen text={t('app.signing_out')} />}
 
             {/* Global Tutorial */}
             <Tutorial run={runTutorial} steps={tutorialSteps} onFinish={() => setRunTutorial(false)} />
@@ -379,13 +379,13 @@ const App: React.FC = () => {
                                     {isTourMenuOpen && (
                                         <div className="absolute right-0 top-full mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
                                             <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                                Interactive Tours
+                                                {t('nav.tours')}
                                             </div>
                                             <button
                                                 onClick={() => handleStartTour('settings')}
                                                 className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                                             >
-                                                Settings & API Keys
+                                                {t('nav.settings_tour')}
                                             </button>
                                         </div>
                                     )}
@@ -464,7 +464,7 @@ const App: React.FC = () => {
                 )}
 
                 {step === AppStep.SETTINGS && currentUser && (
-                    <SettingsScreen user={currentUser} onUpdateUser={(u) => { setCurrentUser(u); showToast("Settings updated!", 'success'); }} />
+                    <SettingsScreen user={currentUser} onUpdateUser={(u) => { setCurrentUser(u); showToast(t('settings.updated'), 'success'); }} />
                 )}
 
                 {step === AppStep.INPUT && (
@@ -491,13 +491,13 @@ const App: React.FC = () => {
                         onStartImageGeneration={generateAssets}
                         onGenerateImagesOnly={generateImagesOnly}
                         onGenerateAudioOnly={generateAudioOnly}
-                        onRegenerateAudio={(v, p, l, m) => { regenerateAllAudio(v, p, l, m); showToast("Regenerating audio...", 'info'); }}
+                        onRegenerateAudio={(v, p, l, m) => { regenerateAllAudio(v, p, l, m); showToast(t('script.regenerating_audio'), 'info'); }}
                         onRegenerateSceneImage={regenerateSceneImage}
                         onRegenerateSceneAudio={regenerateSceneAudio}
                         onRegenerateSceneVideo={regenerateSceneVideo}
                         onUpdateScene={updateScene}
                         isGeneratingImages={isGenerating || step === AppStep.GENERATING_IMAGES}
-                        onCancelGeneration={() => { cancelGeneration(); showToast("Generation cancelled.", 'info'); }}
+                        onCancelGeneration={() => { cancelGeneration(); showToast(t('script.generation_cancelled'), 'info'); }}
                         canPreview={Array.isArray(project.scenes) && project.scenes.some(s => s.imageStatus === 'completed')}
                         onPreview={() => handleSetStep(AppStep.PREVIEW)}
                         includeMusic={project.includeMusic}

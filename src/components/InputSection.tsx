@@ -10,6 +10,7 @@ import ConfirmModal from './ConfirmModal';
 import { useTranslation } from 'react-i18next';
 
 const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provider: TTSProvider, voices: Voice[] }) => {
+    const { t } = useTranslation();
     const [status, setStatus] = useState<'idle' | 'loading' | 'playing'>('idle');
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -26,7 +27,7 @@ const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provid
         setStatus('loading');
         try {
             const vObj = voices.find(v => v.name === voice);
-            if (!vObj) throw new Error("Voice not found");
+            if (!vObj) throw new Error(t('input.voice_not_found'));
 
             let url = vObj.previewUrl;
             if (!url) {
@@ -34,7 +35,7 @@ const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provid
                 url = await generatePreviewAudio(`Hello! I am ${vObj.label}.`, vObj.name, provider);
             }
 
-            if (!url) throw new Error("No preview");
+            if (!url) throw new Error(t('input.no_preview'));
 
             const audio = new Audio(url);
             audioRef.current = audio;
@@ -225,10 +226,10 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         try {
             const desc = await analyzeCharacterFeatures(newCharImages[0]);
             setNewCharDesc(prev => (prev ? prev + ", " + desc : desc));
-            showToast("Character described by AI", 'success');
+            showToast(t('input.char_described'), 'success');
         } catch (e) {
             console.error("Analysis failed", e);
-            showToast("Failed to analyze image", 'error');
+            showToast(t('input.analysis_failed'), 'error');
         } finally {
             setIsAnalyzing(false);
         }
@@ -241,10 +242,10 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 setSelectedCharIds(prev => [...prev, char.id]);
                 setIsAddingChar(false);
                 setNewCharName(''); setNewCharDesc(''); setNewCharImages([]);
-                showToast("Character saved successfully", 'success');
+                showToast(t('input.char_saved'), 'success');
             }
         } catch (e) {
-            showToast("Failed to save character", 'error');
+            showToast(t('input.char_save_failed'), 'error');
         }
     };
 
@@ -255,7 +256,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 setSelectedCharIds(prev => prev.filter(id => id !== deleteCharModal.charId));
             }
             setDeleteCharModal({ isOpen: false, charId: null });
-            showToast("Character deleted", 'success');
+            showToast(t('input.char_deleted'), 'success');
         }
     };
 
@@ -294,12 +295,12 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
             <ConfirmModal
                 isOpen={deleteCharModal.isOpen}
-                title="Delete Character?"
-                message="This character will be removed from your library. This action cannot be undone."
+                title={t('input.delete_char_title')}
+                message={t('input.delete_char_message')}
                 onConfirm={confirmDeleteCharacter}
                 onCancel={() => setDeleteCharModal({ isOpen: false, charId: null })}
                 isDestructive={true}
-                confirmText="Delete Character"
+                confirmText={t('input.delete_char_confirm')}
             />
 
             <div className="text-center mb-12 animate-fade-in-up">
@@ -373,7 +374,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                             placeholder="Min"
                                             disabled={isBusy}
                                         />
-                                        <span className="text-slate-500 text-xs">to</span>
+                                        <span className="text-slate-500 text-xs">{t('input.to')}</span>
                                         <label htmlFor="maxDuration" className="sr-only">Max Duration</label>
                                         <input
                                             id="maxDuration"
@@ -484,7 +485,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                                 onClick={handleAutoDescription}
                                                 disabled={isAnalyzing}
                                                 className="absolute bottom-4 right-2 p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors shadow-lg"
-                                                title="Auto-Describe with AI"
+                                                title={t('input.auto_describe_title')}
                                             >
                                                 {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                                             </button>
@@ -536,7 +537,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                                     type="button"
                                                     onClick={(e) => { e.stopPropagation(); setDeleteCharModal({ isOpen: true, charId: c.id }); }}
                                                     className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
-                                                    title="Delete Character"
+                                                    title={t('input.delete_char_tooltip')}
                                                 >
                                                     <Trash2 className="w-2.5 h-2.5" />
                                                 </button>
@@ -564,7 +565,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         {/* ElevenLabs Model Selector */}
                         {ttsProvider === 'elevenlabs' && (
                             <div className="mb-6 animate-fade-in-up">
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Model</label>
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.model_label')}</label>
                                 <div className="grid grid-cols-1 gap-2">
                                     <button
                                         type="button"
@@ -574,7 +575,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     >
                                         <div>
                                             <div className="font-bold text-sm mb-0.5">Turbo v2.5</div>
-                                            <div className="text-[10px] opacity-70">Melhor custo-benefício</div>
+                                            <div className="text-[10px] opacity-70">{t('input.model_turbo_desc')}</div>
                                         </div>
                                         {audioModel === 'eleven_turbo_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                                     </button>
@@ -587,7 +588,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     >
                                         <div>
                                             <div className="font-bold text-sm mb-0.5">Multilingual v2</div>
-                                            <div className="text-[10px] opacity-70">Modelo mais usado</div>
+                                            <div className="text-[10px] opacity-70">{t('input.model_multilingual_desc')}</div>
                                         </div>
                                         {audioModel === 'eleven_multilingual_v2' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                                     </button>
@@ -600,7 +601,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                                     >
                                         <div>
                                             <div className="font-bold text-sm mb-0.5">Flash v2.5</div>
-                                            <div className="text-[10px] opacity-70">Pior custo-benefício (Rápido)</div>
+                                            <div className="text-[10px] opacity-70">{t('input.model_flash_desc')}</div>
                                         </div>
                                         {audioModel === 'eleven_flash_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                                     </button>
@@ -665,7 +666,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         )}
                     </button>
                     <p className="text-center text-slate-500 text-xs mt-4">
-                        Generates a detailed storyboard, script, and audio assets. <br />
+                        {t('input.footer_desc')} <br />
                         <span className="text-indigo-400 font-semibold">{t('input.daily_limit')}</span>
                     </p>
                 </div>

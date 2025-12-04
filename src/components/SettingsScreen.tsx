@@ -82,7 +82,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) =
               <label htmlFor="geminiKey" className="block text-sm font-medium text-slate-300 mb-2">{t('settings.gemini_label')}</label>
               <input id="geminiKey" name="geminiKey" type="password" value={geminiKey} onChange={(e) => setGeminiKey(e.target.value)} placeholder="AIzaSy..." className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-4 pr-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
               <p className="text-xs text-slate-500 mt-2">
-                {t('settings.gemini_help')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Get Key</a>
+                {t('settings.gemini_help')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">{t('settings.get_key')}</a>
               </p>
             </div>
 
@@ -90,7 +90,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) =
               <label htmlFor="elevenLabsKey" className="block text-sm font-medium text-slate-300 mb-2">{t('settings.elevenlabs_label')}</label>
               <input id="elevenLabsKey" name="elevenLabsKey" type="password" value={elevenLabsKey} onChange={(e) => setElevenLabsKey(e.target.value)} placeholder="sk_..." className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-4 pr-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
               <p className="text-xs text-slate-500 mt-2">
-                {t('settings.elevenlabs_help')} <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Get Key</a>
+                {t('settings.elevenlabs_help')} <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">{t('settings.get_key')}</a>
               </p>
             </div>
             {IS_SUNO_ENABLED && (
@@ -109,7 +109,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, onUpdateUser }) =
               <label htmlFor="groqKey" className="block text-sm font-medium text-slate-300 mb-2">{t('settings.groq_label')}</label>
               <input id="groqKey" name="groqKey" type="password" value={groqKey} onChange={(e) => setGroqKey(e.target.value)} placeholder="gsk_..." className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-4 pr-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
               <p className="text-xs text-slate-500 mt-2">
-                {t('settings.groq_help')} <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">Get Key</a>
+                {t('settings.groq_help')} <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">{t('settings.get_key')}</a>
               </p>
             </div>
             <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mt-8"><ShieldAlert className="w-5 h-5 text-yellow-500 flex-shrink-0" /><p className="text-sm text-yellow-200/80">{t('settings.security_note')}</p></div>

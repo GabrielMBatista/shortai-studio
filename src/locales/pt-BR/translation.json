@@ -3,13 +3,22 @@
         "name": "ShortsAI",
         "loading": "Iniciando Sessão...",
         "logout": "Sessão encerrada com sucesso.",
-        "welcome": "Bem-vindo de volta, {{name}}!"
+        "welcome": "Bem-vindo de volta, {{name}}!",
+        "untitled_project": "Projeto Sem Título",
+        "login_failed": "Falha no login. Tente novamente.",
+        "project_load_failed": "Falha ao carregar detalhes do projeto.",
+        "project_error": "Erro ao carregar projeto.",
+        "delete_failed": "Falha ao excluir projeto.",
+        "signing_out": "Saindo..."
     },
     "nav": {
         "dashboard": "Painel",
         "admin": "Admin",
         "settings": "Configurações",
-        "logout": "Sair"
+        "logout": "Sair",
+        "tours": "Tours Interativos",
+        "tours_title": "Tours & Ajuda",
+        "settings_tour": "Configurações & Chaves de API"
     },
     "folders": {
         "title": "Pastas",
@@ -23,7 +32,8 @@
         "root_folder": "Todos os Projetos (Raiz)",
         "home": "Home",
         "archive": "Arquivar",
-        "unarchive": "Desarquivar"
+        "unarchive": "Desarquivar",
+        "all": "TODOS"
     },
     "dashboard": {
         "title": "Seus Projetos",
@@ -46,7 +56,11 @@
         "no_projects_desc": "Seu estúdio está vazio. Inicie seu primeiro fluxo de trabalho automatizado para gerar roteiros, imagens e narrações em segundos.",
         "start_project": "Começar seu primeiro projeto",
         "export_context": "Exportar Contexto",
-        "progress": "Progresso"
+        "progress": "Progresso",
+        "filters": "Filtros:",
+        "filter_placeholder": "Filtrar por tag...",
+        "showing_archived": "Exibindo Arquivados",
+        "show_archived": "Exibir Arquivados"
     },
     "input": {
         "title": "Crie Sua História",
@@ -78,7 +92,25 @@
         "generating": "Gerando Roteiro & Cenas...",
         "processing": "Processando...",
         "daily_limit": "Limite Diário: 1 Vídeo no Plano Gratuito",
-        "chars_count": "{{count}} caracteres"
+        "chars_count": "{{count}} caracteres",
+        "voice_not_found": "Voz não encontrada",
+        "no_preview": "Sem prévia",
+        "char_described": "Personagem descrito por IA",
+        "analysis_failed": "Falha ao analisar imagem",
+        "char_saved": "Personagem salvo com sucesso",
+        "char_save_failed": "Falha ao salvar personagem",
+        "char_deleted": "Personagem excluído",
+        "delete_char_title": "Excluir Personagem?",
+        "delete_char_message": "Este personagem será removido da sua biblioteca. Esta ação não pode ser desfeita.",
+        "delete_char_confirm": "Excluir Personagem",
+        "to": "até",
+        "auto_describe_title": "Auto-Descrever com IA",
+        "delete_char_tooltip": "Excluir Personagem",
+        "model_label": "Modelo",
+        "model_turbo_desc": "Melhor custo-benefício",
+        "model_multilingual_desc": "Modelo mais usado",
+        "model_flash_desc": "Pior custo-benefício (Rápido)",
+        "footer_desc": "Gera um storyboard detalhado, roteiro e ativos de áudio."
     },
     "script": {
         "metadata_title": "Metadados YouTube Shorts",
@@ -114,7 +146,10 @@
         "resume": "Retomar",
         "veo_high_quality": "Veo 2.0 (Alta Qualidade)",
         "veo_preview": "Veo 3.0 (Preview)",
-        "veo_fast": "Veo 3.0 (Rápido)"
+        "veo_fast": "Veo 3.0 (Rápido)",
+        "regenerating_audio": "Recriando áudio...",
+        "generation_cancelled": "Geração cancelada.",
+        "preview_failed": "Falha ao gerar áudio de prévia."
     },
     "scene": {
         "regenerate_title": "Recriar {{type}}?",
@@ -184,7 +219,9 @@
         "groq_help": "Usado para TTS rápido via modelos PlayAI.",
         "suno_label": "Chave API Suno (Opcional)",
         "suno_help": "Usa a estrutura SunoAPI.org.",
-        "security_note": "As chaves são criptografadas no cliente e armazenadas com segurança. Elas são descriptografadas apenas para chamadas de API."
+        "security_note": "As chaves são criptografadas no cliente e armazenadas com segurança. Elas são descriptografadas apenas para chamadas de API.",
+        "updated": "Configurações atualizadas!",
+        "get_key": "Obter Chave"
     },
     "auth": {
         "preparing_login": "Preparando login...",
@@ -195,5 +232,27 @@
         "continue_admin": "Continuar como Administrador",
         "backend_connected": "Conectado ao Backend • Modo Admin",
         "secure_login": "Login Seguro via Google"
+    },
+    "tour": {
+        "settings": {
+            "welcome": "Bem-vindo às configurações! Aqui você pode gerenciar seu perfil e chaves de API.",
+            "gemini": "A chave do Google Gemini é obrigatória para gerar roteiros e inteligência do vídeo.",
+            "gemini_link": "Obter chave no Google AI Studio",
+            "elevenlabs": "Opcional: Adicione sua chave ElevenLabs para narrações ultra-realistas.",
+            "elevenlabs_link": "Obter chave na ElevenLabs",
+            "save": "Não esqueça de salvar suas alterações aqui!"
+        }
+    },
+    "quota": {
+        "expand_hud": "Expandir HUD",
+        "minimize_hud": "Minimizar HUD",
+        "usage_title": "Uso & Cota",
+        "monthly_limits": "Limites Mensais",
+        "videos": "Vídeos",
+        "audio_min": "Áudio (Min)",
+        "images": "Imagens",
+        "est_cost": "Custo Est. (Este Projeto)",
+        "audio": "Áudio",
+        "video": "Vídeo"
     }
 }
