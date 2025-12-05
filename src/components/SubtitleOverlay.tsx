@@ -40,9 +40,9 @@ const SubtitleOverlay: React.FC<SubtitleOverlayProps> = ({ text, duration, curre
   const visibleTimings = timings.slice(start, end);
 
   return (
-    <div className="absolute bottom-20 left-0 right-0 px-6 text-center z-20 pointer-events-none flex justify-center items-center">
+    <div className="absolute bottom-[15%] left-0 right-0 z-20 pointer-events-none flex justify-center items-center">
       <div
-        className="font-bold text-2xl md:text-3xl leading-snug flex flex-wrap justify-center items-center gap-x-3 gap-y-1 transition-all duration-300 ease-out max-w-4xl"
+        className="font-bold text-2xl md:text-3xl leading-snug flex flex-wrap justify-center items-center gap-x-3 gap-y-1 transition-all duration-300 ease-out w-[85%] max-w-4xl"
         style={{
           fontFamily: SUBTITLE_STYLES.fontFamily,
           textShadow: `0px 2px 8px ${SUBTITLE_STYLES.shadowColor}`

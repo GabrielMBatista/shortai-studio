@@ -646,7 +646,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             const visibleWords = timings.slice(start, end);
 
             // Styling Constants
-            const baseFontSize = 64; 
+            const baseFontSize = SUBTITLE_STYLES.canvasFontSize; 
             const activeScale = 1.1; // Reduced from 1.2
             const fontName = SUBTITLE_STYLES.fontFamily;
             const fontWeight = SUBTITLE_STYLES.fontWeight;
