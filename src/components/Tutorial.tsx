@@ -92,6 +92,10 @@ const Tutorial: React.FC<TutorialProps> = ({ run, steps, onFinish }) => {
                 next: t('common.next') || 'Next',
                 skip: t('common.skip') || 'Skip',
             }}
+            // @ts-ignore
+            disableBeacon={true}
+            disableOverlayClose={true}
+            spotlightClicks={true}
         />
     );
 };
