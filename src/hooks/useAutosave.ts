@@ -12,6 +12,8 @@ export const useAutosave = (
 
     useEffect(() => {
         if (project && currentUser && step !== AppStep.DASHBOARD) {
+            if (project.id === 'mock-project-tour') return;
+
             const currentJson = JSON.stringify(project);
             if (currentJson === lastSavedProjectJson.current) {
                 return;

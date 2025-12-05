@@ -12,6 +12,7 @@ import ScreenManager from './components/layout/ScreenManager';
 import { useAuth } from './hooks/useAuth';
 import { useAutosave } from './hooks/useAutosave';
 import { getSettingsTourSteps, getCreationTourSteps, getScriptTourSteps } from './constants/tourSteps';
+import { MOCK_PROJECT_TOUR } from './constants/mockProject';
 
 const App: React.FC = () => {
     const { t } = useTranslation();
@@ -116,11 +117,11 @@ const App: React.FC = () => {
             handleSetStep(AppStep.INPUT);
             setTutorialSteps(getCreationTourSteps(t));
         } else if (tour === 'script') {
-            // We can only tour script if we are in scripting mode or have a project
-            if (step !== AppStep.SCRIPTING && !project) {
-                showToast(t('tour.script.no_project'), 'error');
-                return;
+            // Load mock project if none matches
+            if (!project) {
+                setProject(MOCK_PROJECT_TOUR);
             }
+            
             if (step !== AppStep.SCRIPTING) {
                 handleSetStep(AppStep.SCRIPTING);
             }

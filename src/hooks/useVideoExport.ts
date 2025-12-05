@@ -411,7 +411,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         const fps = 30;
         const frameDuration = 1 / fps;
         const totalFrames = Math.ceil(totalDuration * fps);
-        const subtitleLayouts = precomputeSubtitleLayouts(ctx, assets.map(a => ({ ...a, durationSeconds: a.renderDuration })), canvas.width);
+        const subtitleLayouts = precomputeSubtitleLayouts(ctx, assets, canvas.width);
 
         for (let i = 0; i < totalFrames; i++) {
             if (!isDownloadingRef.current) break;
@@ -505,7 +505,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         source.start(0);
 
         const startTime = Date.now();
-        const subtitleLayouts = precomputeSubtitleLayouts(ctx, assets.map(a => ({ ...a, durationSeconds: a.renderDuration })), canvas.width);
+        const subtitleLayouts = precomputeSubtitleLayouts(ctx, assets, canvas.width);
 
         const drawLoop = () => {
             if (!isDownloadingRef.current || recorder.state === 'inactive') return;
