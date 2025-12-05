@@ -9,7 +9,8 @@
         "project_load_failed": "Falha ao carregar detalhes do projeto.",
         "project_error": "Erro ao carregar projeto.",
         "delete_failed": "Falha ao excluir projeto.",
-        "signing_out": "Saindo..."
+        "signing_out": "Saindo...",
+        "loading_project": "Carregando projeto..."
     },
     "nav": {
         "dashboard": "Painel",

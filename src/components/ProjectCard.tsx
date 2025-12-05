@@ -12,6 +12,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onContextMenu }) => {
     const { t } = useTranslation();
+    const [imageLoaded, setImageLoaded] = React.useState(false);
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: project.id,
     });
@@ -50,10 +51,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
             {/* Thumbnail */}
             <div className="aspect-video bg-slate-900 relative overflow-hidden">
                 {project.scenes[0]?.imageUrl ? (
-                    <img
-                        src={project.scenes[0].imageUrl}
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                    />
+                    <>
+                        {!imageLoaded && (
+                            <div className="absolute inset-0 bg-slate-800 animate-pulse flex items-center justify-center">
+                                <Zap className="w-8 h-8 text-slate-700 opacity-20" />
+                            </div>
+                        )}
+                        <img
+                            src={project.scenes[0].imageUrl}
+                            onLoad={() => setImageLoaded(true)}
+                            className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-80 group-hover:opacity-100 group-hover:scale-105' : 'opacity-0'}`}
+                        />
+                    </>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-slate-800/80">
                         <Zap className="w-12 h-12 text-slate-700 group-hover:text-indigo-500/50 transition-colors" />

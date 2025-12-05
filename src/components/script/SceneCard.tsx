@@ -198,6 +198,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         setModalConfig({ isOpen: false, type: null });
     };
 
+    const [imageLoaded, setImageLoaded] = useState(false);
+
+    useEffect(() => {
+        setImageLoaded(false);
+    }, [mediaData.imageUrl, scene.imageUrl]);
+
     return (
         <>
             <ConfirmModal
@@ -224,9 +230,25 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     ) : showVideo && isVideoLoading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_video')}</span></div>
                     ) : hasImage ? (
-                        <img src={mediaData.imageUrl || scene.imageUrl || ''} alt={`Scene ${scene.sceneNumber}`} className="w-full h-full object-cover transition-opacity duration-500" />
-                    ) : (isImageLoading || isLoadingMedia) ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{isLoadingMedia ? t('scene.loading_media') : t('scene.generating_image')}</span></div>
+                        <>
+                            {!imageLoaded && (
+                                <div className="absolute inset-0 bg-slate-800 animate-pulse flex items-center justify-center">
+                                    <ImageIcon className="w-12 h-12 text-slate-700 opacity-20" />
+                                </div>
+                            )}
+                            <img
+                                src={mediaData.imageUrl || scene.imageUrl || ''}
+                                alt={`Scene ${scene.sceneNumber}`}
+                                className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                onLoad={() => setImageLoaded(true)}
+                            />
+                        </>
+                    ) : isLoadingMedia ? (
+                         <div className="absolute inset-0 bg-slate-800 animate-pulse flex items-center justify-center">
+                            <ImageIcon className="w-12 h-12 text-slate-700 opacity-20" />
+                        </div>
+                    ) : isImageLoading ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_image')}</span></div>
                     ) : scene.imageStatus === 'error' || scene.videoStatus === 'error' ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center text-sm bg-slate-900/80"><AlertCircle className="w-8 h-8 mb-2 mx-auto opacity-80" /><span>{scene.errorMessage || t('scene.failed_load')}</span></div>
                     ) : (

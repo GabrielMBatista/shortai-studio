@@ -9,7 +9,8 @@
         "project_load_failed": "Failed to load project details.",
         "project_error": "Error loading project.",
         "delete_failed": "Failed to delete project.",
-        "signing_out": "Signing out..."
+        "signing_out": "Signing out...",
+        "loading_project": "Loading project..."
     },
     "nav": {
         "dashboard": "Dashboard",
