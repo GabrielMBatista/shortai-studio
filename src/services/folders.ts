@@ -1,11 +1,12 @@
 import { apiFetch } from './api';
 
-export const getFolders = async (): Promise<any[]> => {
+export const getFolders = async (): Promise<{ folders: any[]; rootCount: number }> => {
     try {
         const data = await apiFetch('/folders');
-        return Array.isArray(data) ? data : [];
+        if (Array.isArray(data)) return { folders: data, rootCount: 0 };
+        return { folders: data.folders || [], rootCount: data.rootCount || 0 };
     } catch (e) {
-        return [];
+        return { folders: [], rootCount: 0 };
     }
 };
 

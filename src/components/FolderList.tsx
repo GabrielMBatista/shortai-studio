@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 interface FolderListProps {
     folders: FolderType[];
+    rootCount?: number;
     selectedFolderId: string | null;
     onSelectFolder: (folderId: string | null) => void;
     onCreateFolder: (name: string) => Promise<void>;
@@ -20,6 +21,7 @@ interface FolderListProps {
 
 const FolderList: React.FC<FolderListProps> = ({
     folders,
+    rootCount = 0,
     selectedFolderId,
     onSelectFolder,
     onCreateFolder,
@@ -116,7 +118,12 @@ const FolderList: React.FC<FolderListProps> = ({
                     ) : (
                         <Folder className="w-4 h-4 flex-shrink-0" />
                     )}
-                    {!isCollapsed ? t('folders.home') : <span className="text-[10px] font-bold">{t('folders.all')}</span>}
+                    {!isCollapsed ? (
+                        <>
+                            <span className="truncate flex-1 text-left">{t('folders.home')}</span>
+                            {rootCount > 0 && <span className="text-xs text-slate-500">({rootCount})</span>}
+                        </>
+                    ) : <span className="text-[10px] font-bold">{t('folders.all')}</span>}
                 </button>
             </DroppableFolder>
 

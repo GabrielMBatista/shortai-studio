@@ -81,6 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         onRefreshProjects();
     };
     const [folders, setFolders] = useState<FolderType[]>([]);
+    const [rootCount, setRootCount] = useState(0);
     const [isLoadingFolders, setIsLoadingFolders] = useState(true);
 
     // Context Menu State
@@ -88,8 +89,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     useEffect(() => {
         setIsLoadingFolders(true);
-        getFolders().then(data => {
-            setFolders(data);
+        getFolders().then(({ folders, rootCount }) => {
+            setFolders(folders);
+            setRootCount(rootCount);
             setIsLoadingFolders(false);
         });
     }, []);
@@ -98,8 +100,20 @@ const Dashboard: React.FC<DashboardProps> = ({
         // Don't set loading here to avoid flickering on every small update, or maybe do?
         // Let's keep it silent for background updates, but we can set it if we want.
         // For now, let's just fetch.
-        getFolders().then(setFolders);
+        getFolders().then(({ folders, rootCount }) => {
+            setFolders(folders);
+            setRootCount(rootCount);
+        });
     };
+
+    // Calculate how many skeletons to show
+    const skeletonCount = useMemo(() => {
+        if (selectedFolderId) {
+            const folder = folders.find(f => f.id === selectedFolderId);
+            return folder?._count?.projects || 8;
+        }
+        return rootCount || 8;
+    }, [selectedFolderId, folders, rootCount]);
 
     // Refresh folders when projects change (to update counts)
     useEffect(() => {
@@ -297,6 +311,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                     `}
                     folders={folders}
+                    rootCount={rootCount}
                     selectedFolderId={selectedFolderId}
                     onSelectFolder={(id) => {
                         setSelectedFolderId(id);
@@ -416,7 +431,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         {isLoading ? (
                             <div className="flex flex-col gap-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                    {Array.from({ length: 10 }).map((_, i) => (
+                                    {Array.from({ length: Math.min(Math.max(skeletonCount, 4), 12) }).map((_, i) => (
                                         <ProjectCardSkeleton key={i} />
                                     ))}
                                 </div>
