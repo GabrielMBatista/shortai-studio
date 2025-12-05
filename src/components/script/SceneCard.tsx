@@ -198,10 +198,15 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         setModalConfig({ isOpen: false, type: null });
     };
 
+    const imgRef = useRef<HTMLImageElement>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
 
     useEffect(() => {
         setImageLoaded(false);
+        // Fix for race condition where image loads before effect runs (cached images)
+        if (imgRef.current && imgRef.current.complete) {
+            setImageLoaded(true);
+        }
     }, [mediaData.imageUrl, scene.imageUrl]);
 
     return (
@@ -232,11 +237,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     ) : hasImage ? (
                         <>
                             {!imageLoaded && (
-                                <div className="absolute inset-0 bg-slate-700 animate-pulse flex items-center justify-center">
-                                    <ImageIcon className="w-16 h-16 text-slate-500 opacity-50" />
+                                <div className="absolute inset-0 bg-slate-700 animate-pulse flex items-center justify-center z-10">
+                                    <ImageIcon className="w-16 h-16 text-slate-600 opacity-20" />
+                                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin absolute" />
                                 </div>
                             )}
                             <img
+                                ref={imgRef}
                                 src={mediaData.imageUrl || scene.imageUrl || ''}
                                 alt={`Scene ${scene.sceneNumber}`}
                                 className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -246,7 +253,8 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         </>
                     ) : isLoadingMedia ? (
                          <div className="absolute inset-0 bg-slate-700 animate-pulse flex items-center justify-center">
-                            <ImageIcon className="w-16 h-16 text-slate-500 opacity-50" />
+                            <ImageIcon className="w-16 h-16 text-slate-600 opacity-20" />
+                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin absolute" />
                         </div>
                     ) : isImageLoading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_image')}</span></div>
