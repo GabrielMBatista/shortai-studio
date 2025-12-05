@@ -318,6 +318,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                         </div>
 
                         <button
+                            id={sceneIndex === 0 ? 'scene-0-regen-image' : undefined}
                             onClick={(e) => { e.stopPropagation(); handleRegenClick('image'); }}
                             className={`bg-black/60 hover:bg-indigo-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm ${isImageLoading || localLoading.image ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'}`}
                             disabled={isImageLoading || localLoading.image}
@@ -348,6 +349,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                                     <Mic className="w-3 h-3" /> {t('scene.narration')}
                                 </h4>
                                 <button
+                                    id={sceneIndex === 0 ? 'scene-0-edit-narration' : undefined}
                                     onClick={toggleEdit}
                                     disabled={isAudioLoading || localLoading.audio}
                                     className={`p-1 rounded-md transition-all ${isEditing ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500 hover:text-indigo-400 hover:bg-slate-700'} ${isAudioLoading || localLoading.audio ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -358,6 +360,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                             <div className="flex items-center gap-2">
                                 {onRegenerateAudio && (
                                     <button
+                                        id={sceneIndex === 0 ? 'scene-0-regen-audio' : undefined}
                                         onClick={() => handleRegenClick('audio')}
                                         disabled={isAudioLoading || isEditing || localLoading.audio}
                                         className={`p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors ${isAudioLoading || isEditing || localLoading.audio ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -388,10 +391,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
 
                     <div className="mt-auto border-t border-slate-700/50 pt-3">
                         <div className="flex items-center justify-between mb-2">
-                            <button onClick={() => setIsPromptOpen(!isPromptOpen)} className="flex items-center text-left text-[10px] uppercase tracking-wider text-slate-500 font-bold hover:text-indigo-400 transition-colors">
+                            <button
+                                id={sceneIndex === 0 ? 'scene-0-toggle-prompt' : undefined} 
+                                onClick={() => setIsPromptOpen(!isPromptOpen)} className="flex items-center text-left text-[10px] uppercase tracking-wider text-slate-500 font-bold hover:text-indigo-400 transition-colors">
                                 <span>{t('scene.visual_prompt')}</span>{isPromptOpen ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
                             </button>
                             <button
+                                id={sceneIndex === 0 ? 'scene-0-edit-prompt' : undefined}
                                 onClick={toggleEditPrompt}
                                 disabled={isImageLoading}
                                 className={`p-1 rounded-md transition-all ${isEditingPrompt ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500 hover:text-indigo-400 hover:bg-slate-700'} ${isImageLoading ? 'opacity-50 cursor-not-allowed' : ''}`}

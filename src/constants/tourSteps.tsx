@@ -84,6 +84,26 @@ export const getScriptTourSteps = (t: TFunction): Step[] => [
         placement: 'top',
     },
     {
+        target: '#scene-0-regen-image',
+        content: t('tour.script.scene_regen_image'),
+        placement: 'left',
+    },
+    {
+        target: '#scene-0-edit-narration',
+        content: t('tour.script.scene_edit_narration'),
+        placement: 'top',
+    },
+    {
+        target: '#scene-0-regen-audio',
+        content: t('tour.script.scene_regen_audio'),
+        placement: 'top',
+    },
+    {
+        target: '#scene-0-toggle-prompt',
+        content: t('tour.script.scene_visual_prompt'),
+        placement: 'top',
+    },
+    {
         target: '#btn-add-scene',
         content: t('tour.script.add_scene'),
         placement: 'left',

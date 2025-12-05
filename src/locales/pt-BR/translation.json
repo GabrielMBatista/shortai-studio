@@ -264,6 +264,10 @@
             "generate_all": "Gera todas as mídias (imagens e áudio) para as cenas pendentes.",
             "preview": "Veja como está ficando seu vídeo antes de exportar.",
             "export": "Tudo pronto? Baixe o vídeo final e os recursos.",
+            "scene_regen_image": "Não gostou da imagem? Clique para gerar uma nova versão usando o prompt visual.",
+            "scene_edit_narration": "Edite o texto da narração manualmente. O áudio deve ser gerado novamente se alterar o texto.",
+            "scene_regen_audio": "Regere apenas o áudio desta cena. Necessário após editar o texto.",
+            "scene_visual_prompt": "Ajuste o prompt visual (descrição da cena) usado para gerar a imagem.",
             "no_project": "Selecione um projeto para iniciar o tour."
         }
     },

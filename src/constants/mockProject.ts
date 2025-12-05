@@ -22,18 +22,6 @@ export const MOCK_PROJECT_TOUR: VideoProject = {
             sfxStatus: 'pending',
             videoStatus: 'pending',
             imageUrl: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=2070&auto=format&fit=crop',
-        },
-        {
-            id: 'mock-scene-2',
-            sceneNumber: 2,
-            visualDescription: 'A shadowy figure lights a cigarette in a dark alleyway.',
-            narration: 'I was looking for a ghost. Found a demon instead.',
-            durationSeconds: 4,
-            imageStatus: 'completed',
-            audioStatus: 'completed',
-            sfxStatus: 'pending',
-            videoStatus: 'pending',
-            imageUrl: 'https://images.unsplash.com/photo-1605218427306-6354db69e563?q=80&w=1978&auto=format&fit=crop',
         }
     ],
     generatedTitle: 'Neon Shadows',
