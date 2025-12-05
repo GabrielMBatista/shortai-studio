@@ -262,7 +262,8 @@
             "add_scene": "Need more content? Add a new scene manually.",
             "generate_all": "Generates all media (images and audio) for pending scenes.",
             "preview": "Preview your video before exporting.",
-            "export": "All done? Download the final video and assets."
+            "export": "All done? Download the final video and assets.",
+            "no_project": "Please select a project to start the tour."
         }
     }
 }

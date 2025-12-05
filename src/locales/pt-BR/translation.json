@@ -263,7 +263,8 @@
             "add_scene": "Precisa de mais conteúdo? Adicione uma nova cena manual.",
             "generate_all": "Gera todas as mídias (imagens e áudio) para as cenas pendentes.",
             "preview": "Veja como está ficando seu vídeo antes de exportar.",
-            "export": "Tudo pronto? Baixe o vídeo final e os recursos."
+            "export": "Tudo pronto? Baixe o vídeo final e os recursos.",
+            "no_project": "Selecione um projeto para iniciar o tour."
         }
     },
     "quota": {
