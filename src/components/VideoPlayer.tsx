@@ -291,7 +291,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
             <h3 className="text-xl font-bold mb-2 text-white">{t('video_player.export_options')}</h3>
             <p className="text-xs text-slate-400 mb-6">{t('video_player.resolution_note')}</p>
 
-            <div className="w-full max-w-xs mb-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+            <div className="w-full max-w-sm mb-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
               <label className="text-sm font-medium text-slate-300 block mb-3 text-left">{t('video_player.format')}</label>
               <div className="flex gap-2">
                 <button
@@ -316,7 +316,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
               </div>
             </div>
 
-            <div className="w-full max-w-xs mb-8 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+            <div className="w-full max-w-sm mb-8 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
               <div className="flex items-center justify-between mb-4">
                 <label className="text-sm font-medium text-slate-300">{t('video_player.merge_video')}</label>
                 <div
@@ -358,7 +358,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
               )}
             </div>
 
-            <div className="flex gap-3 w-full max-w-xs">
+            <div className="flex gap-3 w-full max-w-sm">
               <button
                 onClick={() => setShowExportOptions(false)}
                 className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl font-semibold transition-colors text-sm"
@@ -367,7 +367,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
               </button>
               <button
                 onClick={confirmExport}
-                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <Download className="w-4 h-4" />
                 {t('video_player.start_export')}

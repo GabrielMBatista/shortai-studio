@@ -637,76 +637,93 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 }
             }
 
-            // --- FLUID SINGLE LINE LOGIC (Matches SubtitleOverlay.tsx) ---
-            const WORDS_PER_PAGE = 4; // Same as UI
+            // --- FLUID MULTI-LINE LOGIC (Matches SubtitleOverlay.tsx) ---
+            const WORDS_PER_PAGE = 7;
             const pageIndex = Math.floor(activeIndex / WORDS_PER_PAGE);
 
             const start = pageIndex * WORDS_PER_PAGE;
             const end = Math.min(start + WORDS_PER_PAGE, timings.length);
             const visibleWords = timings.slice(start, end);
 
-            // Calculate total width of the line to center it
-            // We use a base font size for measurement
-            const baseFontSize = 64; // Slightly larger for 1080p
-            const activeScale = 1.2;
+            // Styling Constants
+            const baseFontSize = 64; 
+            const activeScale = 1.1; // Reduced from 1.2
             const fontName = SUBTITLE_STYLES.fontFamily;
             const fontWeight = SUBTITLE_STYLES.fontWeight;
-            
-            ctx.font = `${fontWeight} ${baseFontSize}px ${fontName}`;
-            
-            // 1. Measure all words at BASE font (Layout Pass)
-            // This ensures STABLE layout. The words don't jump around when one grows.
-            ctx.font = `${fontWeight} ${baseFontSize}px ${fontName}`;
+            const gap = 20;
+            const maxWidth = w * 0.85;
+
+            // 1. Measure words
             const wordMetrics = visibleWords.map((t, i) => {
-                const width = ctx.measureText(t.word).width;
                 const absIndex = start + i;
+                const isActive = absIndex === activeIndex;
+                const scale = isActive ? activeScale : 1.0;
+                 // Measure with scale applied to get real bounding box needs
+                ctx.font = `${fontWeight} ${baseFontSize * scale}px ${fontName}`;
                 return { 
                     word: t.word, 
-                    width, 
-                    isActive: absIndex === activeIndex
+                    width: ctx.measureText(t.word).width, 
+                    isActive,
+                    scale
                 };
             });
-            
-            // 2. Calculate Total Width to center the block
-            const gap = 20; // 20px gap
-            const totalWidth = wordMetrics.reduce((acc, m) => acc + m.width, 0) + (Math.max(0, wordMetrics.length - 1) * gap);
-            
-            // 3. Draw (Render Pass)
-            let currentX = (w - totalWidth) / 2;
-            const y = h - 250; // Bottom position
 
-            wordMetrics.forEach((m) => {
-                const centerX = currentX + (m.width / 2); // Center of the base slot
+            // 2. Wrap Lines
+            const lines: { words: typeof wordMetrics, width: number }[] = [];
+            let currentLine: typeof wordMetrics = [];
+            let currentLineWidth = 0;
 
-                if (m.isActive) {
-                    // Active: Scaled Font + Glow + Full Opacity
-                    ctx.font = `${fontWeight} ${baseFontSize * activeScale}px ${fontName}`;
-                    ctx.fillStyle = SUBTITLE_STYLES.activeColor;
-                    
-                    // Simulating "Text Shadow Glow"
-                    ctx.shadowColor = SUBTITLE_STYLES.activeColor;
-                    ctx.shadowBlur = 30; 
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 0;
-                    
+            wordMetrics.forEach(m => {
+                const wordWidthWithGap = m.width + (currentLine.length > 0 ? gap : 0);
+                
+                if (currentLineWidth + wordWidthWithGap > maxWidth && currentLine.length > 0) {
+                    lines.push({ words: currentLine, width: currentLineWidth });
+                    currentLine = [m];
+                    currentLineWidth = m.width;
                 } else {
-                    // Inactive: Base Font + Drop Shadow + Dimmed
-                    ctx.font = `${fontWeight} ${baseFontSize}px ${fontName}`;
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Matching opacity 0.5
-                    
-                    // Standard Drop Shadow
-                    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                    ctx.shadowBlur = 4;
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 2; 
+                    currentLine.push(m);
+                    currentLineWidth += wordWidthWithGap;
                 }
-
-                ctx.textAlign = 'center';
-                ctx.fillText(m.word, centerX, y);
-
-                // Advance X by the BASE width + gap. 
-                currentX += m.width + gap;
             });
+            if (currentLine.length > 0) lines.push({ words: currentLine, width: currentLineWidth });
+
+            // 3. Draw Lines
+            // Center block vertically at bottom
+            const lineHeight = baseFontSize * 1.5;
+            const blockHeight = lines.length * lineHeight;
+            let startY = h - 250 - (blockHeight / 2);
+
+            lines.forEach((line) => {
+                let currentX = (w - line.width) / 2;
+                
+                line.words.forEach(m => {
+                     // Config Font
+                     ctx.font = `${fontWeight} ${baseFontSize * m.scale}px ${fontName}`;
+                     
+                     // Shadow (Standard, no glow)
+                     ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                     ctx.shadowBlur = 4;
+                     ctx.shadowOffsetX = 0;
+                     ctx.shadowOffsetY = 4;
+
+                     // Color
+                     if (m.isActive) {
+                         ctx.fillStyle = SUBTITLE_STYLES.activeColor;
+                         ctx.globalAlpha = 1.0;
+                     } else {
+                         ctx.fillStyle = '#FFFFFF';
+                         ctx.globalAlpha = 0.9;
+                     }
+
+                     const centerX = currentX + (m.width / 2);
+                     ctx.fillText(m.word, centerX, startY);
+
+                     currentX += m.width + gap;
+                });
+                
+                startY += lineHeight;
+            });
+            ctx.globalAlpha = 1.0;
         }
     };
 
