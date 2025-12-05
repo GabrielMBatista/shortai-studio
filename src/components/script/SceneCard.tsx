@@ -241,6 +241,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                                 alt={`Scene ${scene.sceneNumber}`}
                                 className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                                 onLoad={() => setImageLoaded(true)}
+                                onError={() => setImageLoaded(true)}
                             />
                         </>
                     ) : isLoadingMedia ? (
