@@ -1,24 +1,28 @@
 version: '3.8'
 
 services:
+  # ==============================
+  # FRONTEND (Nginx + React)
+  # ==============================
   studio:
+    container_name: shortai-studio
     build:
       context: .
       dockerfile: Dockerfile
       args:
         VITE_API_URL: /api
-    # container_name: shortsai-studio # Removed to allow rolling updates
     ports:
-      - "3000:80"
+      - "3000:80" # Site acessível na porta 3000
     environment:
       - VITE_API_URL=/api
     restart: always
     networks:
-      shortsai-network:
-        aliases:
-          - shortsai-studio
+      - shortsai-network
 
+# ==============================
+# CONEXÃO COM A REDE
+# ==============================
 networks:
   shortsai-network:
-    external: true
-    name: shortsai-network
+    external: true # Diz "Não crie, use a que já existe"
+    name: shortsai-network # Nome exato criado pelo Backend
