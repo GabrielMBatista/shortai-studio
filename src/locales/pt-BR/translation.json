@@ -19,7 +19,9 @@
         "logout": "Sair",
         "tours": "Tours Interativos",
         "tours_title": "Tours & Ajuda",
-        "settings_tour": "Configurações & Chaves de API"
+        "settings_tour": "Configurações & Chaves de API",
+        "creation_tour": "Tour de Criação",
+        "script_tour": "Tour do Roteiro"
     },
     "folders": {
         "title": "Pastas",
@@ -211,6 +213,8 @@
     },
     "settings": {
         "title": "Configurações do Usuário",
+        "pro_plan": "Plano Pro",
+        "free_plan": "Plano Gratuito",
         "language": "Idioma / Language",
         "api_config": "Configuração das APIs",
         "gemini_label": "Chave API Google Gemini (Obrigatório)",

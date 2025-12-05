@@ -19,7 +19,9 @@
         "logout": "Logout",
         "tours": "Interactive Tours",
         "tours_title": "Tours & Help",
-        "settings_tour": "Settings & API Keys"
+        "settings_tour": "Settings & API Keys",
+        "creation_tour": "Creation Tour",
+        "script_tour": "Script Tour"
     },
     "folders": {
         "title": "Folders",
@@ -210,6 +212,8 @@
     },
     "settings": {
         "title": "User Settings",
+        "pro_plan": "Pro Plan",
+        "free_plan": "Free Plan",
         "language": "Language / Idioma",
         "api_config": "API Configuration",
         "gemini_label": "Google Gemini API Key (Required)",

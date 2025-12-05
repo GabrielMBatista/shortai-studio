@@ -553,75 +553,77 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 {/* RIGHT COLUMN */}
                 <div className="lg:col-span-5 space-y-8">
                     <div id="audio-section" className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl h-full flex flex-col">
-                        <SectionTitle icon={Mic} title={t('input.audio_studio')} subtitle={t('input.audio_subtitle')} />
+                        <div id="audio-controls-group">
+                            <SectionTitle icon={Mic} title={t('input.audio_studio')} subtitle={t('input.audio_subtitle')} />
 
-                        {/* Provider Selector */}
-                        <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1.5 rounded-xl mb-6">
-                            <button type="button" onClick={() => setTtsProvider('gemini')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'gemini' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Google Gemini</button>
-                            <button type="button" onClick={() => setTtsProvider('elevenlabs')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'elevenlabs' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>ElevenLabs</button>
-                            <button type="button" onClick={() => setTtsProvider('groq')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'groq' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Groq (PlayAI)</button>
-                        </div>
+                            {/* Provider Selector */}
+                            <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1.5 rounded-xl mb-6">
+                                <button type="button" onClick={() => setTtsProvider('gemini')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'gemini' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Google Gemini</button>
+                                <button type="button" onClick={() => setTtsProvider('elevenlabs')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'elevenlabs' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>ElevenLabs</button>
+                                <button type="button" onClick={() => setTtsProvider('groq')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'groq' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Groq (PlayAI)</button>
+                            </div>
 
-                        {/* ElevenLabs Model Selector */}
-                        {ttsProvider === 'elevenlabs' && (
-                            <div className="mb-6 animate-fade-in-up">
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.model_label')}</label>
-                                <div className="grid grid-cols-1 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAudioModel('eleven_turbo_v2_5')}
-                                        disabled={isBusy}
-                                        className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_turbo_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
-                                    >
-                                        <div>
-                                            <div className="font-bold text-sm mb-0.5">Turbo v2.5</div>
-                                            <div className="text-[10px] opacity-70">{t('input.model_turbo_desc')}</div>
-                                        </div>
-                                        {audioModel === 'eleven_turbo_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
-                                    </button>
+                            {/* ElevenLabs Model Selector */}
+                            {ttsProvider === 'elevenlabs' && (
+                                <div className="mb-6 animate-fade-in-up">
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.model_label')}</label>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setAudioModel('eleven_turbo_v2_5')}
+                                            disabled={isBusy}
+                                            className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_turbo_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                        >
+                                            <div>
+                                                <div className="font-bold text-sm mb-0.5">Turbo v2.5</div>
+                                                <div className="text-[10px] opacity-70">{t('input.model_turbo_desc')}</div>
+                                            </div>
+                                            {audioModel === 'eleven_turbo_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+                                        </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setAudioModel('eleven_multilingual_v2')}
-                                        disabled={isBusy}
-                                        className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_multilingual_v2' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
-                                    >
-                                        <div>
-                                            <div className="font-bold text-sm mb-0.5">Multilingual v2</div>
-                                            <div className="text-[10px] opacity-70">{t('input.model_multilingual_desc')}</div>
-                                        </div>
-                                        {audioModel === 'eleven_multilingual_v2' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAudioModel('eleven_multilingual_v2')}
+                                            disabled={isBusy}
+                                            className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_multilingual_v2' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                        >
+                                            <div>
+                                                <div className="font-bold text-sm mb-0.5">Multilingual v2</div>
+                                                <div className="text-[10px] opacity-70">{t('input.model_multilingual_desc')}</div>
+                                            </div>
+                                            {audioModel === 'eleven_multilingual_v2' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+                                        </button>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setAudioModel('eleven_flash_v2_5')}
-                                        disabled={isBusy}
-                                        className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_flash_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
-                                    >
-                                        <div>
-                                            <div className="font-bold text-sm mb-0.5">Flash v2.5</div>
-                                            <div className="text-[10px] opacity-70">{t('input.model_flash_desc')}</div>
-                                        </div>
-                                        {audioModel === 'eleven_flash_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAudioModel('eleven_flash_v2_5')}
+                                            disabled={isBusy}
+                                            className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between ${audioModel === 'eleven_flash_v2_5' ? 'bg-indigo-500/20 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'}`}
+                                        >
+                                            <div>
+                                                <div className="font-bold text-sm mb-0.5">Flash v2.5</div>
+                                                <div className="text-[10px] opacity-70">{t('input.model_flash_desc')}</div>
+                                            </div>
+                                            {audioModel === 'eleven_flash_v2_5' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        <label htmlFor="voice" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.voice_model')}</label>
-                        <div className="flex gap-3 mb-8">
-                            <div className="relative flex-1">
-                                <select id="voice" name="voice" value={voice} onChange={(e) => setVoice(e.target.value)} disabled={isBusy || filteredVoices.length === 0} className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-3 text-white appearance-none cursor-pointer hover:border-slate-500 transition-colors h-12">
-                                    {filteredVoices.length > 0 ? (
-                                        filteredVoices.map(v => <option key={v.name} value={v.name}>{v.label} ({v.gender})</option>)
-                                    ) : (
-                                        <option value="" disabled>{t('input.no_voices')}</option>
-                                    )}
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
+                            <label htmlFor="voice" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t('input.voice_model')}</label>
+                            <div className="flex gap-3 mb-8">
+                                <div className="relative flex-1">
+                                    <select id="voice" name="voice" value={voice} onChange={(e) => setVoice(e.target.value)} disabled={isBusy || filteredVoices.length === 0} className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-3 text-white appearance-none cursor-pointer hover:border-slate-500 transition-colors h-12">
+                                        {filteredVoices.length > 0 ? (
+                                            filteredVoices.map(v => <option key={v.name} value={v.name}>{v.label} ({v.gender})</option>)
+                                        ) : (
+                                            <option value="" disabled>{t('input.no_voices')}</option>
+                                        )}
+                                    </select>
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
+                                </div>
+                                <VoicePreviewButton voice={voice} provider={ttsProvider} voices={filteredVoices} />
                             </div>
-                            <VoicePreviewButton voice={voice} provider={ttsProvider} voices={filteredVoices} />
                         </div>
 
                         {IS_SUNO_ENABLED && (

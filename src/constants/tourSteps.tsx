@@ -61,9 +61,9 @@ export const getCreationTourSteps = (t: TFunction): Step[] => [
         placement: 'top',
     },
     {
-        target: '#audio-section',
+        target: '#audio-controls-group',
         content: t('tour.creation.audio'),
-        placement: 'left',
+        placement: 'top',
     },
     {
         target: '#btn-generate',
