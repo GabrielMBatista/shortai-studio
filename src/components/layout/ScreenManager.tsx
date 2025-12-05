@@ -147,7 +147,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                 />
             )}
 
-            {step === AppStep.SHOWS && currentUser && (
+            {step === AppStep.SHOWS && currentUser && currentUser.role === 'ADMIN' && (
                 <ShowsView 
                     onOpenShow={(id) => { console.log('Open Show', id); /* Implementar nav pro detalhe depois */ }}
                     showToast={showToast}

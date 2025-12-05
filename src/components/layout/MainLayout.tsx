@@ -99,10 +99,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                     <button
                                         id="nav-tours"
                                         onClick={() => setIsTourMenuOpen(!isTourMenuOpen)}
-                                        className={`p-2 rounded-lg transition-colors ${isTourMenuOpen ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                                        className={`p-2 rounded-lg transition-colors relative group ${isTourMenuOpen ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
                                         title="Tours & Help"
                                     >
-                                        <HelpCircle className="w-5 h-5" />
+                                        <div className="absolute inset-1 bg-yellow-500/40 blur-md rounded-full animate-pulse" />
+                                        <HelpCircle className={`w-5 h-5 relative z-10 ${!isTourMenuOpen ? 'text-yellow-100 shadow-white drop-shadow-[0_0_2px_rgba(255,255,255,0.5)]' : ''}`} />
                                     </button>
 
                                     {isTourMenuOpen && (
@@ -165,13 +166,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 )}
                                 
                                 {/* Shows Navigation */}
-                                <button
-                                    onClick={() => onSetStep(AppStep.SHOWS)}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${step === AppStep.SHOWS ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                                >
-                                    <Film className="w-4 h-4" />
-                                    <span className="text-sm font-bold">Shows</span>
-                                </button>
+                                {currentUser.role === 'ADMIN' && (
+                                    <button
+                                        onClick={() => onSetStep(AppStep.SHOWS)}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${step === AppStep.SHOWS ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                                    >
+                                        <Film className="w-4 h-4" />
+                                        <span className="text-sm font-bold">Shows</span>
+                                    </button>
+                                )}
 
                                 <button id="nav-settings" onClick={() => onSetStep(AppStep.SETTINGS)} className="flex items-center gap-2 group">
                                     <img src={currentUser.avatar} className="w-8 h-8 rounded-full border border-slate-600 transition-transform group-hover:scale-105 group-hover:border-indigo-500" />
