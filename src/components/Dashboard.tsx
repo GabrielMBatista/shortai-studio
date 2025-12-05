@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, VideoProject, Folder as FolderType } from '../types';
 import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Download, Filter, MoreVertical, FolderInput, Folder, Menu, X, Loader2 } from 'lucide-react';
-import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, pointerWithin } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import ProjectCard from './ProjectCard';
+import ProjectCardSkeleton from './ProjectCardSkeleton';
 import { exportProjectContext, patchProjectMetadata, getFolders, createFolder, updateFolder, deleteFolder } from '../services/storageService';
 import Pagination from './Pagination';
 
@@ -414,8 +414,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
 
                         {isLoading ? (
-                            <div className="w-full h-64 flex items-center justify-center bg-slate-800/30 rounded-3xl border border-slate-700/50">
-                                <Loader text={t('dashboard.loading_projects')} />
+                            <div className="flex flex-col gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                    {Array.from({ length: 10 }).map((_, i) => (
+                                        <ProjectCardSkeleton key={i} />
+                                    ))}
+                                </div>
                             </div>
                         ) : filteredProjects.length === 0 ? (
                             <div className="relative overflow-hidden bg-slate-800/30 rounded-3xl border-2 border-dashed border-slate-700/50 p-12 text-center group hover:border-indigo-500/30 transition-colors">
