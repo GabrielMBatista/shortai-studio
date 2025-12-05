@@ -4,6 +4,8 @@ import { Zap, MoreVertical, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useDraggable } from '@dnd-kit/core';
 
+import { getSceneMedia } from '../services/scenes';
+
 interface ProjectCardProps {
     project: VideoProject;
     onOpenProject: (project: VideoProject) => void;
@@ -13,6 +15,28 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onContextMenu }) => {
     const { t } = useTranslation();
     const [imageLoaded, setImageLoaded] = React.useState(false);
+    const [thumbnailUrl, setThumbnailUrl] = React.useState<string | null>(project.scenes[0]?.imageUrl || null);
+
+    React.useEffect(() => {
+        const loadThumbnail = async () => {
+            // Only fetch if we don't have a URL, but the scene implies it should have one (completed status)
+            if (!thumbnailUrl && project.scenes.length > 0 && project.scenes[0].imageStatus === 'completed') {
+                const sceneId = project.scenes[0].id;
+                if (sceneId) {
+                    try {
+                        const media = await getSceneMedia(sceneId);
+                        if (media && media.image_base64) {
+                            setThumbnailUrl(media.image_base64);
+                        }
+                    } catch (e) {
+                        console.error("Failed to load thumbnail", e);
+                    }
+                }
+            }
+        };
+        loadThumbnail();
+    }, [project.scenes, thumbnailUrl]);
+
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: project.id,
     });
@@ -50,7 +74,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
         >
             {/* Thumbnail */}
             <div className="aspect-video bg-slate-900 relative overflow-hidden">
-                {project.scenes[0]?.imageUrl ? (
+                {thumbnailUrl ? (
                     <>
                         {!imageLoaded && (
                             <div className="absolute inset-0 bg-slate-700 animate-pulse flex items-center justify-center">
@@ -58,7 +82,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
                             </div>
                         )}
                         <img
-                            src={project.scenes[0].imageUrl}
+                            src={thumbnailUrl}
                             onLoad={() => setImageLoaded(true)}
                             onError={() => setImageLoaded(true)}
                             className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-80 group-hover:opacity-100 group-hover:scale-105' : 'opacity-0'}`}
@@ -66,7 +90,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
                     </>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-slate-800/80">
-                        <Zap className="w-12 h-12 text-slate-700 group-hover:text-indigo-500/50 transition-colors" />
+                         {/* Show loading state if we expect an image (completed status) but don't have URL yet */}
+                         {project.scenes[0]?.imageStatus === 'completed' ? (
+                            <div className="flex flex-col items-center">
+                                <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2" />
+                            </div>
+                         ) : (
+                            <Zap className="w-12 h-12 text-slate-700 group-hover:text-indigo-500/50 transition-colors" />
+                         )}
                     </div>
                 )}
 
