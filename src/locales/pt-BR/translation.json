@@ -241,6 +241,23 @@
             "elevenlabs": "Opcional: Adicione sua chave ElevenLabs para narrações ultra-realistas.",
             "elevenlabs_link": "Obter chave na ElevenLabs",
             "save": "Não esqueça de salvar suas alterações aqui!"
+        },
+        "creation": {
+            "topic": "Insira o tópico principal do seu vídeo aqui. Seja criativo!",
+            "language": "Escolha o idioma do vídeo final. O roteiro será traduzido automaticamente.",
+            "duration": "Defina a duração estimada. Isso ajuda a controlar o tamanho do roteiro.",
+            "style": "Selecione um estilo visual para manter a consistência das imagens (ex: Cyberpunk, Anime).",
+            "characters": "Crie personagens recorrentes para usar nas suas cenas.",
+            "audio": "Configure a voz do narrador e a música de fundo aqui.",
+            "generate": "Pronto? Clique aqui para gerar a mágica!"
+        },
+        "script": {
+            "controls": "Aqui você controla o fluxo do projeto, regenera áudios e vídeos.",
+            "scenes": "Esta é a grade de cenas. Clique em uma cena para editá-la.",
+            "add_scene": "Precisa de mais conteúdo? Adicione uma nova cena manual.",
+            "generate_all": "Gera todas as mídias (imagens e áudio) para as cenas pendentes.",
+            "preview": "Veja como está ficando seu vídeo antes de exportar.",
+            "export": "Tudo pronto? Baixe o vídeo final e os recursos."
         }
     },
     "quota": {

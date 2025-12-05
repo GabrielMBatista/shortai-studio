@@ -82,6 +82,7 @@ const Tutorial: React.FC<TutorialProps> = ({ run, steps, onFinish }) => {
             scrollToFirstStep
             showProgress
             showSkipButton
+            scrollOffset={120}
             steps={steps}
             styles={styles}
             locale={{

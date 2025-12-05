@@ -240,6 +240,23 @@
             "elevenlabs": "Optional: Add your ElevenLabs key for ultra-realistic voiceovers.",
             "elevenlabs_link": "Get key from ElevenLabs",
             "save": "Don't forget to save your changes here!"
+        },
+        "creation": {
+            "topic": "Enter the main topic of your video here. Be creative!",
+            "language": "Choose the output language. The script will be translated automatically.",
+            "duration": "Set the estimated duration. This helps control script length.",
+            "style": "Select a visual style to keep image consistency (e.g., Cyberpunk, Anime).",
+            "characters": "Create recurring characters to use in your scenes.",
+            "audio": "Configure the narrator voice and background music here.",
+            "generate": "Ready? Click here to generate the magic!"
+        },
+        "script": {
+            "controls": "Here you control the project flow, regenerate audio and video.",
+            "scenes": "This is the scene grid. Click on a scene to edit it.",
+            "add_scene": "Need more content? Add a new scene manually.",
+            "generate_all": "Generates all media (images and audio) for pending scenes.",
+            "preview": "Preview your video before exporting.",
+            "export": "All done? Download the final video and assets."
         }
     }
 }
