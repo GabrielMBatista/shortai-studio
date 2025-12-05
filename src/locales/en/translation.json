@@ -154,6 +154,7 @@
         "regenerate_title": "Regenerate {{type}}?",
         "regenerate_confirm": "This will overwrite the existing file. Are you sure you want to continue?",
         "regenerate_action": "Regenerate",
+        "loading_media": "Loading Media...",
         "generating_video": "Generating Video...",
         "generating_image": "Generating Image...",
         "failed_load": "Failed to load media.",

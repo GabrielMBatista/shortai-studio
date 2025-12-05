@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Scene, ApiKeys } from '../../types';
 import { useSceneVideoGeneration } from '../../hooks/useSceneVideoGeneration';
+import { getSceneMedia } from '../../services/scenes';
 import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video, GripVertical } from 'lucide-react';
 import AudioPlayerButton from '../common/AudioPlayerButton';
 import ConfirmModal from '../ConfirmModal';
@@ -45,10 +46,45 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         setPromptText(scene.visualDescription);
     }, [scene.visualDescription]);
 
+    const [mediaData, setMediaData] = useState<{ imageUrl?: string | null, audioUrl?: string | null, videoUrl?: string | null }>({
+        imageUrl: scene.imageUrl || null,
+        audioUrl: scene.audioUrl || null,
+        videoUrl: scene.videoUrl || null
+    });
+    const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+
+    useEffect(() => {
+        // Sync with props if they update (e.g. after regeneration)
+        if (scene.imageUrl) setMediaData(prev => ({ ...prev, imageUrl: scene.imageUrl }));
+        if (scene.audioUrl) setMediaData(prev => ({ ...prev, audioUrl: scene.audioUrl }));
+        if (scene.videoUrl) setMediaData(prev => ({ ...prev, videoUrl: scene.videoUrl }));
+
+        const loadMedia = async () => {
+            const missingImage = scene.imageStatus === 'completed' && !scene.imageUrl && !mediaData.imageUrl;
+            const missingAudio = scene.audioStatus === 'completed' && !scene.audioUrl && !mediaData.audioUrl;
+            const missingVideo = scene.videoStatus === 'completed' && !scene.videoUrl && !mediaData.videoUrl;
+
+            if ((missingImage || missingAudio || missingVideo) && scene.id) {
+                setIsLoadingMedia(true);
+                const data = await getSceneMedia(scene.id);
+                if (data) {
+                    setMediaData(prev => ({
+                        ...prev,
+                        imageUrl: data.image_base64 || prev.imageUrl,
+                        audioUrl: data.audio_base64 || prev.audioUrl,
+                        videoUrl: data.video_base64 || prev.videoUrl
+                    }));
+                }
+                setIsLoadingMedia(false);
+            }
+        };
+        loadMedia();
+    }, [scene.id, scene.imageStatus, scene.audioStatus, scene.videoStatus, scene.imageUrl, scene.audioUrl, scene.videoUrl]);
+
     useEffect(() => {
         // Sync local state with prop if it changes externally (or on remount if parent persisted it)
-        setShowVideo(scene.mediaType === 'video' || (!scene.mediaType && !!scene.videoUrl));
-    }, [scene.mediaType, scene.videoUrl]);
+        setShowVideo(scene.mediaType === 'video' || (!scene.mediaType && !!(scene.videoUrl || mediaData.videoUrl)));
+    }, [scene.mediaType, scene.videoUrl, mediaData.videoUrl]);
 
     const handleSaveNarration = () => {
         if (narrationText !== scene.narration) {
@@ -109,8 +145,8 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     const isVideoLoading = isVideoCompleted ? false : (isVideoPending || isVideoLoadingFromStatus);
 
     // Check if both video and image are available for toggle
-    const hasVideo = scene.videoStatus === 'completed' && scene.videoUrl;
-    const hasImage = scene.imageStatus === 'completed' && scene.imageUrl;
+    const hasVideo = scene.videoStatus === 'completed' && (scene.videoUrl || mediaData.videoUrl);
+    const hasImage = scene.imageStatus === 'completed' && (scene.imageUrl || mediaData.imageUrl);
     const canToggle = (hasVideo || isVideoLoading) && hasImage;
 
     const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: 'image' | 'audio' | 'video' | null }>({ isOpen: false, type: null });
@@ -178,7 +214,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     {/* Show video OR image based on preference */}
                     {showVideo && hasVideo ? (
                         <video
-                            src={scene.videoUrl}
+                            src={mediaData.videoUrl || scene.videoUrl || ''}
                             className="w-full h-full object-cover"
                             autoPlay
                             loop
@@ -188,9 +224,9 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     ) : showVideo && isVideoLoading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_video')}</span></div>
                     ) : hasImage ? (
-                        <img src={scene.imageUrl} alt={`Scene ${scene.sceneNumber}`} className="w-full h-full object-cover transition-opacity duration-500" />
-                    ) : isImageLoading ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{t('scene.generating_image')}</span></div>
+                        <img src={mediaData.imageUrl || scene.imageUrl || ''} alt={`Scene ${scene.sceneNumber}`} className="w-full h-full object-cover transition-opacity duration-500" />
+                    ) : (isImageLoading || isLoadingMedia) ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm"><Loader2 className="w-8 h-8 animate-spin mb-2" /><span className="text-xs font-medium animate-pulse">{isLoadingMedia ? t('scene.loading_media') : t('scene.generating_image')}</span></div>
                     ) : scene.imageStatus === 'error' || scene.videoStatus === 'error' ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center text-sm bg-slate-900/80"><AlertCircle className="w-8 h-8 mb-2 mx-auto opacity-80" /><span>{scene.errorMessage || t('scene.failed_load')}</span></div>
                     ) : (
@@ -299,7 +335,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                                         <RefreshCw className={`w-3.5 h-3.5 ${isAudioLoading || localLoading.audio ? 'animate-spin' : ''}`} />
                                     </button>
                                 )}
-                                <AudioPlayerButton audioUrl={scene.audioUrl} status={scene.audioStatus} />
+                                <AudioPlayerButton audioUrl={mediaData.audioUrl || scene.audioUrl} status={scene.audioStatus} />
                             </div>
                         </div>
 

@@ -155,6 +155,7 @@
         "regenerate_title": "Recriar {{type}}?",
         "regenerate_confirm": "Isso substituirá o arquivo existente. Tem certeza que deseja continuar?",
         "regenerate_action": "Recriar",
+        "loading_media": "Carregando mídia...",
         "generating_video": "Gerando Vídeo...",
         "generating_image": "Gerando Imagem...",
         "failed_load": "Falha ao carregar mídia.",

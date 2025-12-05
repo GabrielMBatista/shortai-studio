@@ -139,3 +139,23 @@ export const deleteScene = async (sceneId: string) => {
         throw e;
     }
 };
+
+// In-memory cache for media
+const mediaCache = new Map<string, { image_base64?: string | null, audio_base64?: string | null, video_base64?: string | null }>();
+
+export const getSceneMedia = async (sceneId: string) => {
+    if (mediaCache.has(sceneId)) {
+        return mediaCache.get(sceneId);
+    }
+
+    try {
+        const res = await apiFetch(`/scenes/${sceneId}/media`);
+        if (res) {
+            mediaCache.set(sceneId, res);
+        }
+        return res;
+    } catch (e) {
+        console.warn("Failed to fetch scene media", e);
+        return null;
+    }
+};
