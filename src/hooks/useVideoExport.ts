@@ -90,12 +90,38 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
             video.crossOrigin = "anonymous";
+            // Check if it's already a blob to avoid double proxying
             video.src = url.startsWith('blob:') ? url : getProxyUrl(url);
             video.muted = true;
             video.playsInline = true;
             video.preload = "auto";
-            video.onloadedmetadata = () => resolve(video);
-            video.onerror = () => reject(new Error(`Failed to load video: ${url}`));
+
+            // Wait for video to be playable through to the end without buffering
+            const onCanPlayThrough = () => {
+                cleanup();
+                resolve(video);
+            };
+
+            const onError = () => {
+                cleanup();
+                reject(new Error(`Failed to load video: ${url}`));
+            };
+
+            const cleanup = () => {
+                video.removeEventListener('canplaythrough', onCanPlayThrough);
+                video.removeEventListener('error', onError);
+            };
+
+            video.addEventListener('canplaythrough', onCanPlayThrough);
+            video.addEventListener('error', onError);
+
+            // Fallback: If canplaythrough doesn't fire nicely, try loadeddata + minimal buffering check
+            video.onloadeddata = () => {
+                if (video.readyState >= 4) { // HAVE_ENOUGH_DATA
+                    cleanup();
+                    resolve(video);
+                }
+            };
         });
     };
 
