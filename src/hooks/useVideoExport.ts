@@ -403,6 +403,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             bitrate: 6_000_000, // 6 Mbps
             framerate: 30
         });
+        console.log("VideoEncoder configured");
 
         const audioEncoder = new AudioEncoder({
             output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
@@ -419,12 +420,14 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             sampleRate: 48000,
             bitrate: 128000
         });
+        console.log("AudioEncoder configured");
 
         // Encode Audio
         setDownloadProgress("Encoding audio...");
         const numberOfChannels = audioBuffer.numberOfChannels;
         const length = audioBuffer.length;
         const sampleRate = audioBuffer.sampleRate;
+        console.log(`Encoding Audio: Channels=${numberOfChannels}, Length=${length}, Rate=${sampleRate}`);
 
         // Interleave audio data for AudioData
         const interleaved = new Float32Array(length * numberOfChannels);
@@ -455,6 +458,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             audioData.close();
         }
         await audioEncoder.flush();
+        console.log("Audio encoding finished");
 
         // Encode Video
         const fps = 30;
@@ -462,10 +466,17 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         const totalFrames = Math.ceil(totalDuration * fps);
         const subtitleLayouts = precomputeSubtitleLayouts(ctx, assets, canvas.width);
 
+        console.log(`Starting Video Encoding: Total Frames=${totalFrames}, Duration=${totalDuration}s`);
+
         for (let i = 0; i < totalFrames; i++) {
-            if (!isDownloadingRef.current) break;
+            if (!isDownloadingRef.current) {
+                console.log("Export cancelled by user");
+                break;
+            }
 
             const time = i * frameDuration;
+            if (i % 30 === 0) console.log(`Processing Frame ${i}/${totalFrames} (Time: ${time.toFixed(2)})`);
+
             setDownloadProgress(`Encoding video (${Math.round((i / totalFrames) * 100)}%)...`);
 
             // Seek video if needed
@@ -473,11 +484,15 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             for (const asset of assets) {
                 if (time < accum + asset.renderDuration) {
                     if (asset.video) {
-                        asset.video.currentTime = time - accum;
-                        await new Promise<void>(r => {
-                            const onSeek = () => { asset.video.removeEventListener('seeked', onSeek); r(); };
-                            asset.video.addEventListener('seeked', onSeek, { once: true });
-                        });
+                        try {
+                            const seekTime = time - accum;
+                            asset.video.currentTime = seekTime;
+                            // Wait for seek if strictly necessary, but blob url puts it in memory usually fast enough
+                            // Adding a micro-wait to ensure frame readiness could help avoid black frames if buggy
+                            // await new Promise(r => requestAnimationFrame(r)); 
+                        } catch (e) {
+                            console.warn("Error seeking video asset", e);
+                        }
                     }
                     break;
                 }
@@ -485,7 +500,11 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             }
 
             // Draw Frame
-            drawFrame(ctx, canvas.width, canvas.height, time, assets, endingVideoElement, totalScenesDuration, subtitleLayouts);
+            try {
+                drawFrame(ctx, canvas.width, canvas.height, time, assets, endingVideoElement, totalScenesDuration, subtitleLayouts);
+            } catch (drawErr) {
+                console.error(`Error drawing frame ${i}`, drawErr);
+            }
 
             const frame = new VideoFrame(canvas, {
                 timestamp: time * 1_000_000 // microseconds
