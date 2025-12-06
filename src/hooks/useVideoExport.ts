@@ -216,6 +216,18 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 return { ...s, img, video, buffer, renderDuration: realDuration };
             }));
 
+            // --- Asset Loading Summary ---
+            const failedVideos = assets.filter(a => a.mediaType === 'video' && !a.video && a.videoUrl).map(a => a.sceneNumber);
+            const failedImages = assets.filter(a => !a.img && !a.video).map(a => a.sceneNumber);
+            const failedAudios = assets.filter(a => a.audioUrl && !a.buffer).map(a => a.sceneNumber);
+
+            console.log("=== Asset Loading Summary ===");
+            console.log(`Total Scenes: ${assets.length}`);
+            if (failedVideos.length > 0) console.warn(`❌ Failed Videos (fallback to image): Scenes ${failedVideos.join(', ')}`);
+            if (failedImages.length > 0) console.error(`❌ Failed Images (CRITICAL): Scenes ${failedImages.join(', ')}`);
+            if (failedAudios.length > 0) console.warn(`❌ Failed Audios (silent): Scenes ${failedAudios.join(', ')}`);
+            console.log("============================");
+
             let bgMusicBuffer: AudioBuffer | null = null;
             if (bgMusicUrl) {
                 try { bgMusicBuffer = await loadAudioBuffer(mainAudioCtx, bgMusicUrl); } catch (e) { }
