@@ -223,6 +223,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                     onClose={() => onSetStep(AppStep.SCRIPTING)}
                     bgMusicUrl={project.bgMusicUrl}
                     title={getDisplayTitle(project)}
+                    projectId={project.id}
                 />
             )}
         </>
