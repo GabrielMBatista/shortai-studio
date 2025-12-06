@@ -53,13 +53,18 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, pro
                 let statusMsg = i18n.t('video_player.rendering_server') || "Rendering on server...";
 
                 if (job.progress !== undefined) {
-                    statusMsg = `Renderizando: ${job.progress}%`;
-                    if (job.eta) {
-                        const mins = Math.floor(job.eta / 60);
-                        const secs = job.eta % 60;
-                        const etaStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-                        statusMsg += ` (ETA: ${etaStr})`;
-                        setEta(etaStr);
+                    if (job.progress >= 90) {
+                        statusMsg = "Finalizando renderização (pode levar alguns instantes)...";
+                        setEta(null);
+                    } else {
+                        statusMsg = `Renderizando: ${job.progress}%`;
+                        if (job.eta) {
+                            const mins = Math.floor(job.eta / 60);
+                            const secs = job.eta % 60;
+                            const etaStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                            statusMsg += ` (ETA: ${etaStr})`;
+                            setEta(etaStr);
+                        }
                     }
                 } else if (job.status === 'pending') {
                     statusMsg = "Na fila de processamento...";
