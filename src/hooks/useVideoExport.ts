@@ -158,7 +158,6 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             mainAudioCtx = new AudioContextClass({ sampleRate: 48000 });
 
             // 3. Load Assets
-            setEta("~150s");
             console.log(`Starting export with ${validScenes.length} valid scenes out of ${scenes.length} total.`);
 
             if (validScenes.length < scenes.length) {
@@ -500,6 +499,9 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
 
         console.log(`Starting Video Encoding: Total Frames=${totalFrames}, Duration=${totalDuration}s`);
 
+        const encodingStartTime = Date.now();
+        let lastEtaUpdate = 0;
+
         for (let i = 0; i < totalFrames; i++) {
             if (!isDownloadingRef.current) {
                 console.log("Export cancelled by user");
@@ -509,7 +511,24 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             const time = i * frameDuration;
             if (i % 30 === 0) console.log(`Processing Frame ${i}/${totalFrames} (Time: ${time.toFixed(2)})`);
 
-            setDownloadProgress(`Encoding video (${Math.round((i / totalFrames) * 100)}%)...`);
+            const progress = i / totalFrames;
+            setDownloadProgress(`Encoding video (${Math.round(progress * 100)}%)...`);
+
+            // Update ETA every 30 frames to avoid too many updates
+            if (i > 0 && i % 30 === 0) {
+                const elapsed = (Date.now() - encodingStartTime) / 1000; // seconds
+                const estimatedTotal = elapsed / progress;
+                const remaining = estimatedTotal - elapsed;
+
+                const formatTime = (seconds: number) => {
+                    if (seconds < 60) return `${Math.round(seconds)}s`;
+                    const mins = Math.floor(seconds / 60);
+                    const secs = Math.round(seconds % 60);
+                    return `${mins}m ${secs}s`;
+                };
+
+                setEta(formatTime(remaining));
+            }
 
             // Draw Frame - videos will play naturally, no manual seeking needed
             try {
@@ -530,9 +549,9 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 await new Promise(r => setTimeout(r, 20));
             }
 
-            // Small delay to allow video elements to render their next frame naturally
-            // This is critical for smooth video playback without seek artifacts
-            await new Promise(r => setTimeout(r, 0));
+            // Small delay to allow video element to render the seeked frame correctly
+            // Critical for MP4 encoding where we do frame-by-frame seeks
+            await new Promise(r => requestAnimationFrame(r));
         }
 
         if (isDownloadingRef.current) {
@@ -675,30 +694,10 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         const isVideoFrozen = hasVideo && timeInScene >= asset.videoDuration;
 
         if (isVideoActive) {
-            // Play video naturally (like the preview does) - no pan/zoom during video playback
+            // For MP4 frame-by-frame encoding, use direct currentTime setting
+            // This is different from preview which uses natural playback
             const videoTime = timeInScene;
-
-            // Start playing if not already playing  
-            if (asset.video.paused) {
-                try {
-                    asset.video.currentTime = videoTime;
-                    asset.video.play().catch(e => console.warn("Video play failed", e));
-                } catch (e) {
-                    console.warn("Failed to start video", e);
-                }
-            }
-
-            // Only seek if we're significantly off (>1s) - otherwise let it play naturally
-            const currentVideoTime = asset.video.currentTime;
-            const timeDiff = Math.abs(currentVideoTime - videoTime);
-
-            if (timeDiff > 1.0) {
-                try {
-                    asset.video.currentTime = videoTime;
-                } catch (e) {
-                    console.warn("Failed to seek video", e);
-                }
-            }
+            asset.video.currentTime = videoTime;
 
             const vw = asset.video.videoWidth;
             const vh = asset.video.videoHeight;
