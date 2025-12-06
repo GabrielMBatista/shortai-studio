@@ -560,7 +560,78 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 setEta(i18n.t('video_player.calculating'));
             }
 
+            // Throttle encoding to prevent GPU crash / OOM
+            if (videoEncoder.encodeQueueSize > 5) {
+                await new Promise(r => setTimeout(r, 20));
+            }
+
+            // --- FIX: Frame-Accurate Seeking ---
+            // We must identify the active video and WAIT for it to seek before drawing.
+            // Replicating the scene detection logic from drawFrame to get the active asset.
+            let currentSceneIdx = 0;
+            let accumTime = 0;
+            let timeInScene = 0;
+
+            for (let j = 0; j < assets.length; j++) {
+                if (time < accumTime + assets[j].renderDuration) {
+                    currentSceneIdx = j;
+                    timeInScene = time - accumTime;
+                    break;
+                }
+                accumTime += assets[j].renderDuration;
+            }
+            // Handle last scene edge case
+            if (currentSceneIdx >= assets.length) {
+                currentSceneIdx = assets.length - 1;
+                timeInScene = assets[currentSceneIdx].renderDuration;
+            }
+
+            const activeAsset = assets[currentSceneIdx];
+            if (activeAsset.video && activeAsset.videoDuration > 0 && timeInScene < activeAsset.videoDuration) {
+                const videoEl = activeAsset.video as HTMLVideoElement;
+                const targetTime = timeInScene;
+
+                // Only seek if significantly different (though encoding usually marches forward)
+                if (Math.abs(videoEl.currentTime - targetTime) > 0.001) {
+                    videoEl.currentTime = targetTime;
+
+                    // Wait for the specific 'seeked' event
+                    await new Promise<void>((resolve) => {
+                        const onSeeked = () => {
+                            videoEl.removeEventListener('seeked', onSeeked);
+                            resolve();
+                        };
+                        // Timeout safety just in case
+                        const timeout = setTimeout(() => {
+                            videoEl.removeEventListener('seeked', onSeeked);
+                            resolve(); // Continue anyway to avoid deadlock
+                        }, 500);
+
+                        videoEl.addEventListener('seeked', onSeeked);
+                    });
+                }
+            } else if (endingVideoElement && time >= totalScenesDuration) {
+                // Handle ending video seeking if present
+                const endingTime = time - totalScenesDuration;
+                if (Math.abs(endingVideoElement.currentTime - endingTime) > 0.001) {
+                    endingVideoElement.currentTime = endingTime;
+                    await new Promise<void>((resolve) => {
+                        const onSeeked = () => {
+                            endingVideoElement.removeEventListener('seeked', onSeeked);
+                            resolve();
+                        };
+                        const timeout = setTimeout(() => {
+                            endingVideoElement.removeEventListener('seeked', onSeeked);
+                            resolve();
+                        }, 500);
+                        endingVideoElement.addEventListener('seeked', onSeeked);
+                    });
+                }
+            }
+            // -----------------------------------
+
             // Draw Frame - videos will play naturally, no manual seeking needed
+
             try {
                 drawFrame(ctx, canvas.width, canvas.height, time, assets, endingVideoElement, totalScenesDuration, subtitleLayouts);
             } catch (drawErr) {
@@ -570,23 +641,6 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             const frame = new VideoFrame(canvas, {
                 timestamp: time * 1_000_000 // microseconds
             });
-
-            videoEncoder.encode(frame, { keyFrame: i % 60 === 0 });
-            frame.close();
-
-            // Throttle encoding to prevent GPU crash / OOM
-            if (videoEncoder.encodeQueueSize > 5) {
-                await new Promise(r => setTimeout(r, 20));
-            }
-
-            // Small delay to allow video element to render the seeked frame correctly
-            // Critical for MP4 encoding where we do frame-by-frame seeks
-            await new Promise(r => requestAnimationFrame(r));
-        }
-
-        if (isDownloadingRef.current) {
-            await videoEncoder.flush();
-            muxer.finalize();
         }
 
         const { buffer } = muxer.target;
