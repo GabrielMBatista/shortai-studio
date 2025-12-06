@@ -17,27 +17,26 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, pro
     const [downloadProgress, setDownloadProgress] = useState("");
     const [downloadError, setDownloadError] = useState<string | null>(null);
     const [resultUrl, setResultUrl] = useState<string | null>(null);
-    
-    // Kept for compatibility with component usage
-    const eta = null; 
+    const [eta, setEta] = useState<string | null>(null);
 
     const checkStatus = async (jobId: string) => {
         if (!isDownloading) return; // Stop polling if cancelled
-        
+
         try {
             // Using absolute URL or relative depending on vite proxy config. 
             // Assuming /api is proxied to backend
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
             const res = await fetch(`${apiUrl}/render/${jobId}`);
-            
+
             if (!res.ok) throw new Error("Failed to poll status");
             const job = await res.json();
-            
+
             if (job.status === 'completed') {
                 setIsDownloading(false);
                 setDownloadProgress(i18n.t('video_player.export_complete') || "Export Complete!");
                 setResultUrl(job.resultUrl);
-                
+                setEta(null);
+
                 // Auto-trigger download tab or prompt
                 const a = document.createElement('a');
                 a.href = job.resultUrl;
@@ -50,8 +49,24 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, pro
             } else if (job.status === 'failed') {
                 throw new Error(job.error || "Render failed on server");
             } else {
-                setDownloadProgress(i18n.t('video_player.rendering_server') || "Rendering on server...");
-                setTimeout(() => checkStatus(jobId), 5000);
+                // Formatting Status
+                let statusMsg = i18n.t('video_player.rendering_server') || "Rendering on server...";
+
+                if (job.progress !== undefined) {
+                    statusMsg = `Renderizando: ${job.progress}%`;
+                    if (job.eta) {
+                        const mins = Math.floor(job.eta / 60);
+                        const secs = job.eta % 60;
+                        const etaStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                        statusMsg += ` (ETA: ${etaStr})`;
+                        setEta(etaStr);
+                    }
+                } else if (job.status === 'pending') {
+                    statusMsg = "Na fila de processamento...";
+                }
+
+                setDownloadProgress(statusMsg);
+                setTimeout(() => checkStatus(jobId), 3000);
             }
         } catch (e: any) {
             setDownloadError(e.message);
@@ -79,7 +94,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, pro
         try {
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
             console.log("Queueing render job at", `${apiUrl}/render`);
-            
+
             const res = await fetch(`${apiUrl}/render`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,7 +112,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, pro
 
             const { jobId } = await res.json();
             setDownloadProgress("Job enfileirado. Aguardando servidor...");
-            
+
             // Start polling
             setTimeout(() => checkStatus(jobId), 2000);
 
