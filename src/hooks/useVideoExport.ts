@@ -131,9 +131,9 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
 
         setIsDownloading(true);
         setDownloadError(null);
-        setEta("calculating...");
+        setEta("Calculando...");
         isDownloadingRef.current = true;
-        setDownloadProgress("Loading assets (0%)...");
+        setDownloadProgress("Preparando exportação...");
 
         await new Promise(r => setTimeout(r, 100)); // UI Breath
 
@@ -528,6 +528,9 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 };
 
                 setEta(formatTime(remaining));
+            } else if (i < 30) {
+                // Keep showing "Calculando..." for the first frames
+                setEta("Calculando...");
             }
 
             // Draw Frame - videos will play naturally, no manual seeking needed
