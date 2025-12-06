@@ -172,6 +172,8 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
 
                 let img: HTMLImageElement | null = null;
                 let video: HTMLVideoElement | null = null;
+                let videoDuration = 0;
+                let lastFrameImg: HTMLImageElement | null = null;
 
                 const useVideo = (s.mediaType === 'video' || (!s.mediaType && s.videoUrl)) && s.videoUrl && s.videoStatus === 'completed';
 
@@ -186,7 +188,26 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                         const blobUrl = URL.createObjectURL(blob);
 
                         video = await loadVideo(blobUrl);
-                        console.log(`Video loaded successfully for scene ${s.sceneNumber}`);
+                        videoDuration = video.duration;
+                        console.log(`Video loaded successfully for scene ${s.sceneNumber}, duration: ${videoDuration}s`);
+
+                        // Capture last frame for freeze effect when narration is longer than video
+                        video.currentTime = Math.max(0, videoDuration - 0.1);
+                        await new Promise(resolve => {
+                            video!.onseeked = () => resolve(null);
+                        });
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(video, 0, 0);
+                            lastFrameImg = await loadImage(canvas.toDataURL());
+                        }
+
+                        // Reset video to start
+                        video.currentTime = 0;
                     } catch (e) {
                         console.warn(`Failed to load video for scene ${s.sceneNumber}, falling back to image`, e);
                         img = await loadImage(s.imageUrl!);
@@ -202,7 +223,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                     if (!buffer) {
                         console.warn(`Failed to load audio for scene ${s.sceneNumber}: ${s.audioUrl}`);
                     } else {
-                        console.log(`Audio loaded for scene ${s.sceneNumber}, duration: ${buffer.duration}`);
+                        console.log(`Audio loaded for scene ${s.sceneNumber}, duration: ${buffer.duration}s`);
                     }
                 }
 
@@ -211,7 +232,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 const fallbackDuration = dbDuration > 0 ? dbDuration : 5;
                 const realDuration = (buffer && Number.isFinite(buffer.duration)) ? buffer.duration : fallbackDuration;
 
-                return { ...s, img, video, buffer, renderDuration: realDuration };
+                return { ...s, img, video, videoDuration, lastFrameImg, buffer, renderDuration: realDuration };
             }));
 
             // --- Asset Loading Summary ---
@@ -662,18 +683,45 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
 
         const asset = assets[currentSceneIdx];
         const layout = subtitleLayouts[currentSceneIdx];
-        const scale = 1.0 + (0.15 * (timeInScene / asset.renderDuration));
 
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, w, h);
 
-        if (asset.video) {
+        // Determine if we should use video, frozen frame, or image
+        const hasVideo = asset.video && asset.videoDuration > 0;
+        const isVideoActive = hasVideo && timeInScene < asset.videoDuration;
+        const isVideoFrozen = hasVideo && timeInScene >= asset.videoDuration;
+
+        if (isVideoActive) {
+            // Play video normally (no pan/zoom during video playback)
+            const videoTime = timeInScene;
+            asset.video.currentTime = videoTime;
+
+            const vw = asset.video.videoWidth;
+            const vh = asset.video.videoHeight;
+            if (vw > 0 && vh > 0) {
+                const scale = Math.max(w / vw, h / vh);
+                const sw = vw * scale;
+                const sh = vh * scale;
+                const ox = (w - sw) / 2;
+                const oy = (h - sh) / 2;
+                ctx.drawImage(asset.video, ox, oy, sw, sh);
+            }
+        } else if (isVideoFrozen && asset.lastFrameImg) {
+            // Video ended but narration continues: freeze last frame with pan/zoom
+            const frozenTime = timeInScene - asset.videoDuration;
+            const frozenDuration = asset.renderDuration - asset.videoDuration;
+            const frozenProgress = frozenTime / frozenDuration;
+            const scale = 1.0 + (0.15 * frozenProgress);
+
             const sw = w * scale;
             const sh = h * scale;
             const ox = (w - sw) / 2;
             const oy = (h - sh) / 2;
-            ctx.drawImage(asset.video, ox, oy, sw, sh);
+            ctx.drawImage(asset.lastFrameImg, ox, oy, sw, sh);
         } else if (asset.img) {
+            // Static image with pan/zoom
+            const scale = 1.0 + (0.15 * (timeInScene / asset.renderDuration));
             const sw = w * scale;
             const sh = h * scale;
             const ox = (w - sw) / 2;
