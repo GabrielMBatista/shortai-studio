@@ -428,11 +428,12 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         });
 
         videoEncoder.configure({
-            codec: 'avc1.42002A', // H.264 Baseline Profile Level 4.2
+            codec: 'avc1.4d0028', // H.264 Main Profile Level 4.0 (better quality)
             width: 1080,
             height: 1920,
-            bitrate: 6_000_000, // 6 Mbps
-            framerate: 30
+            bitrate: 10_000_000, // 10 Mbps for better quality
+            framerate: 30,
+            hardwareAcceleration: 'prefer-hardware'
         });
         console.log("VideoEncoder configured");
 
@@ -449,7 +450,7 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             codec: 'mp4a.40.2', // AAC LC
             numberOfChannels: 2,
             sampleRate: 48000,
-            bitrate: 128000
+            bitrate: 192000 // 192 kbps for better audio quality
         });
         console.log("AudioEncoder configured");
 
@@ -676,16 +677,12 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             // Play video normally (no pan/zoom during video playback)
             const videoTime = timeInScene;
 
-            // Only seek if we're off by more than 0.1s to avoid micro-seeks that can pause the video
-            const currentVideoTime = asset.video.currentTime;
-            const timeDiff = Math.abs(currentVideoTime - videoTime);
-
-            if (timeDiff > 0.1) {
-                try {
-                    asset.video.currentTime = videoTime;
-                } catch (e) {
-                    console.warn("Failed to seek video", e);
-                }
+            // Always set currentTime for accurate frame-by-frame rendering
+            // This ensures every frame is rendered correctly without skipping
+            try {
+                asset.video.currentTime = videoTime;
+            } catch (e) {
+                console.warn("Failed to seek video", e);
             }
 
             const vw = asset.video.videoWidth;
