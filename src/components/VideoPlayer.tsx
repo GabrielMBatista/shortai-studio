@@ -66,6 +66,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
   const [includeEndingVideo, setIncludeEndingVideo] = useState(false);
   const [endingVideoFile, setEndingVideoFile] = useState<File | null>(null);
   const [exportFormat, setExportFormat] = useState<'mp4' | 'webm'>('mp4');
+  const [exportResolution, setExportResolution] = useState<'1080p' | '720p'>('1080p');
   const [exportFps, setExportFps] = useState<30 | 60>(60);
   const [isMp4Supported, setIsMp4Supported] = useState(true);
   const [showMobileTips, setShowMobileTips] = useState(false);
@@ -89,7 +90,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
     downloadProgress,
     downloadError,
     eta
-  } = useVideoExport({ scenes: validScenes, bgMusicUrl, title, endingVideoFile, showSubtitles, fps: exportFps });
+  } = useVideoExport({ scenes: validScenes, bgMusicUrl, title, endingVideoFile, showSubtitles, fps: exportFps, resolution: exportResolution });
 
 
   // Reset state when scenes change
@@ -338,6 +339,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
                       className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${exportFormat === 'webm' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
                     >
                       WebM
+                    </button>
+                  </div>
+              </div>
+
+              <div className="w-full max-w-sm mb-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                  <label className="text-sm font-medium text-slate-300 block mb-3 text-left">{t('video_player.resolution')}</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setExportResolution('1080p')}
+                      className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${exportResolution === '1080p'
+                        ? 'bg-indigo-600 border-indigo-500 text-white'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                        }`}
+                    >
+                      1080p (FHD)
+                    </button>
+                    <button
+                      onClick={() => setExportResolution('720p')}
+                      className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${exportResolution === '720p'
+                        ? 'bg-indigo-600 border-indigo-500 text-white'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                        }`}
+                    >
+                      720p (HD)
                     </button>
                   </div>
                 </div>

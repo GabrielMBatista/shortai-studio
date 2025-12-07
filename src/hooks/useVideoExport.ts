@@ -11,9 +11,10 @@ interface UseVideoExportProps {
     endingVideoFile?: File | null;
     showSubtitles?: boolean;
     fps?: 30 | 60;
+    resolution?: '1080p' | '720p';
 }
 
-export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, showSubtitles = true, fps = 60 }: UseVideoExportProps) => {
+export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, showSubtitles = true, fps = 60, resolution = '1080p' }: UseVideoExportProps) => {
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState("");
     const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -143,15 +144,17 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         try {
             // 1. Setup Canvas (High Quality)
             const canvas = document.createElement('canvas');
-            canvas.width = 1080;
-            canvas.height = 1920;
+            const width = resolution === '1080p' ? 1080 : 720;
+            const height = resolution === '1080p' ? 1920 : 1280;
+            canvas.width = width;
+            canvas.height = height;
             const ctx = canvas.getContext('2d', { alpha: false });
             if (!ctx) throw new Error("Could not create canvas context");
 
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, 1080, 1920);
+            ctx.fillRect(0, 0, width, height);
 
             // 2. Audio Context (For decoding and final playback)
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -473,8 +476,8 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             target: new Mp4Muxer.ArrayBufferTarget(),
             video: {
                 codec: 'avc',
-                width: 1080,
-                height: 1920
+                width: canvas.width,
+                height: canvas.height
             },
             audio: {
                 codec: 'aac',
@@ -495,15 +498,20 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             }
         });
 
+        // Calculate ideal bitrate: 10Mbps for 1080p@60, ~6Mbps for 720p@60
+        const is1080p = canvas.width >= 1080;
+        const baseBitrate = is1080p ? 10_000_000 : 5_500_000;
+        const bitrate = fps === 60 ? baseBitrate : Math.round(baseBitrate * 0.6); // Lower bitrate for 30fps
+
         videoEncoder.configure({
-            codec: 'avc1.4d0028', // H.264 Main Profile Level 4.0 (better quality)
-            width: 1080,
-            height: 1920,
-            bitrate: 10_000_000, // 10 Mbps for better quality
+            codec: 'avc1.4d0028', // H.264 Main Profile
+            width: canvas.width,
+            height: canvas.height,
+            bitrate: bitrate,
             framerate: fps,
             hardwareAcceleration: 'prefer-hardware'
         });
-        console.log(`VideoEncoder configured with ${fps} FPS`);
+        console.log(`VideoEncoder configured with ${fps} FPS, ${canvas.width}x${canvas.height}, ${(bitrate / 1000000).toFixed(1)} Mbps`);
 
         const audioEncoder = new AudioEncoder({
             output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
@@ -656,7 +664,10 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
         if (audioTrack) stream.addTrack(audioTrack);
 
         // Adjust bitrate based on FPS (higher FPS needs more bitrate)
-        const videoBitrate = fps === 60 ? 8000000 : 6000000;
+        // Adjust bitrate based on FPS and Resolution
+        const is1080p = canvas.width >= 1080;
+        const baseBitrate = is1080p ? 8_000_000 : 4_500_000;
+        const videoBitrate = fps === 60 ? baseBitrate : Math.round(baseBitrate * 0.7);
 
         const recorder = new MediaRecorder(stream, {
             mimeType: mimeType,
