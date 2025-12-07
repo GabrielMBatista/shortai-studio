@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen, Loader2, HelpCircle, PlayCircle, Settings, FileText, Video, Download } from 'lucide-react';
+import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen, Loader2, HelpCircle, PlayCircle, Settings, FileText, Video, Download, PanelLeft } from 'lucide-react';
 import { Folder as FolderType } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -101,7 +101,7 @@ const FolderList: React.FC<FolderListProps> = ({
                         onClick={onToggleCollapse}
                         className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors"
                     >
-                        {isCollapsed ? <FolderOpen className="w-4 h-4" /> : <div className="w-4 h-4 flex items-center justify-center">«</div>}
+                        {isCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeft className="w-4 h-4 rotate-180" />}
                     </button>
                 </div>
             </div>

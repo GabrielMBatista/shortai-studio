@@ -250,6 +250,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
       {/* Main Player Container */}
       <div id="video-preview-player" className="relative h-[80vh] max-w-full aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
 
+        {isLoadingMedia && (
+          <div className="absolute inset-0 z-20 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in">
+            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-3" />
+            <span className="text-xs font-semibold text-slate-300 tracking-wider uppercase">{t('common.loading')}</span>
+          </div>
+        )}
+
         {/* Background Media */}
         {activeScene.mediaType !== 'image' && (
           (activeScene.mediaType === 'video' || (activeScene.videoUrl && activeScene.videoStatus === 'completed')) ||
@@ -258,6 +265,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           <video
             ref={videoRef}
             src={activeMedia.videoUrl || activeScene.videoUrl || ''}
+            poster={activeMedia.imageUrl || activeScene.imageUrl || undefined}
             className={`w-full h-full object-cover ${videoEnded ? 'transition-transform duration-[20s] ease-linear scale-110' : 'scale-100'}`}
             muted={true}
             playsInline
