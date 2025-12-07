@@ -143,7 +143,9 @@ const App: React.FC = () => {
             handleSetStep(AppStep.PREVIEW);
             setTutorialSteps(getExportTourSteps(t));
         }
-        setTimeout(() => setRunTutorial(true), 800);
+        // Export tour needs longer delay to wait for modal open (1000ms in VideoPlayer)
+        const delay = tour === 'export' ? 2000 : 800;
+        setTimeout(() => setRunTutorial(true), delay);
     };
 
     // --- Restoration Logic ---
