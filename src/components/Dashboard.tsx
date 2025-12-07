@@ -344,7 +344,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <Menu className="w-6 h-6" />
                         </button>
                         <span className="ml-2 font-bold text-white">ShortsAI</span>
-                        <div className="ml-auto relative">
+                        <div className="ml-auto relative md:hidden">
                              <button
                                 onClick={(e) => {
                                     e.stopPropagation();

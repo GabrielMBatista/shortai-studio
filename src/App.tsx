@@ -12,7 +12,7 @@ import ScreenManager from './components/layout/ScreenManager';
 import { useAuth } from './hooks/useAuth';
 import { useAutosave } from './hooks/useAutosave';
 import { getSettingsTourSteps, getCreationTourSteps, getScriptTourSteps, getPreviewTourSteps } from './constants/tourSteps';
-import { MOCK_PROJECT_TOUR } from './constants/mockProject';
+import { MOCK_PROJECT_TOUR, MOCK_PROJECT_PREVIEW } from './constants/mockProject';
 
 const App: React.FC = () => {
     const { t } = useTranslation();
@@ -129,11 +129,11 @@ const App: React.FC = () => {
             }
             setTutorialSteps(getScriptTourSteps(t));
         } else if (tour === 'preview') {
-             if (step !== AppStep.PREVIEW) {
-                // If not in preview, we can't really tour it easily unless we open one.
-                // Assuming this is triggered FROM preview, or we force open one if possible.
-                // For now, assume user is there or we just set steps.
+             // Force PREVIEW step for tour with Mock Data
+             if (!project || project.id !== MOCK_PROJECT_PREVIEW.id) {
+                 setProject(MOCK_PROJECT_PREVIEW);
              }
+             handleSetStep(AppStep.PREVIEW);
              setTutorialSteps(getPreviewTourSteps(t));
         }
         setTimeout(() => setRunTutorial(true), 800);

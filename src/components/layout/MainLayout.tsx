@@ -49,12 +49,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     project
 }) => {
     const { t, i18n } = useTranslation();
-    const [isTourMenuOpen, setIsTourMenuOpen] = useState(false);
 
-    const handleStartTourInternal = (tour: 'settings' | 'creation' | 'script') => {
-        setIsTourMenuOpen(false);
-        onStartTour(tour);
-    };
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-[#0f172a] text-slate-50 flex flex-col font-sans">
@@ -94,44 +89,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         <div className="flex items-center gap-3 border-l border-slate-800 pl-4">
                             {/* Desktop Menu */}
                             <div className="hidden md:flex items-center gap-3">
-                                {/* Tour Menu */}
-                                <div className="relative">
-                                    <button
-                                        id="nav-tours"
-                                        onClick={() => setIsTourMenuOpen(!isTourMenuOpen)}
-                                        className={`p-2 rounded-lg transition-colors relative group ${isTourMenuOpen ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                                        title="Tours & Help"
-                                    >
-                                        <div className="absolute inset-1 bg-yellow-500/40 blur-md rounded-full animate-pulse" />
-                                        <HelpCircle className={`w-5 h-5 relative z-10 ${!isTourMenuOpen ? 'text-yellow-100 shadow-white drop-shadow-[0_0_2px_rgba(255,255,255,0.5)]' : ''}`} />
-                                    </button>
 
-                                    {isTourMenuOpen && (
-                                        <div className="absolute right-0 top-full mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
-                                            <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                                {t('nav.tours')}
-                                            </div>
-                                            <button
-                                                onClick={() => handleStartTourInternal('settings')}
-                                                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                                            >
-                                                {t('nav.settings_tour')}
-                                            </button>
-                                            <button
-                                                onClick={() => handleStartTourInternal('creation')}
-                                                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                                            >
-                                                {t('nav.creation_tour')}
-                                            </button>
-                                            <button
-                                                onClick={() => handleStartTourInternal('script')}
-                                                className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                                            >
-                                                {t('nav.script_tour')}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
 
                                 {/* Language Selector */}
                                 <div className="relative mr-2 group">

@@ -28,3 +28,33 @@ export const MOCK_PROJECT_TOUR: VideoProject = {
     generatedDescription: 'A short noir story set in a cyberpunk future.',
     referenceCharacters: []
 };
+
+export const MOCK_PROJECT_PREVIEW: VideoProject = {
+    id: 'mock-project-preview',
+    userId: 'mock-user',
+    createdAt: Date.now(),
+    topic: 'Space Exploration Documentary',
+    style: 'Documentary',
+    voiceName: 'Nova',
+    ttsProvider: 'gemini',
+    language: 'English',
+    status: 'completed',
+    scenes: [
+        {
+            id: 'mock-scene-prev-1',
+            sceneNumber: 1,
+            visualDescription: 'Vast nebula with vibrant colors in deep space.',
+            narration: 'The universe is vast, filled with mysteries waiting to be discovered.',
+            durationSeconds: 5,
+            imageStatus: 'completed',
+            audioStatus: 'completed',
+            sfxStatus: 'completed',
+            videoStatus: 'completed',
+            mediaType: 'image',
+            imageUrl: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2070&auto=format&fit=crop',
+        }
+    ],
+    generatedTitle: 'Cosmic Journey',
+    generatedDescription: 'A brief look into the cosmos.',
+    referenceCharacters: []
+};
