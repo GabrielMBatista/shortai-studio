@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen, Loader2, HelpCircle, PlayCircle, Settings, FileText, Video } from 'lucide-react';
+import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen, Loader2, HelpCircle, PlayCircle, Settings, FileText, Video, Download } from 'lucide-react';
 import { Folder as FolderType } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +17,7 @@ interface FolderListProps {
     className?: string;
     isLoading?: boolean;
     updatingFolderId?: string | null;
-    onStartTour: (tour: 'settings' | 'creation' | 'script' | 'preview') => void;
+    onStartTour: (tour: 'settings' | 'creation' | 'script' | 'preview' | 'export') => void;
 }
 
 const FolderList: React.FC<FolderListProps> = ({
@@ -243,11 +243,11 @@ const FolderList: React.FC<FolderListProps> = ({
                         ))
                     )}
                 </div>
-            
+
                 {/* Tours Section - Inside Scrollable Area */}
                 <div className={`mt-4 border-t border-slate-800 pt-2 flex flex-col gap-1 pb-4`}>
                     {!isCollapsed && <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 py-2 mb-1">{t('nav.tours_title')}</h3>}
-                
+
                     <button
                         onClick={() => onStartTour('settings')}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
@@ -277,10 +277,18 @@ const FolderList: React.FC<FolderListProps> = ({
                     <button
                         onClick={() => onStartTour('preview')}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
-                        title={isCollapsed ? "Preview Tour" : undefined}
+                        title={isCollapsed ? t('nav.preview_tour') : undefined}
                     >
                         <Video className="w-4 h-4 flex-shrink-0" />
-                        {!isCollapsed && <span className="text-sm truncate">Preview & Export</span>}
+                        {!isCollapsed && <span className="text-sm truncate">{t('nav.preview_tour')}</span>}
+                    </button>
+                    <button
+                        onClick={() => onStartTour('export')}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                        title={isCollapsed ? t('nav.export_tour') : undefined}
+                    >
+                        <Download className="w-4 h-4 flex-shrink-0" />
+                        {!isCollapsed && <span className="text-sm truncate">{t('nav.export_tour')}</span>}
                     </button>
                 </div>
             </div>

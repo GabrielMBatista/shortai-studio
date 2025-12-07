@@ -105,8 +105,8 @@ export const getScriptTourSteps = (t: TFunction): Step[] => [
     },
     {
         target: '#scene-0-edit-prompt',
-        content: t('tour.script.scene_edit_prompt'), 
-        placement: 'top', 
+        content: t('tour.script.scene_edit_prompt'),
+        placement: 'top',
     },
     {
         target: '#btn-add-scene',
@@ -150,10 +150,18 @@ export const getPreviewTourSteps = (t: TFunction): Step[] => [
         target: '#video-export-format',
         content: t('tour.preview.resolution'),
         placement: 'right',
+    }
+].map(step => ({ ...step, disableBeacon: true })) as Step[];
+
+export const getExportTourSteps = (t: TFunction): Step[] => [
+    {
+        target: '#btn-video-export',
+        content: t('tour.export.welcome'),
+        placement: 'bottom',
     },
     {
         target: '#btn-video-export',
-        content: t('tour.preview.export_btn_instruction'),
+        content: t('tour.export.open_modal'),
         placement: 'bottom',
         spotlightClicks: true,
         disableOverlayClose: true,
@@ -161,27 +169,27 @@ export const getPreviewTourSteps = (t: TFunction): Step[] => [
     },
     {
         target: '#video-export-format',
-        content: t('tour.preview.export_format_step'),
+        content: t('tour.export.format_step'),
         placement: 'right',
     },
     {
         target: '#video-export-resolution',
-        content: t('tour.preview.export_resolution_step'),
+        content: t('tour.export.resolution_step'),
         placement: 'right',
     },
     {
         target: '#video-export-fps',
-        content: t('tour.preview.export_fps_step'),
+        content: t('tour.export.fps_step'),
         placement: 'right',
     },
     {
         target: '#video-export-merge',
-        content: t('tour.preview.export_merge_step'),
+        content: t('tour.export.merge_step'),
         placement: 'top',
     },
     {
         target: '#btn-confirm-export',
-        content: t('tour.preview.export_confirm_step'),
+        content: t('tour.export.confirm_step'),
         placement: 'top',
     }
 ].map(step => ({ ...step, disableBeacon: true })) as Step[];

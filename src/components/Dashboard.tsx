@@ -27,7 +27,7 @@ interface DashboardProps {
     setSelectedFolderId: (id: string | null) => void;
     showArchived: boolean;
     setShowArchived: (show: boolean) => void;
-    onStartTour: (tour: 'settings' | 'creation' | 'script' | 'preview') => void;
+    onStartTour: (tour: 'settings' | 'creation' | 'script' | 'preview' | 'export') => void;
 }
 
 const useIsMobile = () => {
@@ -345,7 +345,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </button>
                         <span className="ml-2 font-bold text-white">ShortsAI</span>
                         <div className="ml-auto relative md:hidden">
-                             <button
+                            <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setIsMobileTourMenuOpen(!isMobileTourMenuOpen);
@@ -373,13 +373,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         </button>
                                         <button onClick={() => { onStartTour('preview'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
                                             <Video className="w-4 h-4 text-pink-400" />
-                                            Preview & Export
+                                            {t('nav.preview_tour')}
+                                        </button>
+                                        <button onClick={() => { onStartTour('export'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
+                                            <Download className="w-4 h-4 text-blue-400" />
+                                            {t('nav.export_tour')}
                                         </button>
                                     </div>
                                 </div>
                             )}
 
-                             {/* Close overlay if open */}
+                            {/* Close overlay if open */}
                             {isMobileTourMenuOpen && (
                                 <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsMobileTourMenuOpen(false)} />
                             )}

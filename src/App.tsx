@@ -11,12 +11,12 @@ import MainLayout from './components/layout/MainLayout';
 import ScreenManager from './components/layout/ScreenManager';
 import { useAuth } from './hooks/useAuth';
 import { useAutosave } from './hooks/useAutosave';
-import { getSettingsTourSteps, getCreationTourSteps, getScriptTourSteps, getPreviewTourSteps } from './constants/tourSteps';
+import { getSettingsTourSteps, getCreationTourSteps, getScriptTourSteps, getPreviewTourSteps, getExportTourSteps } from './constants/tourSteps';
 import { MOCK_PROJECT_TOUR, MOCK_PROJECT_PREVIEW } from './constants/mockProject';
 
 const App: React.FC = () => {
     const { t } = useTranslation();
-    
+
     // Auth & Session
     const { currentUser, setCurrentUser, isInitializing: isAuthInitializing, isLoggingOut, login, logout } = useAuth();
     const [step, setStep] = useState<AppStep>(AppStep.AUTH);
@@ -24,7 +24,7 @@ const App: React.FC = () => {
 
     // Tour State
     const [runTutorial, setRunTutorial] = useState(false);
-    const [activeTour, setActiveTour] = useState<'settings' | 'creation' | 'script' | 'preview' | null>(null);
+    const [activeTour, setActiveTour] = useState<'settings' | 'creation' | 'script' | 'preview' | 'export' | null>(null);
     const [tutorialSteps, setTutorialSteps] = useState<Step[]>([]);
 
     // Dashboard State
@@ -110,7 +110,7 @@ const App: React.FC = () => {
         localStorage.setItem('shortsai_last_step', newStep);
     };
 
-    const handleStartTour = (tour: 'settings' | 'creation' | 'script' | 'preview') => {
+    const handleStartTour = (tour: 'settings' | 'creation' | 'script' | 'preview' | 'export') => {
         setActiveTour(tour);
         if (tour === 'settings') {
             handleSetStep(AppStep.SETTINGS);
@@ -123,18 +123,25 @@ const App: React.FC = () => {
             if (!project) {
                 setProject(MOCK_PROJECT_TOUR);
             }
-            
+
             if (step !== AppStep.SCRIPTING) {
                 handleSetStep(AppStep.SCRIPTING);
             }
             setTutorialSteps(getScriptTourSteps(t));
         } else if (tour === 'preview') {
-             // Force PREVIEW step for tour with Mock Data
-             if (!project || project.id !== MOCK_PROJECT_PREVIEW.id) {
-                 setProject(MOCK_PROJECT_PREVIEW);
-             }
-             handleSetStep(AppStep.PREVIEW);
-             setTutorialSteps(getPreviewTourSteps(t));
+            // Force PREVIEW step for tour with Mock Data
+            if (!project || project.id !== MOCK_PROJECT_PREVIEW.id) {
+                setProject(MOCK_PROJECT_PREVIEW);
+            }
+            handleSetStep(AppStep.PREVIEW);
+            setTutorialSteps(getPreviewTourSteps(t));
+        } else if (tour === 'export') {
+            // Force PREVIEW step for export tour with Mock Data
+            if (!project || project.id !== MOCK_PROJECT_PREVIEW.id) {
+                setProject(MOCK_PROJECT_PREVIEW);
+            }
+            handleSetStep(AppStep.PREVIEW);
+            setTutorialSteps(getExportTourSteps(t));
         }
         setTimeout(() => setRunTutorial(true), 800);
     };
@@ -223,7 +230,7 @@ const App: React.FC = () => {
     const handleOpenProject = async (p: VideoProject) => {
         setIsLoadingProject(true);
         handleSetStep(AppStep.SCRIPTING);
-        
+
         try {
             const fullProject = await getProject(p.id);
             if (fullProject) {

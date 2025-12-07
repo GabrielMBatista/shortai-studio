@@ -21,7 +21,9 @@
         "tours_title": "Tours & Ajuda",
         "settings_tour": "Configurações & Chaves de API",
         "creation_tour": "Tour de Criação",
-        "script_tour": "Tour do Roteiro"
+        "script_tour": "Tour do Roteiro",
+        "preview_tour": "Tour de Preview",
+        "export_tour": "Tour de Exportação"
     },
     "folders": {
         "title": "Pastas",
@@ -288,15 +290,17 @@
         "preview": {
             "player": "Aqui você assiste ao resultado final. O vídeo é montado em tempo real.",
             "controls": "Controle a reprodução, pause e navegue pelas cenas.",
-            "export_btn": "Clique aqui para exportar.",
-            "export_btn_instruction": "Clique neste botão de baixar agora para abrir as opções, e depois clique em Próximo no tour.",
             "subtitles": "Ative ou desative as legendas automáticas.",
-            "resolution": "Escolha entre 1080p (qualidade máxima) ou 720p (arquivo menor).",
-            "export_format_step": "MP4 é mais compatível (Instagram/TikTok). WebM é mais rápido.",
-            "export_resolution_step": "1080p para qualidade máxima ou 720p para arquivos mais leves.",
-            "export_fps_step": "60 FPS para movimentos fluídos. 30 FPS para tamanho menor.",
-            "export_merge_step": "Adicione um vídeo de encerramento (outro) automático ao final.",
-            "export_confirm_step": "Clique aqui para solicitar a renderização do vídeo no servidor."
+            "resolution": "Escolha entre 1080p (qualidade máxima) ou 720p (arquivo menor)."
+        },
+        "export": {
+            "welcome": "Bem-vindo ao tour de exportação! Aqui você aprenderá a exportar seu vídeo com as melhores configurações.",
+            "open_modal": "Clique neste botão de baixar agora para abrir as opções de exportação, e depois clique em Próximo.",
+            "format_step": "MP4 é mais compatível (Instagram/TikTok). WebM é mais rápido.",
+            "resolution_step": "1080p para qualidade máxima ou 720p para arquivos mais leves.",
+            "fps_step": "60 FPS para movimentos fluídos. 30 FPS para tamanho menor.",
+            "merge_step": "Adicione um vídeo de encerramento (outro) automático ao final.",
+            "confirm_step": "Clique aqui para solicitar a renderização do vídeo no servidor."
         }
     },
     "quota": {
