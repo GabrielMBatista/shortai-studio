@@ -153,9 +153,11 @@ export const getPreviewTourSteps = (t: TFunction): Step[] => [
     },
     {
         target: '#btn-video-export',
-        content: t('tour.preview.export_btn'),
-        placement: 'top',
+        content: t('tour.preview.export_btn_instruction'),
+        placement: 'bottom',
         spotlightClicks: true,
+        disableOverlayClose: true,
+        hideCloseButton: true,
     },
     {
         target: '#video-export-format',

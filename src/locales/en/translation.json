@@ -276,7 +276,8 @@
         "preview": {
             "player": "Watch the final result here. The video is assembled in real-time.",
             "controls": "Control playback, pause, and navigate through scenes.",
-            "export_btn": "Click here to open export options and download.",
+            "export_btn": "Click here to export.",
+            "export_btn_instruction": "Click this download button now to open options, then click Next on the tour.",
             "subtitles": "Toggle automatic subtitles on or off.",
             "resolution": "Choose between 1080p (high quality) or 720p (smaller file).",
             "export_format_step": "MP4 is more compatible (IG/TikTok). WebM is faster.",

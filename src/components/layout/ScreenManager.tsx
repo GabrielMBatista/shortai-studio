@@ -146,6 +146,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                     setSelectedFolderId={setSelectedFolderId}
                     showArchived={showArchived}
                     setShowArchived={setShowArchived}
+                    onStartTour={onStartTour}
                 />
             )}
 
