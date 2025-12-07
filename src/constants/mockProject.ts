@@ -1,7 +1,7 @@
 import { VideoProject } from '../types';
 
-export const MOCK_PROJECT_TOUR: VideoProject = {
-    id: 'mock-project-tour',
+export const MOCK_PROJECT_COMMON: VideoProject = {
+    id: 'mock-project-unified',
     userId: 'mock-user',
     createdAt: Date.now(),
     topic: 'Cyberpunk Detective in Neo-Tokyo',
@@ -20,8 +20,10 @@ export const MOCK_PROJECT_TOUR: VideoProject = {
             imageStatus: 'completed',
             audioStatus: 'completed',
             sfxStatus: 'pending',
-            videoStatus: 'pending',
+            videoStatus: 'completed', // Video is ready
             imageUrl: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=2070&auto=format&fit=crop',
+            videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', // Valid sample video
+            mediaType: 'video', // Start showing video to demonstrate toggle
         }
     ],
     generatedTitle: 'Neon Shadows',
@@ -29,32 +31,6 @@ export const MOCK_PROJECT_TOUR: VideoProject = {
     referenceCharacters: []
 };
 
-export const MOCK_PROJECT_PREVIEW: VideoProject = {
-    id: 'mock-project-preview',
-    userId: 'mock-user',
-    createdAt: Date.now(),
-    topic: 'Space Exploration Documentary',
-    style: 'Documentary',
-    voiceName: 'Nova',
-    ttsProvider: 'gemini',
-    language: 'English',
-    status: 'completed',
-    scenes: [
-        {
-            id: 'mock-scene-prev-1',
-            sceneNumber: 1,
-            visualDescription: 'Vast nebula with vibrant colors in deep space.',
-            narration: 'The universe is vast, filled with mysteries waiting to be discovered.',
-            durationSeconds: 5,
-            imageStatus: 'completed',
-            audioStatus: 'completed',
-            sfxStatus: 'completed',
-            videoStatus: 'completed',
-            mediaType: 'image',
-            imageUrl: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2070&auto=format&fit=crop',
-        }
-    ],
-    generatedTitle: 'Cosmic Journey',
-    generatedDescription: 'A brief look into the cosmos.',
-    referenceCharacters: []
-};
+// Both exports point to the same unified mock
+export const MOCK_PROJECT_TOUR = MOCK_PROJECT_COMMON;
+export const MOCK_PROJECT_PREVIEW = MOCK_PROJECT_COMMON;
