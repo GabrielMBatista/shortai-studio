@@ -7,6 +7,7 @@ import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, Chevron
 import AudioPlayerButton from '../common/AudioPlayerButton';
 import ConfirmModal from '../ConfirmModal';
 import { SafeImage } from '../common/SafeImage';
+import { SafeVideo } from '../common/SafeVideo';
 import { useTranslation } from 'react-i18next';
 
 interface SceneCardProps {
@@ -223,7 +224,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
             <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col hover:border-slate-600 transition-colors h-full shadow-lg">
                 <div className="aspect-[9/16] bg-slate-900 relative group border-b border-slate-700/50">
                     {showVideo && hasVideo ? (
-                        <video
+                        <SafeVideo
                             src={mediaData.videoUrl || scene.videoUrl || ''}
                             poster={mediaData.imageUrl || scene.imageUrl || undefined}
                             className="w-full h-full object-cover"
