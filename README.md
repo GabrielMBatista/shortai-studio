@@ -82,4 +82,31 @@ O frontend é servido via **Nginx**, que atua como um proxy reverso para o backe
 
 ---
 
+## 📚 Documentação
+
+### Guias Técnicos
+
+- **[Integração com API](./docs/API_INTEGRATION.md)** - Comunicação Frontend ↔ Backend
+  - Endpoints principais
+  - Fluxo de sincronização
+  - Tratamento de erros
+
+- **[Arquitetura e Fluxo](./docs/ARCHITECTURE_FLOW.md)** - Diagramas e visão geral
+  - Hybrid Sync Engine
+  - Fluxo de dados
+
+- **[Schema do Banco](./docs/DATABASE_SCHEMA.md)** - Estrutura do PostgreSQL
+  - Tabelas e relacionamentos
+  - Migrations
+
+- **[Contrato da API](./docs/API_CONTRACT.yaml)** - Especificação OpenAPI
+  - Endpoints completos
+  - Modelos de dados
+
+### Backend (shortsai-api)
+
+Para documentação do backend, veja: [`../shortsai-api/README.md`](../shortsai-api/README.md)
+
+---
+
 Desenvolvido com ❤️, React 19 e Google Gemini.
