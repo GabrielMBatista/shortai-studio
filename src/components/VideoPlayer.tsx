@@ -66,6 +66,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
   const [exportFormat, setExportFormat] = useState<'mp4' | 'webm'>('mp4');
   const [exportFps, setExportFps] = useState<30 | 60>(60);
   const [isMp4Supported, setIsMp4Supported] = useState(true);
+  const [showMobileTips, setShowMobileTips] = useState(false);
 
   useEffect(() => {
     // Check for native MP4 recording support
@@ -285,7 +286,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           <>
             {/* Dark Overlay with Export Form */}
             <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center text-white p-6 animate-fade-in-up">
-              <div className="flex flex-col items-center text-center">
+              <div className="flex flex-col items-center text-center relative">
+                {/* Help Button (Mobile/Tablet Only) */}
+                <button
+                  onClick={() => setShowMobileTips(true)}
+                  className="xl:hidden absolute -top-2 -right-2 p-2 bg-indigo-500 hover:bg-indigo-600 rounded-full transition-colors shadow-lg"
+                  title={t('video_player.tips_title')}
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+
                 <h3 className="text-xl font-bold mb-2 text-white">{t('video_player.export_options')}</h3>
                 <p className="text-xs text-slate-400 mb-6">{t('video_player.resolution_note')}</p>
 
@@ -430,6 +442,46 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
                 </div>
               </div>
             </div>
+
+            {/* Mobile Tips Modal */}
+            {showMobileTips && (
+              <div className="xl:hidden absolute inset-0 z-[70] bg-black/90 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in-up">
+                <div className="bg-slate-900 p-6 rounded-xl border border-indigo-500/30 shadow-2xl max-w-md w-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {t('video_player.tips_title')}
+                    </h4>
+                    <button
+                      onClick={() => setShowMobileTips(false)}
+                      className="p-1 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-3 text-sm text-slate-300 leading-relaxed">
+                    <div className="flex gap-3">
+                      <span className="text-indigo-400 flex-shrink-0">⚡</span>
+                      <p>{t('video_player.tip_performance')}</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="text-indigo-400 flex-shrink-0">🎬</span>
+                      <p>{t('video_player.tip_quality')}</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="text-indigo-400 flex-shrink-0">📁</span>
+                      <p>{t('video_player.tip_format')}</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="text-yellow-400 flex-shrink-0">⚠️</span>
+                      <p className="text-yellow-200/90">{t('video_player.tip_stay')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
