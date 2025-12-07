@@ -153,7 +153,9 @@ export const getUserProjects = async (userId: string, limit: number = 100, page:
             total = response.meta?.total || 0;
         }
 
-        const mappedProjects = data.map((p: any) => fromApiProject(p))
+        const mappedProjects = data
+            .map((p: any) => fromApiProject(p))
+            .filter(p => !p.id.includes('mock-project-'))
             .sort((a, b) => b.createdAt - a.createdAt);
 
         return { projects: mappedProjects, total };
