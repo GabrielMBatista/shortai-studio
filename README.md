@@ -13,12 +13,12 @@ O **ShortsAI Studio** é uma aplicação web moderna que transforma ideias em v�
 - **Geração de Imagens**: Criação de storyboards 9:16 (`gemini-2.5-flash-image`).
 - **Narração Neural (TTS)**: Vozes ultra-realistas via Gemini, ElevenLabs ou Groq (Llama 3).
 
-### 🎥 Exportação de Vídeo
-- **WebCodecs API**: Encoding nativo do navegador (VP9 + Opus)
-- **Cliente-side Processing**: Renderização completa no navegador sem upload
-- **Proxy de Assets**: Integração com `/api/assets` para contornar CORS
-- **Formatos Suportados**: WebM, MP4 (via conversão)
-- **Qualidade**: 1080x1920 (9:16) a 30fps
+### 🎥 Exportação de Vídeo (Server-Side Rendering)
+- **Renderização na Nuvem**: Processamento pesado movido para **Google Cloud Run** (Python Worker).
+- **Alta Performance**: Evita travamentos no navegador delegando a renderização para workers escaláveis.
+- **Pipeline Automatizado**: O frontend solicita a geração e recebe o vídeo pronto via polling.
+- **Formatos**: Vídeos MP4 otimizados para Shorts/Reels/TikTok.
+- **R2 Storage**: Assets e vídeos finais hospedados globalmente com Cloudflare R2.
 
 ### 🏗️ Arquitetura & Engenharia
 
