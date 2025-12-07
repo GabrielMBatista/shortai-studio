@@ -167,9 +167,8 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 // Optional: You could alert the user here, but for now we just log.
             }
 
+            let loadedAssetsCount = 0;
             const assets = await Promise.all(validScenes.map(async (s, index) => {
-                const percent = Math.round((index / validScenes.length) * 20);
-                setDownloadProgress(`Loading assets (${percent}%)...`);
 
                 let img: HTMLImageElement | null = null;
                 let video: HTMLVideoElement | null = null;
@@ -232,6 +231,11 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
                 const dbDuration = Number(s.durationSeconds) || 0;
                 const fallbackDuration = dbDuration > 0 ? dbDuration : 5;
                 const realDuration = (buffer && Number.isFinite(buffer.duration)) ? buffer.duration : fallbackDuration;
+
+                // Update progress
+                loadedAssetsCount++;
+                const percent = Math.round((loadedAssetsCount / validScenes.length) * 20);
+                setDownloadProgress(`Loading assets (${percent}%)...`);
 
                 return { ...s, img, video, videoDuration, lastFrameImg, buffer, renderDuration: realDuration };
             }));
