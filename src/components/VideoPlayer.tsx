@@ -287,13 +287,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
             {/* Dark Overlay with Export Form */}
             <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center text-white p-6 animate-fade-in-up">
               <div className="flex flex-col items-center text-center relative">
-                {/* Help Button (Mobile/Tablet Only) */}
                 <button
                   onClick={() => setShowMobileTips(true)}
-                  className="xl:hidden absolute -top-2 -right-2 p-2 bg-indigo-500 hover:bg-indigo-600 rounded-full transition-colors shadow-lg"
+                  className="xl:hidden absolute -top-12 -right-4 p-3 bg-indigo-500 hover:bg-indigo-600 rounded-full transition-all shadow-[0_0_15px_rgba(99,102,241,0.6)] animate-pulse z-50"
                   title={t('video_player.tips_title')}
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
@@ -413,35 +412,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
               </div>
             </div>
 
-            {/* Export Tips Card (Outside dark overlay, Desktop Only) */}
-            <div className="hidden xl:block absolute right-4 top-1/2 -translate-y-1/2 z-[60] w-72 animate-fade-in-up">
-              <div className="bg-slate-900/95 backdrop-blur-sm p-5 rounded-xl border border-indigo-500/30 shadow-2xl">
-                <h4 className="text-base font-bold text-indigo-300 mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {t('video_player.tips_title')}
-                </h4>
-                <div className="space-y-3 text-sm text-slate-300 leading-relaxed">
-                  <div className="flex gap-3">
-                    <span className="text-indigo-400 flex-shrink-0">⚡</span>
-                    <p>{t('video_player.tip_performance')}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-indigo-400 flex-shrink-0">🎬</span>
-                    <p>{t('video_player.tip_quality')}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-indigo-400 flex-shrink-0">📁</span>
-                    <p>{t('video_player.tip_format')}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-yellow-400 flex-shrink-0">⚠️</span>
-                    <p className="text-yellow-200/90">{t('video_player.tip_stay')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+
           </>
         )}
 
@@ -493,6 +464,38 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           </div>
         )}
       </div>
+
+      {/* Export Tips Card (Desktop Only - Moved to Side) */}
+      {showExportOptions && !isDownloading && (
+        <div className="hidden xl:block absolute right-12 top-1/2 -translate-y-1/2 z-[60] w-80 animate-fade-in-up">
+            <div className="bg-slate-900/95 backdrop-blur-md p-6 rounded-2xl border border-indigo-500/30 shadow-2xl ring-1 ring-white/10">
+            <h4 className="text-lg font-bold text-indigo-300 mb-4 flex items-center gap-2">
+                <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t('video_player.tips_title')}
+            </h4>
+            <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
+                <div className="flex gap-3 items-start">
+                <span className="text-indigo-400 flex-shrink-0 mt-0.5">⚡</span>
+                <p>{t('video_player.tip_performance')}</p>
+                </div>
+                <div className="flex gap-3 items-start">
+                <span className="text-indigo-400 flex-shrink-0 mt-0.5">🎬</span>
+                <p>{t('video_player.tip_quality')}</p>
+                </div>
+                <div className="flex gap-3 items-start">
+                <span className="text-indigo-400 flex-shrink-0 mt-0.5">📁</span>
+                <p>{t('video_player.tip_format')}</p>
+                </div>
+                <div className="flex gap-3 items-start p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <span className="text-yellow-400 flex-shrink-0 mt-0.5">⚠️</span>
+                <p className="text-yellow-100/90 font-medium">{t('video_player.tip_stay')}</p>
+                </div>
+            </div>
+            </div>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="mt-8 flex items-center gap-2 sm:gap-6 bg-slate-900/50 backdrop-blur-xl border border-white/5 p-3 rounded-full shadow-2xl z-10">
