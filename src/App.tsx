@@ -58,6 +58,9 @@ const App: React.FC = () => {
     };
 
     // Video Generation Hook
+    const handleOnError = React.useCallback((msg: string) => showToast(msg, 'error'), []);
+    const handleOnStepChange = React.useCallback((newStep: AppStep) => setStep(newStep), []);
+
     const {
         project,
         setProject,
@@ -85,8 +88,8 @@ const App: React.FC = () => {
         reorderScenes
     } = useVideoGeneration({
         user: currentUser,
-        onError: (msg) => showToast(msg, 'error'),
-        onStepChange: (newStep) => setStep(newStep)
+        onError: handleOnError,
+        onStepChange: handleOnStepChange
     });
 
     // Autosave Hook

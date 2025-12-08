@@ -106,11 +106,11 @@ export const useProjectCreation = (
             };
 
             const savedProject = await saveProject(newProject);
-            setProject(savedProject);
-            localStorage.setItem('shortsai_last_project_id', savedProject.id);
             queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
 
             if (!skipNavigation) {
+                setProject(savedProject);
+                localStorage.setItem('shortsai_last_project_id', savedProject.id);
                 onStepChange(AppStep.SCRIPTING);
             }
         } catch (e: any) {
