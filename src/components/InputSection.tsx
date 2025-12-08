@@ -115,6 +115,31 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         localStorage.setItem('shortsai_pref_language', language);
     }, [language]);
 
+    // Auto-detect JSON and configure settings
+    useEffect(() => {
+        const trimmed = topic.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            try {
+                const json = JSON.parse(trimmed);
+                if (json.scenes && Array.isArray(json.scenes)) {
+                    const count = json.scenes.length;
+                    const totalDuration = json.scenes.reduce((acc: number, s: any) => acc + (Number(s.duration) || Number(s.durationSeconds) || 5), 0);
+
+                    if (totalDuration > 0) {
+                        setMinDuration(Math.max(5, totalDuration - 5)); // Allow small buffer
+                        setMaxDuration(totalDuration + 5);
+                        showToast(`Duration adjusted to ~${totalDuration}s from script`, 'success');
+                    }
+                    if (count > 0) {
+                        setTargetScenes(count.toString());
+                    }
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+    }, [topic]);
+
     // Duration & Scene Config
     const [minDuration, setMinDuration] = useState<number | ''>(60);
     const [maxDuration, setMaxDuration] = useState<number | ''>(70);

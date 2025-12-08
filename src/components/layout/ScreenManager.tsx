@@ -68,6 +68,7 @@ interface ScreenManagerProps {
     reorderScenes: (oldIndex: number, newIndex: number) => Promise<void>;
     updateProjectSettings: (settings: { voiceName?: string; ttsProvider?: TTSProvider; language?: string; videoModel?: string; audioModel?: string }) => Promise<void>;
     regenerateMusic: () => Promise<void>;
+    regenerateScript: () => Promise<void>;
     onExport: () => void;
     getDisplayTitle: (p: VideoProject) => string;
     onStartTour: (tour: 'settings' | 'creation' | 'script' | 'preview' | 'export') => void;
@@ -117,6 +118,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
     reorderScenes,
     updateProjectSettings,
     regenerateMusic,
+    regenerateScript,
     onExport,
     getDisplayTitle,
     onStartTour,
@@ -204,6 +206,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                         musicUrl={project.bgMusicUrl}
                         musicPrompt={project.bgMusicPrompt}
                         onRegenerateMusic={regenerateMusic}
+                        onRegenerateScript={regenerateScript}
                         // Orchestration Props
                         isPaused={isPaused}
                         fatalError={fatalError}

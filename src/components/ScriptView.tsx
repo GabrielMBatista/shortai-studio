@@ -37,6 +37,7 @@ interface ScriptViewProps {
     musicUrl?: string;
     musicPrompt?: string;
     onRegenerateMusic?: () => void;
+    onRegenerateScript?: () => void;
     isPaused?: boolean;
     fatalError?: string | null;
     onResume?: () => void;
@@ -146,7 +147,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, projectVideoModel, projectAudioModel, scenes,
     generatedTitle, generatedDescription,
     onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
-    canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic,
+    canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic, onRegenerateScript,
     isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings, onReorderScenes, projectId, userId, apiKeys
 }) => {
     const { t } = useTranslation();
@@ -483,6 +484,21 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             >
                                 <RefreshCw className="w-3.5 h-3.5" /> {t('script.apply_voice')}
                             </button>
+
+                            {onRegenerateScript && (
+                                <button
+                                    onClick={() => {
+                                        if (window.confirm(t('script.confirm_regenerate_script') || "Regenerate script? This will replace current scenes.")) {
+                                            onRegenerateScript();
+                                        }
+                                    }}
+                                    disabled={isGeneratingImages}
+                                    className="px-4 py-2 rounded-lg border border-slate-700 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-2"
+                                    title="Regenerate Script from Concept"
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5" /> {t('script.regenerate_script') || "Script"}
+                                </button>
+                            )}
 
                             {isGeneratingImages && onCancelGeneration ? (
                                 <button onClick={onCancelGeneration} className="flex items-center px-5 py-2 rounded-lg text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20 transition-all animate-pulse">

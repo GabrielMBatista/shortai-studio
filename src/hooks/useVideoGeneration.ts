@@ -99,7 +99,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
   const simulateProcessing = (() => {
     return (callback: () => void, delayMs = 2000) => {
-        setTimeout(callback, delayMs);
+      setTimeout(callback, delayMs);
     };
   })();
 
@@ -111,28 +111,28 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     onStepChange(AppStep.GENERATING_IMAGES);
 
     if (isMock) {
+      setProject(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          scenes: prev.scenes.map(s => ({ ...s, imageStatus: 'loading', audioStatus: 'loading' }))
+        };
+      });
+      simulateProcessing(() => {
         setProject(prev => {
-           if (!prev) return null;
-           return {
-               ...prev,
-               scenes: prev.scenes.map(s => ({ ...s, imageStatus: 'loading', audioStatus: 'loading' }))
-           };
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: 'completed',
+            scenes: prev.scenes.map(s => ({
+              ...s,
+              imageStatus: 'completed',
+              audioStatus: 'completed'
+            }))
+          };
         });
-        simulateProcessing(() => {
-             setProject(prev => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    status: 'completed',
-                    scenes: prev.scenes.map(s => ({
-                         ...s,
-                         imageStatus: 'completed',
-                         audioStatus: 'completed'
-                    }))
-                };
-             });
-        }, 3000);
-        return;
+      }, 3000);
+      return;
     }
 
     try {
@@ -149,24 +149,24 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     onStepChange(AppStep.GENERATING_IMAGES);
 
     if (isMock) {
+      setProject(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          scenes: prev.scenes.map(s => ({ ...s, imageStatus: 'loading' }))
+        };
+      });
+      simulateProcessing(() => {
         setProject(prev => {
-           if (!prev) return null;
-           return {
-               ...prev,
-               scenes: prev.scenes.map(s => ({ ...s, imageStatus: 'loading' }))
-           };
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: 'completed',
+            scenes: prev.scenes.map(s => ({ ...s, imageStatus: 'completed' }))
+          };
         });
-        simulateProcessing(() => {
-             setProject(prev => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    status: 'completed',
-                    scenes: prev.scenes.map(s => ({ ...s, imageStatus: 'completed' }))
-                };
-             });
-        });
-        return;
+      });
+      return;
     }
 
     try {
@@ -183,24 +183,24 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     onStepChange(AppStep.GENERATING_IMAGES);
 
     if (isMock) {
+      setProject(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          scenes: prev.scenes.map(s => ({ ...s, audioStatus: 'loading' }))
+        };
+      });
+      simulateProcessing(() => {
         setProject(prev => {
-           if (!prev) return null;
-           return {
-               ...prev,
-               scenes: prev.scenes.map(s => ({ ...s, audioStatus: 'loading' }))
-           };
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: 'completed',
+            scenes: prev.scenes.map(s => ({ ...s, audioStatus: 'completed' }))
+          };
         });
-        simulateProcessing(() => {
-             setProject(prev => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    status: 'completed',
-                    scenes: prev.scenes.map(s => ({ ...s, audioStatus: 'completed' }))
-                };
-             });
-        });
-        return;
+      });
+      return;
     }
 
     try {
@@ -213,8 +213,8 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
   const cancelGeneration = () => {
     if (!project || !user) return;
     if (isMock) {
-        setProject(prev => prev ? { ...prev, status: 'draft' } : null);
-        return;
+      setProject(prev => prev ? { ...prev, status: 'draft' } : null);
+      return;
     }
     workflowClient.sendCommand('cancel', project.id, user.id);
   };
@@ -224,12 +224,12 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
     // Optimistic update
     setProject(prev => prev ? { ...prev, status: 'generating' } : null);
-    
+
     if (isMock) {
-        simulateProcessing(() => {
-            setProject(prev => prev ? { ...prev, status: 'completed' } : null);
-        });
-        return;
+      simulateProcessing(() => {
+        setProject(prev => prev ? { ...prev, status: 'completed' } : null);
+      });
+      return;
     }
 
     try {
@@ -241,21 +241,21 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
 
   const regenerateSceneAsset = async (sceneId: string, type: 'image' | 'audio' | 'video', force: boolean) => {
     if (!project || !user) return;
-    
+
     if (isMock) {
-        simulateProcessing(() => {
-            setProject(prev => {
-               if (!prev) return null;
-               const idx = prev.scenes.findIndex(s => s.id === sceneId);
-               if (idx === -1) return prev;
-               const newScenes = [...prev.scenes];
-               const statusKey = type === 'image' ? 'imageStatus' : type === 'audio' ? 'audioStatus' : 'videoStatus';
-               // @ts-ignore
-               newScenes[idx] = { ...newScenes[idx], [statusKey]: 'completed' };
-               return { ...prev, scenes: newScenes };
-            });
-        }, 1500);
-        return;
+      simulateProcessing(() => {
+        setProject(prev => {
+          if (!prev) return null;
+          const idx = prev.scenes.findIndex(s => s.id === sceneId);
+          if (idx === -1) return prev;
+          const newScenes = [...prev.scenes];
+          const statusKey = type === 'image' ? 'imageStatus' : type === 'audio' ? 'audioStatus' : 'videoStatus';
+          // @ts-ignore
+          newScenes[idx] = { ...newScenes[idx], [statusKey]: 'completed' };
+          return { ...prev, scenes: newScenes };
+        });
+      }, 1500);
+      return;
     }
 
     const action = type === 'image' ? 'regenerate_image' : type === 'audio' ? 'regenerate_audio' : 'regenerate_video';
@@ -338,7 +338,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     // Update settings in DB
     const updated = { ...project, voiceName: voice, ttsProvider: provider, language, audioModel };
     if (!isMock) {
-        await saveProject(updated);
+      await saveProject(updated);
     }
     setProject(updated);
 
@@ -349,17 +349,17 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     setProject(prev => prev ? { ...prev, status: 'generating' } : null);
 
     if (isMock) {
-        simulateProcessing(() => {
-             setProject(prev => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    status: 'completed',
-                    scenes: prev.scenes.map(s => ({ ...s, audioStatus: 'completed' }))
-                };
-             });
+      simulateProcessing(() => {
+        setProject(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: 'completed',
+            scenes: prev.scenes.map(s => ({ ...s, audioStatus: 'completed' }))
+          };
         });
-        return;
+      });
+      return;
     }
 
     try {
@@ -376,10 +376,10 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     setProject(prev => prev ? { ...prev, bgMusicStatus: 'loading' } : null);
 
     if (isMock) {
-        simulateProcessing(() => {
-            setProject(prev => prev ? { ...prev, bgMusicStatus: 'completed' } : null);
-        });
-        return;
+      simulateProcessing(() => {
+        setProject(prev => prev ? { ...prev, bgMusicStatus: 'completed' } : null);
+      });
+      return;
     }
 
     try {
@@ -387,6 +387,49 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     } catch (e) {
       handleCommandError(e);
       setProject(prev => prev ? { ...prev, bgMusicStatus: 'failed' } : null);
+    }
+  };
+
+  const regenerateScript = async () => {
+    if (!project || !user) return;
+
+    // Optimistic update
+    setProject(prev => prev ? { ...prev, status: 'generating' } : null);
+
+    if (isMock) {
+      simulateProcessing(() => {
+        setProject(prev => prev ? { ...prev, status: 'draft' } : null);
+      });
+      return;
+    }
+
+    try {
+      const { scenes, metadata } = await generateScript(
+        project.topic,
+        project.style,
+        project.language,
+        {
+          minDuration: project.durationConfig?.min || 55,
+          maxDuration: project.durationConfig?.max || 65,
+          targetScenes: project.durationConfig?.targetScenes
+        }
+      );
+
+      const updatedProject: VideoProject = {
+        ...project,
+        scenes: scenes,  // New scenes
+        generatedTitle: metadata.title,
+        generatedDescription: metadata.description,
+        status: 'draft' // Reset status to allow generating assets again
+      };
+
+      await saveProject(updatedProject);
+      setProject(updatedProject);
+    } catch (e: any) {
+      console.error("Failed to regenerate script", e);
+      handleCommandError(e);
+      // Revert status
+      setProject(prev => prev ? { ...prev, status: 'draft' } : null);
     }
   };
 
@@ -464,6 +507,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
     },
     regenerateAllAudio,
     regenerateMusic,
+    regenerateScript,
 
     // Helpers
     updateScene: async (index: number, updates: Partial<Scene>) => {
@@ -533,7 +577,7 @@ export const useVideoGeneration = ({ user, onError, onStepChange }: UseVideoGene
       if (!project) return;
       const updated = { ...project, ...settings };
       setProject(updated); // Optimistic
-      
+
       if (isMock) return;
 
       try {

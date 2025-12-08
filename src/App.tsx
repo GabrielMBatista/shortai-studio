@@ -78,6 +78,7 @@ const App: React.FC = () => {
         regenerateSceneVideo,
         regenerateAllAudio,
         regenerateMusic,
+        regenerateScript,
         removeScene,
         updateProjectSettings,
         addScene,
@@ -362,6 +363,7 @@ const App: React.FC = () => {
                 reorderScenes={reorderScenes}
                 updateProjectSettings={updateProjectSettings}
                 regenerateMusic={regenerateMusic}
+                regenerateScript={regenerateScript}
                 onExport={handleExport}
                 getDisplayTitle={getDisplayTitle}
                 onStartTour={handleStartTour}
