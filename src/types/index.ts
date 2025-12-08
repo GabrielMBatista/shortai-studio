@@ -23,8 +23,8 @@ export interface Show {
   default_tts_provider?: TTSProvider;
   created_at: string;
   _count?: {
-      episodes: number;
-      characters: number;
+    episodes: number;
+    characters: number;
   }
 }
 
@@ -196,10 +196,12 @@ export interface Folder {
   id: string;
   name: string;
   userId: string;
+  parent_id?: string | null;  // Matches backend field
   createdAt: string;
   updatedAt: string;
   _count?: {
     projects: number;
+    children?: number; // Optional child folder count
   };
 }
 

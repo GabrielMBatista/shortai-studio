@@ -31,7 +31,7 @@
         "new_folder_placeholder": "Folder name...",
         "rename": "Rename",
         "delete": "Delete",
-        "delete_confirm": "Delete this folder? Projects will be moved to \"All Projects\".",
+        "delete_confirm": "Delete this folder? WARNING: This will permanently delete ALL projects and subfolders inside it, including all generated assets (images, video, audio). This action cannot be undone.",
         "move_to_folder": "Move to Folder",
         "root_folder": "All Projects (Root)",
         "home": "Home",

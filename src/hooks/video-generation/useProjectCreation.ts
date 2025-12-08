@@ -21,7 +21,8 @@ export const useProjectCreation = (
         includeMusic: boolean,
         durationConfig: { min: number; max: number; targetScenes?: number } = { min: 55, max: 65 },
         audioModel?: string,
-        skipNavigation: boolean = false
+        skipNavigation: boolean = false,
+        folderId?: string
     ): Promise<void> => {
         if (!user) { onError("User not authenticated."); return; }
 
@@ -33,6 +34,8 @@ export const useProjectCreation = (
         let isPreGenerated = false;
         try {
             const parsed = JSON.parse(topic);
+
+            // Check if parsing result is an object with 'scenes' or 'script'
             if (parsed && (Array.isArray(parsed.scenes) || Array.isArray(parsed.script))) {
                 console.log("Detected pre-generated project JSON");
                 isPreGenerated = true;
@@ -71,9 +74,17 @@ export const useProjectCreation = (
 
             let bgMusicPrompt = "";
             if (includeMusic) {
-                if (isPreGenerated && (JSON.parse(topic).bgMusicPrompt || JSON.parse(topic).musicPrompt)) {
-                    const parsed = JSON.parse(topic);
-                    bgMusicPrompt = parsed.bgMusicPrompt || parsed.musicPrompt;
+                // Safely try to extract bgMusicPrompt if pre-generated
+                let preGenBgMusic = "";
+                if (isPreGenerated) {
+                    try {
+                        const parsed = JSON.parse(topic);
+                        preGenBgMusic = parsed.bgMusicPrompt || parsed.musicPrompt;
+                    } catch (e) { }
+                }
+
+                if (preGenBgMusic) {
+                    bgMusicPrompt = preGenBgMusic;
                 } else {
                     try {
                         bgMusicPrompt = await generateMusicPrompt(finalTopic, style);
@@ -102,7 +113,8 @@ export const useProjectCreation = (
                 includeMusic,
                 bgMusicStatus: includeMusic ? 'pending' : undefined,
                 bgMusicPrompt,
-                status: 'draft'
+                status: 'draft',
+                folderId
             };
 
             const savedProject = await saveProject(newProject);

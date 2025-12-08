@@ -25,7 +25,8 @@ interface InputSectionProps {
         includeMusic: boolean,
         durationConfig: { min: number, max: number, targetScenes?: number },
         audioModel?: string,
-        skipNavigation?: boolean
+        skipNavigation?: boolean,
+        folderId?: string
     ) => Promise<void>;
     isLoading: boolean;
     loadingMessage?: string;
@@ -80,6 +81,46 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
     const extractProjects = (data: any, projects: any[] = []) => {
         if (!data || typeof data !== 'object') return projects;
+
+        // Structured Weekly Schedule Handling
+        if (data.id_da_semana && data.cronograma) {
+            // Week Folder Name
+            const weekFolderName = data.id_da_semana.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+
+            Object.keys(data.cronograma).forEach((dayKey: string) => {
+                const daySchedule = data.cronograma[dayKey];
+
+                // Day Subfolder Name (e.g., "Segunda")
+                const subFolderName = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+
+                // Check direct children or deeply nested
+                if (typeof daySchedule === 'object') {
+                    // e.g. viral_1, viral_2, longo
+                    Object.keys(daySchedule).forEach(key => {
+                        const content = daySchedule[key];
+                        // Skip if it's just a string property like 'tema_dia'
+                        if (content && (content.scenes || content.script || typeof content === 'object')) {
+                            // Try to normalize
+                            if (content.scenes || content.script) {
+                                const norm = normalizeProject(content);
+                                // Prefix title with type if generic
+                                if (!norm.topic || norm.topic === "Untitled Project") {
+                                    norm.topic = `${key} - ${norm.scenes[0]?.narration?.slice(0, 20)}...`;
+                                }
+
+                                // Attach metadata for hierarchical folder creation
+                                norm._folderName = weekFolderName;      // Parent
+                                norm._subFolderName = subFolderName;    // Child
+
+                                projects.push(norm);
+                            }
+                        }
+                    });
+                }
+            });
+            return projects;
+        }
+
         if ((data.scenes && Array.isArray(data.scenes)) || (data.script && Array.isArray(data.script))) {
             projects.push(normalizeProject(data));
             return projects;
@@ -115,7 +156,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
             json = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
         }
 
-        if ((!json || (!json.scenes && !Array.isArray(json))) && firstBracket !== -1 && lastBracket > firstBracket) {
+        if ((!json || (!json.scenes && !Array.isArray(json) && !json.cronograma)) && firstBracket !== -1 && lastBracket > firstBracket) {
             const arrayJson = tryParse(trimmed.substring(firstBracket, lastBracket + 1));
             if (Array.isArray(arrayJson)) {
                 json = arrayJson;
@@ -126,11 +167,9 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
             foundProjects = extractProjects(json);
         }
 
-        if (foundProjects.length > 1) {
+        if (foundProjects.length > 0) {
             setBulkProjects(foundProjects);
             showToast(`🚀 Detected ${foundProjects.length} projects from JSON!`, 'success');
-        } else if (foundProjects.length === 1) {
-            setBulkProjects([]);
         } else {
             setBulkProjects([]);
         }
@@ -166,7 +205,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 }
             }
         }
-    }, [topic]); // We suppress dependency warning for showToast/setters to avoid loops, ideally stable
+    }, [topic]);
 
     // --- Handlers ---
     const handleSubmit = async (e: React.FormEvent) => {
@@ -189,6 +228,50 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         try {
             if (bulkProjects.length > 0) {
                 let processed = 0;
+                const { createFolder } = await import('../services/folders');
+
+                // 1. Identify Unique Folders Structure
+                // Map: WeekName -> { id: string, subfolders: Map<SubFolderName, string> }
+                const structure = new Map<string, { id: string, subfolders: Map<string, string> }>();
+
+                for (const p of bulkProjects) {
+                    if (p._folderName) {
+                        if (!structure.has(p._folderName)) {
+                            structure.set(p._folderName, { id: '', subfolders: new Map() });
+                        }
+                        const entry = structure.get(p._folderName)!;
+                        if (p._subFolderName && !entry.subfolders.has(p._subFolderName)) {
+                            entry.subfolders.set(p._subFolderName, '');
+                        }
+                    }
+                }
+
+                // 2. Create Parent Folders (Weeks)
+                for (const [weekName, entry] of structure) {
+                    try {
+                        // Create Week Folder
+                        const res = await createFolder(weekName);
+                        if (res && (res.id || res._id)) {
+                            entry.id = res.id || res._id;
+
+                            // 3. Create Subfolders (Days) inside Week
+                            for (const [subName, _] of entry.subfolders) {
+                                try {
+                                    const subRes = await createFolder(subName, entry.id); // Pass parentId
+                                    if (subRes && (subRes.id || subRes._id)) {
+                                        entry.subfolders.set(subName, subRes.id || subRes._id);
+                                    }
+                                } catch (err) {
+                                    console.warn(`Failed to create subfolder ${subName}`, err);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn(`Failed to create folder ${weekName}`, err);
+                    }
+                }
+
+                // 4. Create Projects in correct folders
                 for (let i = 0; i < bulkProjects.length; i++) {
                     const p = bulkProjects[i];
                     const pTopic = JSON.stringify(p);
@@ -196,7 +279,33 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     const pVoice = p.voice || voice;
                     const isLast = i === bulkProjects.length - 1;
 
-                    await onGenerate(pTopic, pStyle, pVoice, ttsProvider, language, selectedRefs, includeMusic && IS_SUNO_ENABLED, config, audioModel, !isLast);
+                    let targetFolderId = undefined;
+
+                    // Resolve Folder ID
+                    if (p._folderName && structure.has(p._folderName)) {
+                        const entry = structure.get(p._folderName)!;
+                        if (p._subFolderName && entry.subfolders.has(p._subFolderName)) {
+                            // Use Subfolder ID (Day)
+                            targetFolderId = entry.subfolders.get(p._subFolderName);
+                        } else {
+                            // Fallback to Parent ID (Week) if no subfolder
+                            targetFolderId = entry.id;
+                        }
+                    }
+
+                    await onGenerate(
+                        pTopic,
+                        pStyle,
+                        pVoice,
+                        ttsProvider,
+                        language,
+                        selectedRefs,
+                        includeMusic && IS_SUNO_ENABLED,
+                        config,
+                        audioModel,
+                        !isLast,
+                        targetFolderId
+                    );
                     processed++;
                 }
                 showToast(`Successfully queued ${processed} projects!`, 'success');
@@ -204,6 +313,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                 await onGenerate(topic, style, voice, ttsProvider, language, selectedRefs, includeMusic && IS_SUNO_ENABLED, config, audioModel, false);
             }
         } catch (e) {
+            console.error(e);
             setIsSubmitting(false);
         }
     };

@@ -17,7 +17,8 @@ export const toApiProject = (p: VideoProject) => {
         generated_description: p.generatedDescription,
         reference_image_url: p.referenceImageUrl,
         duration_config: p.durationConfig,
-        status: p.status
+        status: p.status,
+        folder_id: p.folderId
     };
     return apiObj;
 };

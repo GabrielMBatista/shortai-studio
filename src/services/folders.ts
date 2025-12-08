@@ -10,10 +10,10 @@ export const getFolders = async (): Promise<{ folders: any[]; rootCount: number 
     }
 };
 
-export const createFolder = async (name: string) => {
+export const createFolder = async (name: string, parentId?: string) => {
     return await apiFetch('/folders', {
         method: 'POST',
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ name, parent_id: parentId })
     });
 };
 
