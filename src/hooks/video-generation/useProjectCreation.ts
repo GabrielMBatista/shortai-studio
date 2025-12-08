@@ -49,9 +49,16 @@ export const useProjectCreation = (
                     sceneNumber: s.sceneNumber || s.scene || (idx + 1)
                 }));
 
+                const descParts = [];
+                if (parsed.description) descParts.push(parsed.description);
+                if (parsed.intro) descParts.push(parsed.intro);
+                if (parsed.hook_falado) descParts.push(parsed.hook_falado);
+                if (parsed.hashtags) descParts.push(parsed.hashtags);
+                const combinedDesc = descParts.join("\n\n");
+
                 metadata = {
                     title: parsed.title || parsed.projectTitle || parsed.titulo || "Untitled Project",
-                    description: parsed.description || parsed.intro || parsed.hook_falado || ""
+                    description: combinedDesc || ""
                 };
 
                 // Keep the JSON as the topic for reference, or extract the real topic if available

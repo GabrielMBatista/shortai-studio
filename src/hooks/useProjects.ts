@@ -11,7 +11,7 @@ export const useProjects = (userId?: string, folderId?: string | null, isArchive
     queryKey: ['projects', userId, page, limit, folderId, isArchived],
     queryFn: () => getUserProjects(userId!, limit, page, folderId, isArchived),
     enabled: !!userId,
-    staleTime: 30 * 1000,
+    staleTime: 0, // Always fetch fresh data to avoid stale folder views
     refetchInterval: 60 * 1000,
     placeholderData: (previousData, previousQuery) => {
       const oldKey = previousQuery?.queryKey;
@@ -47,7 +47,7 @@ export const useProjects = (userId?: string, folderId?: string | null, isArchive
     isFetching: projectsQuery.isFetching,
     isError: projectsQuery.isError,
     deleteProject: deleteMutation.mutateAsync,
-    refreshProjects: projectsQuery.refetch,
+    refreshProjects: () => queryClient.invalidateQueries({ queryKey: ['projects', userId] }),
     isDeleting: deleteMutation.isPending
   };
 };
