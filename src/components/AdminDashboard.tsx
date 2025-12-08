@@ -24,10 +24,13 @@ interface AdminUser extends User {
     created_at: string;
 }
 
-const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
+const AdminDashboard: React.FC<{ currentUser: User, showToast?: (msg: string, type: 'success' | 'error' | 'info') => void }> = ({ currentUser, showToast }) => {
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [plans, setPlans] = useState<Plan[]>([]);
+    // ... (omitting lines to match context, but the replacement function expects full lines)
+    // It is better to do smaller chunks.
+    // Retrying with smaller chunks.
     const [isLoading, setIsLoading] = useState(true);
     const [editingUser, setEditingUser] = useState<string | null>(null);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -181,11 +184,11 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
                 fetchData();
             } else {
                 const err = await res.json();
-                alert(`Error saving plan: ${err.error}`);
+                if (showToast) showToast(`Error saving plan: ${err.error}`, 'error');
             }
         } catch (e) {
             console.error("Failed to save plan", e);
-            alert("Failed to save plan");
+            if (showToast) showToast("Failed to save plan", 'error');
         }
     };
 
@@ -196,7 +199,7 @@ const AdminDashboard: React.FC<{ currentUser: User }> = ({ currentUser }) => {
             if (res.ok) {
                 fetchData();
             } else {
-                alert("Failed to delete plan");
+                if (showToast) showToast("Failed to delete plan", 'error');
             }
         } catch (e) {
             console.error("Failed to delete plan", e);

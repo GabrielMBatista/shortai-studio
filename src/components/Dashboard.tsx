@@ -216,7 +216,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             URL.revokeObjectURL(url);
         } catch (e) {
             console.error("Export failed", e);
-            alert("Failed to export context");
+            if (showToast) showToast("Failed to export context", 'error');
         }
     };
 

@@ -51,6 +51,7 @@ interface ScriptViewProps {
     projectId: string;
     userId: string;
     apiKeys: ApiKeys;
+    showToast?: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
 
 // Helper to detect mock projects
@@ -162,7 +163,8 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     generatedTitle, generatedDescription,
     onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic, onRegenerateScript,
-    isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings, onReorderScenes, projectId, userId, apiKeys
+    isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings, onReorderScenes, projectId, userId, apiKeys,
+    showToast
 }) => {
     const { t } = useTranslation();
     const [selectedProvider, setSelectedProvider] = useState<TTSProvider>(projectProvider);
@@ -287,7 +289,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
         } catch (e: any) {
             console.error("Preview failed", e);
             setPreviewState({ status: 'idle' });
-            alert(e.message || t('script.preview_failed'));
+            if (showToast) showToast(e.message || t('script.preview_failed'), 'error');
         }
     };
 

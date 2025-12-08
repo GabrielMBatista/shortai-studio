@@ -130,7 +130,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
     return (
         <>
             {step === AppStep.ADMIN && currentUser && currentUser.role === 'ADMIN' && (
-                <AdminDashboard currentUser={currentUser} />
+                <AdminDashboard currentUser={currentUser} showToast={showToast} />
             )}
 
             {step === AppStep.DASHBOARD && currentUser && (
@@ -222,6 +222,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                         projectId={project.id}
                         userId={currentUser?.id || ''}
                         apiKeys={currentUser?.apiKeys || {}}
+                        showToast={showToast}
                     />
                 ) : null
             )}
