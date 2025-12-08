@@ -607,7 +607,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                                 <p className="text-sm text-slate-300 leading-relaxed">
                                     {t('dashboard.delete_permanently_warning')}
-                                    <span className="block mt-2 font-semibold text-white">"{permanentDeleteModal.projectTitle}"</span>
+                                    <span className="block mt-2 font-semibold text-white line-clamp-3 max-h-32 overflow-hidden text-ellipsis w-full">"{permanentDeleteModal.projectTitle}"</span>
                                 </p>
                             </div>
 

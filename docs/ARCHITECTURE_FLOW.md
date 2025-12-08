@@ -70,7 +70,7 @@ sequenceDiagram
 
 ## 🧩 Componentes
 
-### Frontend (`shortai-studio`)
+### Frontend (`shortsai-studio`)
 - **Tech**: React 19, Vite, TailwindCSS.
 - **Responsabilidade**: Interface, Edição de Roteiro, Preview, Solicitação de Geração.
 - **Modos**:

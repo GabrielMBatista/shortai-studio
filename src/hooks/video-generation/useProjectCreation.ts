@@ -25,21 +25,62 @@ export const useProjectCreation = (
     ): Promise<void> => {
         if (!user) { onError("User not authenticated."); return; }
 
+        let scenes: any[] = [];
+        let metadata = { title: "", description: "" };
+        let finalTopic = topic;
+
+        // Bypassing AI if topic is a pre-generated JSON (Bulk Import)
+        let isPreGenerated = false;
         try {
-            const { scenes, metadata } = await generateScript(topic, style, language, {
-                minDuration: durationConfig.min,
-                maxDuration: durationConfig.max,
-                targetScenes: durationConfig.targetScenes
-            });
+            const parsed = JSON.parse(topic);
+            if (parsed && (Array.isArray(parsed.scenes) || Array.isArray(parsed.script))) {
+                console.log("Detected pre-generated project JSON");
+                isPreGenerated = true;
+                scenes = parsed.scenes || parsed.script;
+
+                // Normalize scenes
+                scenes = scenes.map((s: any, idx: number) => ({
+                    ...s,
+                    visualDescription: s.visualDescription || s.visual || s.imagePrompt || s.desc || "Scene visual",
+                    narration: s.narration || s.audio || s.text || s.speech || "",
+                    sceneNumber: s.sceneNumber || s.scene || (idx + 1)
+                }));
+
+                metadata = {
+                    title: parsed.title || parsed.projectTitle || parsed.titulo || "Untitled Project",
+                    description: parsed.description || parsed.intro || parsed.hook_falado || ""
+                };
+
+                // Keep the JSON as the topic for reference, or extract the real topic if available
+                finalTopic = parsed.topic || parsed.title || parsed.titulo || "Untitled Logic";
+            }
+        } catch (e) {
+            // Not JSON, proceed with normal generation
+        }
+
+        try {
+            if (!isPreGenerated) {
+                const result = await generateScript(topic, style, language, {
+                    minDuration: durationConfig.min,
+                    maxDuration: durationConfig.max,
+                    targetScenes: durationConfig.targetScenes
+                });
+                scenes = result.scenes;
+                metadata = result.metadata;
+            }
 
             let bgMusicPrompt = "";
             if (includeMusic) {
-                try {
-                    // Note: generateMusicPrompt might fail if quota exceeded, we catch it
-                    bgMusicPrompt = await generateMusicPrompt(topic, style);
-                } catch (e) {
-                    console.warn("Music prompt gen failed", e);
-                    bgMusicPrompt = "cinematic instrumental background music";
+                if (isPreGenerated && (JSON.parse(topic).bgMusicPrompt || JSON.parse(topic).musicPrompt)) {
+                    const parsed = JSON.parse(topic);
+                    bgMusicPrompt = parsed.bgMusicPrompt || parsed.musicPrompt;
+                } else {
+                    try {
+                        bgMusicPrompt = await generateMusicPrompt(finalTopic, style);
+                    } catch (e) {
+                        console.warn("Music prompt gen failed", e);
+                        bgMusicPrompt = "cinematic instrumental background music";
+                    }
                 }
             }
 
@@ -47,12 +88,16 @@ export const useProjectCreation = (
                 id: crypto.randomUUID(),
                 userId: user.id,
                 createdAt: Date.now(),
-                topic, style, voiceName: voice, ttsProvider: provider, language,
+                topic: finalTopic,
+                style,
+                voiceName: voice,
+                ttsProvider: provider,
+                language,
                 audioModel,
                 referenceCharacters: references,
                 scenes,
-                generatedTitle: metadata.title,
-                generatedDescription: metadata.description,
+                generatedTitle: metadata.title || "Untitled Project",
+                generatedDescription: metadata.description || "No description generated.",
                 durationConfig,
                 includeMusic,
                 bgMusicStatus: includeMusic ? 'pending' : undefined,

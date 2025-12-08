@@ -4,8 +4,8 @@ services:
   # ==============================
   # FRONTEND (Nginx + React)
   # ==============================
-  studio:
-    container_name: shortai-studio
+  shortsai-studio:
+    container_name: shortsai-studio
     build:
       context: .
       dockerfile: Dockerfile
