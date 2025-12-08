@@ -98,6 +98,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             setRootCount(rootCount);
             setIsLoadingFolders(false);
         });
+
+        // Reset page to 1 on mount to ensure we start from the beginning
+        // and don't get stuck on a later page with partial data upon return
+        if (setPage) setPage(1);
     }, []);
 
     const handleRefreshFolders = () => {
