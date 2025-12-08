@@ -117,7 +117,7 @@ export const useProjectCreation = (
                 folderId
             };
 
-            const savedProject = await saveProject(newProject);
+            const savedProject = await saveProject(newProject, true);
             queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
 
             if (!skipNavigation) {

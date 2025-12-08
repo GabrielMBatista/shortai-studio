@@ -23,7 +23,7 @@ export const setProjectStatus = async (projectId: string, status: BackendProject
     }
 };
 
-export const saveProject = async (project: VideoProject): Promise<VideoProject> => {
+export const saveProject = async (project: VideoProject, isNew: boolean = false): Promise<VideoProject> => {
     // 🔒 NEVER save mock/tour projects to backend
     if (project.id === '__mock__-tour-project') {
         console.log('[saveProject] Skipping save for mock tour project');
@@ -36,15 +36,20 @@ export const saveProject = async (project: VideoProject): Promise<VideoProject> 
     let apiSuccess = false;
 
     try {
-        await apiFetch(`/projects/${project.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(apiPayload)
-        });
-        apiSuccess = true;
+        if (!isNew) {
+            await apiFetch(`/projects/${project.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(apiPayload)
+            });
+            apiSuccess = true;
+        } else {
+            // Force 404-like flow to trigger creation below
+            throw { status: 404, message: 'New project' };
+        }
     } catch (e: any) {
         // Typical behavior: We try to UPDATE first. If it fails with 404, it means the ID is new or deleted on backend.
         // So we proceed to CREATE.
-        if (e.status === 404 || e.message?.includes('404')) {
+        if (e.status === 404 || e.message?.includes('404') || e.message === 'New project') {
             // This is expected for new projects.
         } else {
             console.warn("Update project failed with non-404 error:", e);
