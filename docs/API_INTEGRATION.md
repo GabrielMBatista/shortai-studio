@@ -33,18 +33,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3333';
 
 ### Cenas
 - `PATCH /api/scenes/:id`: Atualiza cena
-- `DELETE /api/scenes/:id`: Deleta cena (soft delete)
-- `POST /api/scenes/:id/asset`: Upload de asset (imagem/áudio)
-
-### Workflow (Geração de Assets)
-- `POST /api/workflow/command`: Dispara geração de assets
-  - Actions: `generate_all`, `regenerate_image`, `regenerate_audio`
-- `GET /api/events/:projectId`: Server-Sent Events para progresso em tempo real
-
-### Assets (Proxy R2 Storage)
-- `GET /api/assets?url={r2_url}`: Proxy para assets do R2 Storage
-
-## 🎥 Exportação de Vídeo
 
 O processo de exportação utiliza o proxy de assets para evitar problemas de CORS:
 
@@ -76,27 +64,33 @@ has been blocked by CORS policy
 'Cache-Control': 'public, max-age=31536000, immutable'
 ```
 
-## 🔄 SSE (Server-Sent Events)
+## 🔄 Polling de Status
+    
+O frontend deve fazer polling do status do projeto para refletir as mudanças em tempo real (substituindo o antigo uso de SSE).
 
-O frontend usa SSE para receber atualizações em tempo real durante a geração:
+### Fluxo de Polling
+
+1.  **Endpoint**: `GET /api/projects/:id`
+2.  **Intervalo**: A cada 2-5 segundos.
+3.  **Condição de Parada**: Quando `status` for `completed`, `failed` ou `paused`.
 
 ```typescript
-const eventSource = new EventSource(`${API_URL}/api/events/${projectId}`);
-
-eventSource.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if (data.type === 'scene_update') {
-    // Atualiza UI com novo status da cena
-  }
+const pollProject = async (projectId: string) => {
+    const interval = setInterval(async () => {
+        const res = await fetch(`${API_URL}/api/projects/${projectId}`);
+        const project = await res.json();
+        
+        if (project.status === 'completed' || project.status === 'failed') {
+            clearInterval(interval);
+        }
+        
+        // Atualiza UI
+        updateProjectState(project);
+    }, 5000);
+    
+    return () => clearInterval(interval);
 };
 ```
-
-### Tipos de Eventos Recebidos
-
-- `init`: Status inicial do projeto
-- `scene_update`: Cena foi atualizada (novo asset gerado)
-- `project_update`: Status geral do projeto mudou
-- `error`: Erro na geração
 
 ## 📦 Upload de Assets
 
@@ -215,9 +209,16 @@ async function createAndGenerateProject(title: string, topic: string) {
     }),
   });
   
-  // 3. Escutar atualizações via SSE
-  const events = new EventSource(`${API_URL}/api/events/${project.id}`);
-  events.onmessage = (e) => console.log('Update:', JSON.parse(e.data));
+  // 3. Polling de atualizações
+  const interval = setInterval(async () => {
+      const res = await fetch(`${API_URL}/api/projects/${project.id}`);
+      const updatedProject = await res.json();
+      console.log('Update:', updatedProject.status);
+      
+      if (['completed', 'failed'].includes(updatedProject.status)) {
+          clearInterval(interval);
+      }
+  }, 3000);
   
   return project;
 }
@@ -243,11 +244,11 @@ FRONTEND_URL=http://localhost:5173  # Dev
 FRONTEND_URL=https://seu-dominio.com  # Prod
 ```
 
-### SSE não conecta
+### Polling muito frequente
 
-**Causa**: EventSource não suporta CORS com credenciais em alguns navegadores
+**Causa**: Intervalo de polling muito curto (ex: < 1s)
 
-**Solução**: Use `fetch` com `ReadableStream` como alternativa ou configure domínio único (mesmo domínio para API e frontend via Nginx).
+**Solução**: Mantenha o intervalo entre 3s e 5s para evitar sobrecarregar o servidor (Rate Limits).
 
 ---
 

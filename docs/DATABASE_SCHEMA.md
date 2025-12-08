@@ -1,11 +1,12 @@
-# 🎬 ShortsAI Studio - Database Schema (PostgreSQL Ready)
+# 🎬 ShortsAI Studio - Database Schema (PostgreSQL)
 
-Este documento define a estrutura exata do banco de dados relacional necessário para suportar o ShortsAI Studio integrando com o frontend atual.
+Este documento reflete a estrutura atual do banco de dados (Prisma Schema).
 
 ## 1. Visão Geral
 
-*   **Banco Recomendado**: PostgreSQL 15+
-*   **Extensões Necessárias**: `uuid-ossp` (para geração de IDs).
+*   **ORM**: Prisma
+*   **Banco**: PostgreSQL
+*   **IDs**: UUIDs e CUIDs
 
 ---
 
@@ -16,61 +17,112 @@ Usuários do sistema.
 
 ```sql
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
+    id TEXT PRIMARY KEY, -- UUID
+    name TEXT,
+    email TEXT UNIQUE NOT NULL,
+    email_verified TIMESTAMP,
+    image TEXT,
     avatar_url TEXT,
-    google_id VARCHAR(255), -- Para mapeamento de login social
-    tier VARCHAR(20) DEFAULT 'free' CHECK (tier IN ('free', 'pro', 'enterprise')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    google_id TEXT UNIQUE,
+    role TEXT DEFAULT 'USER', -- Enum: USER, ADMIN
+    subscription_plan TEXT DEFAULT 'FREE', -- Enum: FREE, PRO
+    tier TEXT DEFAULT 'free', -- Enum: free, pro, enterprise
+    is_blocked BOOLEAN DEFAULT false,
+    stripe_customer_id TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    last_video_generated_at TIMESTAMP,
+    plan_id TEXT
 );
 ```
 
 ### 2.2. `user_limits` (Cotas)
-Controle de uso e limites do plano do usuário.
+Controle de uso e limites.
 
 ```sql
 CREATE TABLE user_limits (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    max_videos INTEGER DEFAULT 5,
-    max_tts_minutes DECIMAL(10,2) DEFAULT 10,
-    max_images INTEGER DEFAULT 50,
-    current_videos INTEGER DEFAULT 0,
-    current_tts_minutes DECIMAL(10,2) DEFAULT 0,
-    current_images INTEGER DEFAULT 0,
-    last_reset_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    user_id TEXT PRIMARY KEY,
+    monthly_videos_limit INTEGER DEFAULT 5,
+    monthly_minutes_tts INTEGER DEFAULT 10,
+    monthly_images_limit INTEGER DEFAULT 50,
+    current_videos_used INTEGER DEFAULT 0,
+    current_minutes_tts_used DECIMAL(10,2) DEFAULT 0,
+    current_images_used INTEGER DEFAULT 0,
+    last_reset_date TIMESTAMP DEFAULT NOW(),
+    daily_requests_limit INTEGER DEFAULT 100,
+    current_daily_requests INTEGER DEFAULT 0,
+    last_daily_reset TIMESTAMP DEFAULT NOW(),
+    daily_videos_limit INTEGER DEFAULT 1,
+    current_daily_videos INTEGER DEFAULT 0
 );
 ```
 
 ### 2.3. `api_keys`
-Chaves de API criptografadas do usuário.
+Chaves de API do usuário.
 
 ```sql
 CREATE TABLE api_keys (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT PRIMARY KEY,
     gemini_key TEXT,
     elevenlabs_key TEXT,
     suno_key TEXT,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    groq_key TEXT,
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 2.4. `plans`
+Planos de assinatura.
+
+```sql
+CREATE TABLE plans (
+    id TEXT PRIMARY KEY, -- UUID
+    name TEXT UNIQUE,
+    slug TEXT UNIQUE,
+    description TEXT,
+    price DECIMAL DEFAULT 0,
+    monthly_images_limit INTEGER DEFAULT 10,
+    monthly_videos_limit INTEGER DEFAULT 5,
+    monthly_minutes_tts INTEGER DEFAULT 10,
+    daily_requests_limit INTEGER DEFAULT 50,
+    daily_videos_limit INTEGER DEFAULT 2,
+    features JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
 );
 ```
 
 ---
 
-## 3. Biblioteca de Assets
+## 3. Organização
 
-### 3.1. `characters`
-Personagens reutilizáveis.
+### 3.1. `folders`
+Pastas para organizar projetos.
 
 ```sql
-CREATE TABLE characters (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    description TEXT, 
-    images TEXT[], -- Array de strings (Base64 Data URIs ou URLs)
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TABLE folders (
+    id TEXT PRIMARY KEY, -- UUID
+    name TEXT,
+    user_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+```
+
+### 3.2. `shows`
+Séries ou programas.
+
+```sql
+CREATE TABLE shows (
+    id TEXT PRIMARY KEY, -- UUID
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    style_preset TEXT,
+    visual_prompt TEXT,
+    default_tts_provider TEXT DEFAULT 'gemini',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
 );
 ```
 
@@ -83,102 +135,153 @@ O projeto de vídeo.
 
 ```sql
 CREATE TABLE projects (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- Configuração Básica
+    id TEXT PRIMARY KEY, -- UUID
+    user_id TEXT NOT NULL,
     topic TEXT NOT NULL,
-    style VARCHAR(50) NOT NULL,
-    language VARCHAR(10) DEFAULT 'en',
+    style TEXT NOT NULL,
+    language TEXT DEFAULT 'en',
+    voice_name TEXT NOT NULL,
+    tts_provider TEXT NOT NULL, -- Enum: gemini, elevenlabs, groq
     
-    -- Configuração de Voz
-    voice_name VARCHAR(100) NOT NULL,
-    tts_provider VARCHAR(20) CHECK (tts_provider IN ('gemini', 'elevenlabs')),
+    -- Configurações de IA
+    reference_image_url TEXT,
+    reference_characters_snapshot JSONB,
+    video_model TEXT DEFAULT 'veo',
+    audio_model TEXT,
     
     -- Música
-    include_music BOOLEAN DEFAULT FALSE,
+    include_music BOOLEAN DEFAULT false,
     bg_music_prompt TEXT,
-    bg_music_url TEXT, -- Suporta Base64 Data URI ou URL
-    bg_music_status VARCHAR(20) DEFAULT 'pending',
-
-    -- Metadados SEO
-    generated_title VARCHAR(255),
+    bg_music_url TEXT,
+    bg_music_status TEXT, -- Enum: MusicStatus
+    
+    -- Metadados
+    status TEXT DEFAULT 'draft', -- Enum: ProjectStatus
+    generated_title TEXT,
     generated_description TEXT,
+    duration_config JSONB,
+    tags TEXT[], 
+    
+    -- Organização
+    is_archived BOOLEAN DEFAULT false,
+    folder_id TEXT,
+    show_id TEXT,
+    episode_number INTEGER,
+    
+    -- Locks
+    lock_session_id TEXT,
+    lock_expires_at TIMESTAMP,
 
-    -- Configuração de Duração
-    duration_config JSONB, -- { "min": 55, "max": 65, "targetScenes": 10 }
-
-    -- Referência Legacy (opcional, mantido se necessário para projetos antigos)
-    reference_image_url TEXT,
-
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
-### 4.2. `project_characters` (Relacionamento N:N)
-Tabela de junção para vincular múltiplos personagens a um projeto.
-
-```sql
-CREATE TABLE project_characters (
-    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
-    character_id UUID REFERENCES characters(id) ON DELETE CASCADE,
-    PRIMARY KEY (project_id, character_id)
-);
-```
-
-### 4.3. `scenes`
-As cenas individuais do roteiro.
+### 4.2. `scenes`
+As cenas individuais.
 
 ```sql
 CREATE TABLE scenes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    
+    id TEXT PRIMARY KEY, -- UUID
+    project_id TEXT NOT NULL,
     scene_number INTEGER NOT NULL,
     visual_description TEXT NOT NULL,
     narration TEXT NOT NULL,
     duration_seconds DECIMAL(5,2) NOT NULL,
     
-    -- Assets Gerados
-    -- NOTA: O tipo TEXT do Postgres suporta até 1GB.
-    -- Armazenaremos Base64 Data URIs (ex: data:image/png;base64,...) diretamente aqui.
-    image_url TEXT, 
-    image_status VARCHAR(20) DEFAULT 'pending', -- pending, loading, completed, error
-    
+    -- Assets
+    image_url TEXT,
+    image_status TEXT DEFAULT 'draft', -- Enum: SceneStatus
     audio_url TEXT,
-    audio_status VARCHAR(20) DEFAULT 'pending', -- pending, loading, completed, error
+    audio_status TEXT DEFAULT 'draft',
+    sfx_url TEXT,
+    sfx_status TEXT DEFAULT 'draft',
+    video_url TEXT,
+    video_status TEXT DEFAULT 'draft',
     
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- Config
+    media_type TEXT DEFAULT 'image',
+    visual_effect TEXT DEFAULT 'zoom_in',
+    word_timings JSONB,
+    
+    -- Erros e Tentativas
+    error_message TEXT,
+    image_attempts INTEGER DEFAULT 0,
+    audio_attempts INTEGER DEFAULT 0,
+    sfx_attempts INTEGER DEFAULT 0,
+    video_attempts INTEGER DEFAULT 0,
+    
+    character_id TEXT,
+    
+    created_at TIMESTAMP DEFAULT NOW(),
+    deleted_at TIMESTAMP
 );
+```
 
-CREATE INDEX idx_scenes_project_order ON scenes (project_id, scene_number);
+### 4.3. `jobs`
+Fila de processamento assíncrono (ex: Render de Vídeo).
+
+```sql
+CREATE TABLE jobs (
+    id TEXT PRIMARY KEY, -- CUID
+    type TEXT NOT NULL,
+    status TEXT DEFAULT 'QUEUED', 
+    inputPayload JSONB NOT NULL,
+    outputResult JSONB,
+    errorMessage TEXT,
+    
+    projectId TEXT NOT NULL,
+    sceneId TEXT,
+    
+    createdAt TIMESTAMP DEFAULT NOW(),
+    updatedAt TIMESTAMP
+);
 ```
 
 ---
 
-## 5. Analytics & Logs
+## 5. Assets Reutilizáveis
 
-### 5.1. `usage_logs`
-Rastreamento de consumo de API (Tokens/Requests).
+### 5.1. `characters`
+Personagens consistentes.
+
+```sql
+CREATE TABLE characters (
+    id TEXT PRIMARY KEY, -- UUID
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    images TEXT[],
+    created_at TIMESTAMP DEFAULT NOW(),
+    
+    show_id TEXT,
+    voice_provider TEXT,
+    voice_id TEXT,
+    voice_settings JSONB
+);
+```
+
+---
+
+## 6. Logs
+
+### 6.1. `usage_logs`
+Logs de consumo de tokens/serviços.
 
 ```sql
 CREATE TABLE usage_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
-    
-    action_type VARCHAR(50) NOT NULL, -- GENERATE_SCRIPT, GENERATE_IMAGE, TTS, etc.
-    provider VARCHAR(50) NOT NULL,    -- gemini, elevenlabs, suno
-    model_name VARCHAR(100),
-    
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    project_id TEXT,
+    action_type TEXT NOT NULL, -- Enum: UsageLogAction
+    provider TEXT NOT NULL,
+    model_name TEXT NOT NULL,
     tokens_input INTEGER DEFAULT 0,
     tokens_output INTEGER DEFAULT 0,
-    duration_seconds DECIMAL(10,2),   -- Para áudio/vídeo
-    
-    status VARCHAR(20) DEFAULT 'success',
+    duration_seconds DECIMAL(10,2) DEFAULT 0,
+    status TEXT NOT NULL, -- Enum: UsageLogStatus
     error_message TEXT,
-    
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    idempotency_key TEXT UNIQUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 ```
