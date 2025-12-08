@@ -118,31 +118,61 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     // Auto-detect JSON and configure settings
     useEffect(() => {
         const trimmed = topic.trim();
-        // Try to find the first '{' and last '}' to handle marked down JSON or surrounding text
+
+        const tryParse = (str: string) => {
+            try { return JSON.parse(str); } catch (e) { return null; }
+        };
+
+        // Attempt to find JSON object or array
         const firstBrace = trimmed.indexOf('{');
         const lastBrace = trimmed.lastIndexOf('}');
+        const firstBracket = trimmed.indexOf('[');
+        const lastBracket = trimmed.lastIndexOf(']');
 
-        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-            try {
-                const potentialJson = trimmed.substring(firstBrace, lastBrace + 1);
-                const json = JSON.parse(potentialJson);
+        let json = null;
 
-                if (json.scenes && Array.isArray(json.scenes)) {
-                    const count = json.scenes.length;
-                    const totalDuration = json.scenes.reduce((acc: number, s: any) => acc + (Number(s.duration) || Number(s.durationSeconds) || 5), 0);
+        // Try object first
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+            json = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
+        }
 
-                    if (totalDuration > 0) {
-                        // Only update if these values are different to avoid loops/jitter (though unlikely with these specific setters)
-                        setMinDuration(Math.max(5, totalDuration - 5));
-                        setMaxDuration(totalDuration + 5);
-                        showToast(`Duration adjusted to ~${totalDuration}s from script`, 'success');
-                    }
-                    if (count > 0) {
-                        setTargetScenes(count.toString());
-                    }
+        // If object failed or not found, try array
+        if (!json && firstBracket !== -1 && lastBracket > firstBracket) {
+            const arrayJson = tryParse(trimmed.substring(firstBracket, lastBracket + 1));
+            if (Array.isArray(arrayJson)) {
+                json = { scenes: arrayJson };
+            }
+        }
+
+        if (json && (json.scenes || Array.isArray(json))) {
+            const scenes = Array.isArray(json) ? json : json.scenes;
+
+            if (Array.isArray(scenes)) {
+                const count = scenes.length;
+                const totalDuration = scenes.reduce((acc: number, s: any) => {
+                    // Handle various key formats and "5s" strings
+                    const d = s.duration || s.durationSeconds || s.duration_seconds || s.estimated_duration;
+                    const val = typeof d === 'string' ? parseFloat(d) : Number(d);
+                    return acc + (isNaN(val) ? 5 : val);
+                }, 0);
+
+                if (totalDuration > 0) {
+                    const newMin = Math.round(Math.max(5, totalDuration - 5));
+                    const newMax = Math.round(totalDuration + 5);
+
+                    // console.log("Auto-detected duration:", totalDuration, "Setting:", newMin, newMax);
+                    setMinDuration(newMin);
+                    setMaxDuration(newMax);
+
+                    // Show toast only if we haven't just shown it (debounce could be added, but simple check is ok)
+                    // We can check if values are significantly different to avoid spamming if user types in json
+
+                    showToast(`Duration adjusted to ~${Math.round(totalDuration)}s from script`, 'success');
                 }
-            } catch (e) {
-                // Ignore parse errors, it might just be text with braces
+
+                if (count > 0) {
+                    setTargetScenes(count.toString());
+                }
             }
         }
     }, [topic]);
