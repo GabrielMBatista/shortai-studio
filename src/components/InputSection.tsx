@@ -8,6 +8,7 @@ import Loader from './Loader';
 import { ToastType } from './Toast';
 import ConfirmModal from './ConfirmModal';
 import { useTranslation } from 'react-i18next';
+import JSON5 from 'json5';
 
 const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provider: TTSProvider, voices: Voice[] }) => {
     const { t } = useTranslation();
@@ -115,15 +116,24 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         localStorage.setItem('shortsai_pref_language', language);
     }, [language]);
 
+    // Duration & Scene Config
+    const [minDuration, setMinDuration] = useState<number | ''>(60);
+    const [maxDuration, setMaxDuration] = useState<number | ''>(70);
+    const [targetScenes, setTargetScenes] = useState<string>("");
+
     // Auto-detect JSON and configure settings
     useEffect(() => {
         const trimmed = topic.trim();
+        if (!trimmed) return;
 
+        // Helper to try parsing with JSON5 (handles trailing commas, comments, etc.)
         const tryParse = (str: string) => {
-            try { return JSON.parse(str); } catch (e) { return null; }
+            try {
+                return JSON5.parse(str);
+            } catch (e) { return null; }
         };
 
-        // Attempt to find JSON object or array
+        // Attempt to find JSON object or array block
         const firstBrace = trimmed.indexOf('{');
         const lastBrace = trimmed.lastIndexOf('}');
         const firstBracket = trimmed.indexOf('[');
@@ -131,27 +141,34 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
         let json = null;
 
-        // Try object first
+        // Strategy 1: Try object block {...}
         if (firstBrace !== -1 && lastBrace > firstBrace) {
             json = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
         }
 
-        // If object failed or not found, try array
-        if (!json && firstBracket !== -1 && lastBracket > firstBracket) {
+        // Strategy 2: If object failed or not found, try array block [...]
+        if ((!json || (!json.scenes && !Array.isArray(json))) && firstBracket !== -1 && lastBracket > firstBracket) {
             const arrayJson = tryParse(trimmed.substring(firstBracket, lastBracket + 1));
             if (Array.isArray(arrayJson)) {
                 json = { scenes: arrayJson };
             }
         }
 
-        if (json && (json.scenes || Array.isArray(json))) {
-            const scenes = Array.isArray(json) ? json : json.scenes;
+        if (json) {
+            const scenes = Array.isArray(json) ? json : (json.scenes || json.script); // Handle 'script' key too
 
-            if (Array.isArray(scenes)) {
+            if (Array.isArray(scenes) && scenes.length > 0) {
                 const count = scenes.length;
                 const totalDuration = scenes.reduce((acc: number, s: any) => {
                     // Handle various key formats and "5s" strings
                     const d = s.duration || s.durationSeconds || s.duration_seconds || s.estimated_duration;
+
+                    // If no duration, estimate based on narration words (avg 2.5 words/sec)
+                    if (!d && s.narration) {
+                        const words = s.narration.split(/\s+/).length;
+                        return acc + Math.max(3, words / 2.5);
+                    }
+
                     const val = typeof d === 'string' ? parseFloat(d) : Number(d);
                     return acc + (isNaN(val) ? 5 : val);
                 }, 0);
@@ -160,12 +177,9 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     const newMin = Math.round(Math.max(5, totalDuration - 5));
                     const newMax = Math.round(totalDuration + 5);
 
-                    // console.log("Auto-detected duration:", totalDuration, "Setting:", newMin, newMax);
-                    setMinDuration(newMin);
-                    setMaxDuration(newMax);
-
-                    // Show toast only if we haven't just shown it (debounce could be added, but simple check is ok)
-                    // We can check if values are significantly different to avoid spamming if user types in json
+                    // Only update if significantly different to prevent jitter
+                    setMinDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMin) > 2 ? newMin : prev));
+                    setMaxDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMax) > 2 ? newMax : prev));
 
                     showToast(`Duration adjusted to ~${Math.round(totalDuration)}s from script`, 'success');
                 }
@@ -176,11 +190,6 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
             }
         }
     }, [topic]);
-
-    // Duration & Scene Config
-    const [minDuration, setMinDuration] = useState<number | ''>(60);
-    const [maxDuration, setMaxDuration] = useState<number | ''>(70);
-    const [targetScenes, setTargetScenes] = useState<string>("");
 
     // TTS State
     const [ttsProvider, setTtsProvider] = useState<TTSProvider>(() => (localStorage.getItem('shortsai_pref_provider') as TTSProvider) || 'gemini');
