@@ -118,15 +118,22 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     // Auto-detect JSON and configure settings
     useEffect(() => {
         const trimmed = topic.trim();
-        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        // Try to find the first '{' and last '}' to handle marked down JSON or surrounding text
+        const firstBrace = trimmed.indexOf('{');
+        const lastBrace = trimmed.lastIndexOf('}');
+
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
             try {
-                const json = JSON.parse(trimmed);
+                const potentialJson = trimmed.substring(firstBrace, lastBrace + 1);
+                const json = JSON.parse(potentialJson);
+
                 if (json.scenes && Array.isArray(json.scenes)) {
                     const count = json.scenes.length;
                     const totalDuration = json.scenes.reduce((acc: number, s: any) => acc + (Number(s.duration) || Number(s.durationSeconds) || 5), 0);
 
                     if (totalDuration > 0) {
-                        setMinDuration(Math.max(5, totalDuration - 5)); // Allow small buffer
+                        // Only update if these values are different to avoid loops/jitter (though unlikely with these specific setters)
+                        setMinDuration(Math.max(5, totalDuration - 5));
                         setMaxDuration(totalDuration + 5);
                         showToast(`Duration adjusted to ~${totalDuration}s from script`, 'success');
                     }
@@ -135,7 +142,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     }
                 }
             } catch (e) {
-                // Ignore parse errors
+                // Ignore parse errors, it might just be text with braces
             }
         }
     }, [topic]);
