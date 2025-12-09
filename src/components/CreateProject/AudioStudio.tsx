@@ -135,7 +135,7 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
             </div>
 
             {/* Provider Selector */}
-            <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1.5 rounded-xl mb-6">
+            <div id="audio-controls-group" className="grid grid-cols-3 gap-1 bg-slate-900 p-1.5 rounded-xl mb-6">
                 <button type="button" onClick={() => setTtsProvider('gemini')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'gemini' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Google Gemini</button>
                 <button type="button" onClick={() => setTtsProvider('elevenlabs')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'elevenlabs' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>ElevenLabs</button>
                 <button type="button" onClick={() => setTtsProvider('groq')} disabled={isBusy} className={`py-2.5 rounded-lg text-xs font-bold transition-all ${ttsProvider === 'groq' ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}>Groq (PlayAI)</button>

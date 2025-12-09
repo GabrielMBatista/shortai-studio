@@ -338,7 +338,13 @@
             "welcome": "Organize your work with Folders. Drag & drop projects!",
             "create": "Create a new folder.",
             "root": "View all projects here.",
-            "drag": "Drag folders into other folders to organize."
+            "drag": "Drag folders into other folders to organize.",
+            "edit_menu": "Click the 3 dots to Edit, Archive or Move your projects."
+        },
+        "guides": {
+            "welcome": "Explore our ready-to-use guides and templates!",
+            "sidebar": "Navigate between AI Prompts, JSON Schemas, and Character Templates.",
+            "copy": "Copy any template with one click and use it in your projects."
         }
     }
 }

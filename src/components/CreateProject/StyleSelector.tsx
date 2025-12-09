@@ -38,7 +38,7 @@ export const StyleSelector: React.FC<StyleSelectorProps> = ({ style, setStyle, i
                 <p className="text-sm text-slate-500 ml-9">{t('input.visual_style_subtitle')}</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+            <div id="style-grid" className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                 {VIDEO_STYLES.map((s) => {
                     const Icon = getStyleIcon(s);
                     const isSelected = style === s;

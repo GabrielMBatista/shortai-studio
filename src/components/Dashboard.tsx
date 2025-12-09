@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, VideoProject, Folder as FolderType } from '../types';
-import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Download, Filter, MoreVertical, FolderInput, Folder, Menu, X, Loader2, HelpCircle, Settings, PlayCircle, FileText, Video, AlertTriangle } from 'lucide-react';
+import { Plus, Clock, Film, Play, Trash2, Zap, Sparkles, ArrowRight, Archive, Download, Filter, MoreVertical, FolderInput, Folder, Menu, X, Loader2, HelpCircle, Settings, PlayCircle, FileText, Video, AlertTriangle, Edit2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import FolderList from './FolderList';
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor, pointerWithin } from '@dnd-kit/core';
@@ -377,6 +377,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                             style={{ top: contextMenu.y, left: contextMenu.x }}
                             onClick={(e) => e.stopPropagation()}
                         >
+                            <button
+                                onClick={() => {
+                                    const p = projects.find(p => p.id === contextMenu.projectId);
+                                    if (p) onOpenProject(p);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                            >
+                                <Edit2 className="w-4 h-4" />
+                                {t('common.edit', 'Edit')}
+                            </button>
+
                             <button
                                 onClick={() => {
                                     const p = projects.find(p => p.id === contextMenu.projectId);

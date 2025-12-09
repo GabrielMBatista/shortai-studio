@@ -36,12 +36,12 @@ export const getSettingsTourSteps = (t: TFunction): Step[] => [
 
 export const getCreationTourSteps = (t: TFunction): Step[] => [
     {
-        target: '#topic',
+        target: '#input-topic',
         content: t('tour.creation.topic'),
         placement: 'bottom',
     },
     {
-        target: '#language',
+        target: '#input-language',
         content: t('tour.creation.language'),
         placement: 'bottom',
     },
@@ -201,5 +201,28 @@ export const getFoldersTourSteps = (t: TFunction): Step[] => [
         target: '#folder-tree-container',
         content: t('tour.folders.drag'),
         placement: 'right',
+    },
+    {
+        target: '.lucide-more-vertical, .lucide-menu',
+        content: t('tour.folders.edit_menu'),
+        placement: 'left',
+    }
+].map(step => ({ ...step, disableBeacon: true })) as Step[];
+
+export const getGuidesTourSteps = (t: TFunction): Step[] => [
+    {
+        target: '#guides-header',
+        content: t('tour.guides.welcome'),
+        placement: 'center',
+    },
+    {
+        target: '#guides-sidebar',
+        content: t('tour.guides.sidebar'),
+        placement: 'right',
+    },
+    {
+        target: '#btn-copy-prompt',
+        content: t('tour.guides.copy'),
+        placement: 'bottom',
     }
 ].map(step => ({ ...step, disableBeacon: true })) as Step[];

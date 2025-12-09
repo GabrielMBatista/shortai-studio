@@ -104,7 +104,7 @@ export const CharacterManager: React.FC<CharacterManagerProps> = ({
                 confirmText={t('input.delete_char_confirm')}
             />
 
-            <div className="flex justify-between items-center mb-4">
+            <div id="character-section" className="flex justify-between items-center mb-4">
                 <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
                     <UserIcon className="w-4 h-4 text-indigo-400" /> {t('input.character_consistency')}
                 </label>

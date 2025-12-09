@@ -350,7 +350,13 @@
             "welcome": "Organize seu trabalho com Pastas. Arraste e solte projetos!",
             "create": "Crie uma nova pasta.",
             "root": "Visualize todos os projetos aqui.",
-            "drag": "Arraste pastas para dentro de outras pastas para organizar."
+            "drag": "Arraste pastas para dentro de outras pastas para organizar.",
+            "edit_menu": "Clique nos 3 pontos para Editar, Arquivar ou Mover seus projetos."
+        },
+        "guides": {
+            "welcome": "Explore nossos guias e modelos prontos para uso!",
+            "sidebar": "Navegue entre modelos de Prompts de IA, Schema JSON e Templates de Personagem.",
+            "copy": "Copie qualquer modelo com um clique e use nos seus projetos."
         }
     },
     "quota": {

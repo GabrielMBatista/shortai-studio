@@ -17,12 +17,12 @@ export const GuideView: React.FC = () => {
             {/* Sidebar */}
             <div className="w-64 border-r border-slate-800 flex-shrink-0 flex flex-col pt-4 overflow-y-auto bg-[#0f172a]">
                 <div className="px-6 mb-8">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h2 id="guides-header" className="text-lg font-bold text-white flex items-center gap-2">
                         <Book className="w-5 h-5 text-indigo-500" />
                         {t('guides.title', 'Guides & Templates')}
                     </h2>
                 </div>
-                <nav className="flex-1 px-4 space-y-1">
+                <nav id="guides-sidebar" className="flex-1 px-4 space-y-1">
                     {sections.map(section => (
                         <button
                             key={section.id}
@@ -100,7 +100,9 @@ const ChatGPTGuide = () => {
                         <Terminal className="w-4 h-4" />
                         <span>{t('guides.prompt_template')}</span>
                     </div>
+
                     <button
+                        id="btn-copy-prompt"
                         onClick={handleCopy}
                         className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors"
                     >
@@ -127,7 +129,7 @@ const ChatGPTGuide = () => {
                     <p className="text-sm text-slate-400">{t('guides.batch_desc')}</p>
                 </div>
             </div>
-        </section>
+        </section >
     );
 };
 
