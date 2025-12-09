@@ -9,6 +9,7 @@ import AdminDashboard from '../AdminDashboard';
 import Loader from '../Loader';
 import ShowsView from '../ShowsView';
 import GuideView from '../GuideView';
+import ChannelsPage from '../ChannelsPage';
 import { useTranslation } from 'react-i18next';
 
 interface ScreenManagerProps {
@@ -163,6 +164,10 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                     setShowArchived={setShowArchived}
                     onStartTour={onStartTour}
                 />
+            )}
+
+            {step === AppStep.CHANNELS && currentUser && (
+                <ChannelsPage />
             )}
 
             {step === AppStep.SHOWS && currentUser && currentUser.role === 'ADMIN' && (

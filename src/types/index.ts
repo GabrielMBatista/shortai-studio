@@ -10,7 +10,8 @@ export enum AppStep {
   GENERATING_IMAGES = 'GENERATING_IMAGES',
   PREVIEW = 'PREVIEW',
   ADMIN = 'ADMIN',
-  GUIDES = 'GUIDES'
+  GUIDES = 'GUIDES',
+  CHANNELS = 'CHANNELS'
 }
 
 // ...

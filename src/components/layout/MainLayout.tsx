@@ -76,20 +76,45 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             {/* Navbar */}
             <nav className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-40 flex-shrink-0">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        {step !== AppStep.DASHBOARD ? (
-                            <button onClick={() => { onRefreshProjects(); onSetStep(AppStep.DASHBOARD); }} className="text-slate-400 hover:text-white transition-colors">
-                                <ChevronLeft className="w-6 h-6" />
-                            </button>
-                        ) : <Film className="h-8 w-8 text-indigo-500" />}
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 hidden sm:inline">{t('app.name')}</span>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4">
+                            {step !== AppStep.DASHBOARD ? (
+                                <button onClick={() => { onRefreshProjects(); onSetStep(AppStep.DASHBOARD); }} className="text-slate-400 hover:text-white transition-colors">
+                                    <ChevronLeft className="w-6 h-6" />
+                                </button>
+                            ) : <Film className="h-8 w-8 text-indigo-500" />}
+                            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 hidden sm:inline">{t('app.name')}</span>
+                        </div>
+
+                        {/* Module Switcher - Only visible on Dashboard or Channels */}
+                        {currentUser && (step === AppStep.DASHBOARD || step === AppStep.CHANNELS) && (
+                            <div className="hidden md:flex items-center bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+                                <button
+                                    onClick={() => onSetStep(AppStep.DASHBOARD)}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${step === AppStep.DASHBOARD
+                                            ? 'bg-indigo-500/20 text-indigo-400 shadow-sm'
+                                            : 'text-slate-400 hover:text-white'
+                                        }`}
+                                >
+                                    Studio
+                                </button>
+                                <button
+                                    onClick={() => onSetStep(AppStep.CHANNELS)}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${step === AppStep.CHANNELS
+                                            ? 'bg-indigo-500/20 text-indigo-400 shadow-sm'
+                                            : 'text-slate-400 hover:text-white'
+                                        }`}
+                                >
+                                    Channels
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {currentUser && (
                         <div className="flex items-center gap-3 border-l border-slate-800 pl-4">
                             {/* Desktop Menu */}
                             <div className="hidden md:flex items-center gap-3">
-
 
                                 {/* Language Selector */}
                                 <div className="relative mr-2 group">
@@ -120,17 +145,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                     >
                                         <Shield className="w-4 h-4" />
                                         <span className="text-sm font-bold">{t('nav.admin')}</span>
-                                    </button>
-                                )}
-
-                                {/* Shows Navigation */}
-                                {currentUser.role === 'ADMIN' && (
-                                    <button
-                                        onClick={() => onSetStep(AppStep.SHOWS)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${step === AppStep.SHOWS ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                                    >
-                                        <Film className="w-4 h-4" />
-                                        <span className="text-sm font-bold">Shows</span>
                                     </button>
                                 )}
 
