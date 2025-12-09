@@ -66,14 +66,14 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 
-    const handleCreateFolder = async (name: string) => {
-        await createFolder(name);
+    const handleCreateFolder = async (name: string, parentId?: string) => {
+        await createFolder(name, parentId);
         handleRefreshFolders();
         onRefreshProjects();
     };
 
-    const handleUpdateFolder = async (id: string, name: string) => {
-        await updateFolder(id, name);
+    const handleUpdateFolder = async (id: string, name?: string, parentId?: string | null) => {
+        await updateFolder(id, name, parentId);
         handleRefreshFolders();
         onRefreshProjects();
     };
@@ -83,6 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         handleRefreshFolders();
         onRefreshProjects();
     };
+
     const [folders, setFolders] = useState<FolderType[]>([]);
     const [rootCount, setRootCount] = useState(0);
     const [isLoadingFolders, setIsLoadingFolders] = useState(true);
@@ -310,10 +311,21 @@ const Dashboard: React.FC<DashboardProps> = ({
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
-        if (over) {
-            const projectId = active.id as string;
-            const folderId = over.id === 'root' ? null : (over.id as string);
-            handleMoveToFolder(projectId, folderId);
+        if (over && active) {
+            const activeType = active.data.current?.type;
+
+            if (activeType === 'folder_drag') {
+                const folderId = active.data.current?.folder?.id;
+                const targetFolderId = over.id === 'root' ? null : (over.id as string);
+
+                if (folderId && folderId !== targetFolderId) {
+                    handleUpdateFolder(folderId, undefined, targetFolderId);
+                }
+            } else {
+                const projectId = active.id as string;
+                const folderId = over.id === 'root' ? null : (over.id as string);
+                handleMoveToFolder(projectId, folderId);
+            }
         }
         setActiveId(null);
     };
