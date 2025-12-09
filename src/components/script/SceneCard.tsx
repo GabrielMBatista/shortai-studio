@@ -3,13 +3,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Scene, ApiKeys } from '../../types';
 import { useSceneVideoGeneration } from '../../hooks/useSceneVideoGeneration';
 import { getSceneMedia } from '../../services/scenes';
-import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video, GripVertical } from 'lucide-react';
+import { Loader2, AlertCircle, ImageIcon, RefreshCw, Clock, ChevronDown, ChevronUp, Mic, Pencil, Check, Trash2, Video, GripVertical, User as UserIcon } from 'lucide-react';
 import AudioPlayerButton from '../common/AudioPlayerButton';
 import ConfirmModal from '../ConfirmModal';
 import { SafeImage } from '../common/SafeImage';
 import { SafeVideo } from '../common/SafeVideo';
 import { useTranslation } from 'react-i18next';
-import { SceneCharacterSelector } from './SceneCharacterSelector';
+import { SceneCharacterPicker } from './SceneCharacterPicker';
 
 interface SceneCardProps {
     scene: Scene;
@@ -32,6 +32,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     const { generate: generateVideo, isPending: isVideoPending } = useSceneVideoGeneration();
     const [isPromptOpen, setIsPromptOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [narrationText, setNarrationText] = useState(scene.narration);
     // Prefer video if explicit preference is 'video', or if no preference but video exists
     const [showVideo, setShowVideo] = useState(scene.mediaType === 'video' || (!scene.mediaType && !!scene.videoUrl));
@@ -332,6 +333,27 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
 
                     {/* Bottom Right: Controls & Duration */}
                     <div className="absolute bottom-2 right-2 flex gap-2 items-center z-10">
+                        {/* Character Picker Trigger */}
+                        <div className="relative">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setIsPickerOpen(!isPickerOpen); }}
+                                className={`bg-black/60 hover:bg-indigo-600 backdrop-blur p-1.5 rounded-md text-white transition-all border border-white/10 shadow-sm ${isPickerOpen ? 'bg-indigo-600 border-indigo-500 ring-2 ring-indigo-400/50' : 'cursor-pointer hover:scale-105'}`}
+                                title={t('script.select_character')}
+                            >
+                                <UserIcon className="w-3.5 h-3.5" />
+                            </button>
+                            {/* Picker Popover - Positioned relative to this wrapper */}
+                            <div className="absolute right-0 bottom-full mb-2">
+                                <SceneCharacterPicker
+                                    isOpen={isPickerOpen}
+                                    onClose={() => setIsPickerOpen(false)}
+                                    availableCharacters={projectCharacters || []}
+                                    selectedCharacterIds={selectedCharIds}
+                                    onToggleCharacter={handleToggleCharacter}
+                                />
+                            </div>
+                        </div>
+
                         <div className="bg-black/60 backdrop-blur px-2 py-1 rounded-md text-xs font-mono text-white flex items-center pointer-events-none border border-white/10 shadow-sm mr-1">
                             <Clock className="w-3 h-3 mr-1.5 text-slate-300" /> {Math.round(Number(scene.durationSeconds || 0))}s
                         </div>
@@ -409,15 +431,29 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                     </div>
 
                     <div className="mt-auto border-t border-slate-700/50 pt-3">
-                        {/* Character Selector */}
-                        {projectCharacters && projectCharacters.length > 0 && (
-                            <div className="mb-4">
-                                <SceneCharacterSelector
-                                    projectCharacters={projectCharacters}
-                                    selectedCharacterIds={selectedCharIds}
-                                    onToggleCharacter={handleToggleCharacter}
-                                    onClearSelection={handleClearSelection}
-                                />
+
+                        {/* Selected Characters Footer */}
+                        {scene.characters && scene.characters.length > 0 && (
+                            <div className="mb-4 flex gap-2 items-center">
+                                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5 mr-1">
+                                    <UserIcon className="w-3 h-3" />
+                                </div>
+                                <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-1">
+                                    {scene.characters.map(c => (
+                                        <div key={c.id} className="relative group/char cursor-pointer" title={c.name}>
+                                            <div className="w-6 h-6 rounded-full border border-slate-600 overflow-hidden">
+                                                <img src={c.imageUrl || c.images[0]} className="w-full h-full object-cover" />
+                                            </div>
+                                            {/* Mini Remove Button on Hover */}
+                                            <button
+                                                onClick={() => handleToggleCharacter(c.id)}
+                                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 flex items-center justify-center opacity-0 group-hover/char:opacity-100 transition-opacity"
+                                            >
+                                                <div className="w-1.5 h-0.5 bg-white rounded-full" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
