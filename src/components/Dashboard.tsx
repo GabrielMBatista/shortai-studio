@@ -64,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const isMobile = useIsMobile();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isMobileTourMenuOpen, setIsMobileTourMenuOpen] = useState(false);
+
 
     const handleCreateFolder = async (name: string) => {
         await createFolder(name);
@@ -357,63 +357,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Main Content */}
                 <div className="flex-1 bg-[#0f172a] relative flex flex-col">
-                    {/* Mobile Header */}
-                    <div className="md:hidden flex items-center p-4 border-b border-slate-800 bg-slate-900/50 flex-shrink-0">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsMobileMenuOpen(true);
-                            }}
-                            className="p-2 -ml-2 text-slate-400 hover:text-white"
-                        >
-                            <Menu className="w-6 h-6" />
-                        </button>
-                        <span className="ml-2 font-bold text-white">ShortsAI</span>
-                        <div className="ml-auto relative md:hidden">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsMobileTourMenuOpen(!isMobileTourMenuOpen);
-                                }}
-                                className="p-2 text-indigo-400 hover:text-white bg-indigo-500/10 rounded-full animate-pulse transition-all relative z-50"
-                            >
-                                <HelpCircle className="w-6 h-6" />
-                            </button>
 
-                            {isMobileTourMenuOpen && (
-                                <div className="absolute right-0 top-12 w-56 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in-up">
-                                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 py-3 border-b border-slate-700">{t('nav.tours_title')}</h3>
-                                    <div className="flex flex-col p-1">
-                                        <button onClick={() => { onStartTour('settings'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
-                                            <Settings className="w-4 h-4 animate-[pulse_3s_ease-in-out_infinite] text-blue-400/70" />
-                                            {t('nav.settings_tour')}
-                                        </button>
-                                        <button onClick={() => { onStartTour('creation'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
-                                            <PlayCircle className="w-4 h-4 animate-[pulse_3s_ease-in-out_infinite_0.6s] text-green-400/70" />
-                                            {t('nav.creation_tour')}
-                                        </button>
-                                        <button onClick={() => { onStartTour('script'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
-                                            <FileText className="w-4 h-4 animate-[pulse_3s_ease-in-out_infinite_1.2s] text-purple-400/70" />
-                                            {t('nav.script_tour')}
-                                        </button>
-                                        <button onClick={() => { onStartTour('preview'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
-                                            <Video className="w-4 h-4 animate-[pulse_3s_ease-in-out_infinite_1.8s] text-orange-400/70" />
-                                            {t('nav.preview_tour')}
-                                        </button>
-                                        <button onClick={() => { onStartTour('export'); setIsMobileTourMenuOpen(false); }} className="flex items-center gap-3 px-3 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors text-left">
-                                            <Download className="w-4 h-4 animate-[pulse_3s_ease-in-out_infinite_2.4s] text-pink-400/70" />
-                                            {t('nav.export_tour')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Close overlay if open */}
-                            {isMobileTourMenuOpen && (
-                                <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsMobileTourMenuOpen(false)} />
-                            )}
-                        </div>
-                    </div>
                     {/* Context Menu */}
                     {contextMenu && (
                         <div
@@ -473,26 +417,37 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="w-full px-6 py-8">
                         {/* Header Section */}
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 animate-fade-in-up">
-                            <div>
-                                <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                                    {t('dashboard.hello', { name: user.name.split(' ')[0] })} <span className="animate-pulse">👋</span>
-                                </h1>
-                                <p className="text-slate-400 text-lg">{t('dashboard.subtitle')}</p>
+                            <div className="flex items-start gap-4">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsMobileMenuOpen(true);
+                                    }}
+                                    className="p-2 -ml-2 text-slate-400 hover:text-white md:hidden mt-0"
+                                >
+                                    <Menu className="w-8 h-8" />
+                                </button>
+                                <div>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                                        {t('dashboard.hello', { name: user.name.split(' ')[0] })} <span className="animate-pulse">👋</span>
+                                    </h1>
+                                    <p className="text-slate-400 text-lg">{t('dashboard.subtitle')}</p>
+                                </div>
                             </div>
 
-                            <div className="flex gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                                 <button
                                     onClick={handleExportContext}
-                                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors border border-slate-700"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors border border-slate-700 w-full sm:w-auto text-lg md:text-base font-medium"
                                     title={t('dashboard.export_context')}
                                 >
-                                    <Download className="w-4 h-4" />
-                                    <span className="hidden sm:inline">{t('dashboard.export_context')}</span>
+                                    <Download className="w-5 h-5 md:w-4 md:h-4" />
+                                    <span>{t('dashboard.export_context')}</span>
                                 </button>
 
                                 <button
                                     onClick={onNewProject}
-                                    className="group relative inline-flex items-center justify-center px-6 py-2 font-bold text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5"
+                                    className="group relative inline-flex items-center justify-center px-6 py-3 md:py-2 font-bold text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 w-full sm:w-auto text-lg md:text-base"
                                 >
                                     <Sparkles className="w-5 h-5 mr-2 text-indigo-200 group-hover:text-white transition-colors" />
                                     <span>{t('dashboard.create_magic')}</span>

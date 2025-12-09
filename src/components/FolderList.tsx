@@ -320,7 +320,7 @@ const FolderList: React.FC<FolderListProps> = ({
                 </div>
 
                 {/* Tours Section - Desktop Only (Mobile has icon in header) */}
-                <div className={`mt-4 border-t border-slate-800 pt-2 flex-col gap-1 pb-4 hidden md:flex`}>
+                <div className={`mt-4 border-t border-slate-800 pt-2 flex-col gap-1 pb-4 flex`}>
                     {!isCollapsed && <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 py-2 mb-1">{t('nav.tours_title')}</h3>}
 
                     <button
