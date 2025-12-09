@@ -5,10 +5,17 @@ import { ScheduleUploadModal } from './ScheduleUploadModal';
 
 interface Channel {
     id: string;
+    accountId: string;
     name: string;
+    thumbnail?: string;
+    statistics?: {
+        subscriberCount: string;
+        videoCount: string;
+        viewCount: string;
+    };
     provider: string;
     lastSync: string;
-    status: 'active' | 'inactive';
+    status: 'active' | 'inactive' | 'error';
 }
 
 interface TransferJob {
@@ -65,12 +72,6 @@ const ChannelsPage: React.FC = () => {
         window.location.href = `${apiUrl}/auth/signin/google?callbackUrl=${window.location.origin}`;
     };
 
-    const stats = {
-        connected: channels.length,
-        activeSyncs: jobs.filter(j => ['processing', 'queued'].includes(j.status.toLowerCase())).length,
-        completedToday: jobs.filter(j => j.status === 'COMPLETED' && new Date(j.createdAt).toDateString() === new Date().toDateString()).length
-    };
-
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'COMPLETED': return 'bg-green-500/10 text-green-400';
@@ -82,6 +83,14 @@ const ChannelsPage: React.FC = () => {
         }
     };
 
+    const formatNumber = (num?: string) => {
+        if (!num) return '0';
+        const n = parseInt(num);
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toString();
+    };
+
     return (
         <div className="flex-1 bg-[#0f172a] p-4 md:p-8 min-h-screen animate-fade-in relative">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -89,7 +98,7 @@ const ChannelsPage: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-white mb-2">{t('channels.title', 'Channel Manager')}</h1>
-                        <p className="text-slate-400">{t('channels.subtitle', 'Automate your uploads from Drive to YouTube')}</p>
+                        <p className="text-slate-400">{t('channels.subtitle', 'Manage your connected YouTube channels and automated uploads')}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -109,39 +118,93 @@ const ChannelsPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Stats Cards */}
+                {/* Connected Channels Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {channels.length > 0 ? (
+                        channels.map(channel => (
+                            <div key={channel.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800 transition-colors group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-red-600/20 transition-colors"></div>
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            {channel.thumbnail ? (
+                                                <img src={channel.thumbnail} alt={channel.name} className="w-12 h-12 rounded-full border-2 border-slate-700" />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold text-lg">
+                                                    {channel.name.charAt(0)}
+                                                </div>
+                                            )}
+                                            <div className="absolute -bottom-1 -right-1 bg-slate-900 rounded-full p-1">
+                                                <Youtube className="w-4 h-4 text-red-500" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-white font-bold truncate max-w-[150px]" title={channel.name}>{channel.name}</h3>
+                                            <p className="text-xs text-slate-400 capitalize">{channel.provider} • {channel.status}</p>
+                                        </div>
+                                    </div>
+                                    {channel.status === 'active' && <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>}
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 py-4 border-t border-slate-700/50 mb-2">
+                                    <div className="text-center">
+                                        <p className="text-lg font-bold text-white">{formatNumber(channel.statistics?.subscriberCount)}</p>
+                                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Subs</p>
+                                    </div>
+                                    <div className="text-center border-l border-slate-700/50">
+                                        <p className="text-lg font-bold text-white">{formatNumber(channel.statistics?.videoCount)}</p>
+                                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Videos</p>
+                                    </div>
+                                    <div className="text-center border-l border-slate-700/50">
+                                        <p className="text-lg font-bold text-white">{formatNumber(channel.statistics?.viewCount)}</p>
+                                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Views</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    Last synced: {new Date(channel.lastSync).toLocaleDateString()}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-800/20">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4 text-slate-600">
+                                <Youtube className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-lg font-medium text-white mb-1">No channels connected</h3>
+                            <p className="text-slate-400 mb-4">Connect your YouTube account to start scheduling uploads.</p>
+                            <button
+                                onClick={handleConnect}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Connect Now
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Dashboard Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-red-500/20 rounded-lg">
-                                <Youtube className="w-6 h-6 text-red-400" />
-                            </div>
-                            <div>
-                                <p className="text-slate-400 text-sm">Connected Channels</p>
-                                <p className="text-2xl font-bold text-white">{stats.connected}</p>
-                            </div>
+                    <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 flex items-center gap-4">
+                        <div className="p-3 bg-blue-500/10 rounded-lg"><RefreshCw className="w-5 h-5 text-blue-400" /></div>
+                        <div>
+                            <p className="text-slate-400 text-xs uppercase tracking-wide">Jobs Processing</p>
+                            <p className="text-xl font-bold text-white">{jobs.filter(j => ['processing', 'queued'].includes(j.status.toLowerCase())).length}</p>
                         </div>
                     </div>
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-blue-500/20 rounded-lg">
-                                <RefreshCw className={`w-6 h-6 text-blue-400 ${stats.activeSyncs > 0 ? 'animate-spin' : ''}`} />
-                            </div>
-                            <div>
-                                <p className="text-slate-400 text-sm">Active Syncs</p>
-                                <p className="text-2xl font-bold text-white">{stats.activeSyncs}</p>
-                            </div>
+                    <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 flex items-center gap-4">
+                        <div className="p-3 bg-purple-500/10 rounded-lg"><Clock className="w-5 h-5 text-purple-400" /></div>
+                        <div>
+                            <p className="text-slate-400 text-xs uppercase tracking-wide">Scheduled</p>
+                            <p className="text-xl font-bold text-white">{jobs.filter(j => j.status === 'SCHEDULED').length}</p>
                         </div>
                     </div>
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-green-500/20 rounded-lg">
-                                <CheckCircle className="w-6 h-6 text-green-400" />
-                            </div>
-                            <div>
-                                <p className="text-slate-400 text-sm">Uploads Today</p>
-                                <p className="text-2xl font-bold text-white">{stats.completedToday}</p>
-                            </div>
+                    <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 flex items-center gap-4">
+                        <div className="p-3 bg-green-500/10 rounded-lg"><CheckCircle className="w-5 h-5 text-green-400" /></div>
+                        <div>
+                            <p className="text-slate-400 text-xs uppercase tracking-wide">Completed Today</p>
+                            <p className="text-xl font-bold text-white">{jobs.filter(j => j.status === 'COMPLETED' && new Date(j.createdAt).toDateString() === new Date().toDateString()).length}</p>
                         </div>
                     </div>
                 </div>
