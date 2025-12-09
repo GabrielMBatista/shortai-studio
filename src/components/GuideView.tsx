@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { Book, Code, Copy, Check, Terminal, FileJson, MessageSquare } from 'lucide-react';
+import { Book, Code, Copy, Check, Terminal, FileJson, MessageSquare, Users } from 'lucide-react';
 
 export const GuideView: React.FC = () => {
     const { t } = useTranslation();
@@ -9,6 +9,7 @@ export const GuideView: React.FC = () => {
     const sections = [
         { id: 'chatgpt', label: t('guides.chatgpt_title', 'ChatGPT Prompts'), icon: MessageSquare },
         { id: 'json-schema', label: t('guides.json_title', 'JSON Schema (Batch)'), icon: FileJson },
+        { id: 'characters', label: t('guides.characters_title', 'Character Consistency'), icon: Users },
     ];
 
     return (
@@ -43,6 +44,7 @@ export const GuideView: React.FC = () => {
                 <div className="max-w-3xl mx-auto space-y-12">
                     {activeSection === 'chatgpt' && <ChatGPTGuide />}
                     {activeSection === 'json-schema' && <JsonSchemaGuide />}
+                    {activeSection === 'characters' && <CharacterGuide />}
                 </div>
             </div>
         </div>
@@ -54,22 +56,7 @@ const ChatGPTGuide = () => {
     const [copied, setCopied] = useState(false);
     const [mode, setMode] = useState<'single' | 'batch'>('single');
 
-    const singleCode = `I want to create a short video script about [TOPIC]. 
-Please generate a structured JSON output with the following format:
-
-{
-  "topic": "[TOPIC]",
-  "scenes": [
-    {
-      "scene_number": 1,
-      "visual_description": "Detailed visual description for Image/Video generation...",
-      "narration": "Text for the voiceover...",
-      "duration_seconds": 5
-    }
-  ]
-}
-
-Make sure the narration is engaging and the visual descriptions are vivid and suitable for AI image generation.`;
+    const singleCode = t('guides.single_prompt_code');
 
     const batchCode = t('guides.batch_prompt_code');
 
@@ -147,27 +134,7 @@ Make sure the narration is engaging and the visual descriptions are vivid and su
 const JsonSchemaGuide = () => {
     const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
-    const code = `{
-  "batches": [
-    {
-      "topic": "Example Project 1",
-      "style": "Cinematic",
-      "voice": "Puck",
-      "scenes": [
-        {
-          "narration": "Welcome to the future.",
-          "visual_description": "Futuristic city skyline at sunset",
-          "duration_seconds": 4
-        }
-      ]
-    },
-    {
-      "topic": "Example Project 2",
-      "style": "Cyberpunk",
-      "scenes": [...]
-    }
-  ]
-}`;
+    const code = t('guides.json_schema_code');
 
     const handleCopy = () => {
         navigator.clipboard.writeText(code);
@@ -199,6 +166,53 @@ const JsonSchemaGuide = () => {
                 <div className="p-4 overflow-x-auto">
                     <pre className="font-mono text-sm text-emerald-300 leading-relaxed whitespace-pre-wrap">{code}</pre>
                 </div>
+            </div>
+        </section>
+    );
+};
+
+const CharacterGuide = () => {
+    const { t } = useTranslation();
+    const [copied, setCopied] = useState(false);
+    const code = t('guides.char_prompt_code');
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <section className="space-y-6">
+            <header className="border-b border-slate-800 pb-4">
+                <h1 className="text-3xl font-bold text-white mb-2">{t('guides.characters_title')}</h1>
+                <p className="text-slate-400 text-lg">{t('guides.characters_desc')}</p>
+            </header>
+
+            <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-800/50 border-b border-slate-700">
+                    <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                        <Users className="w-4 h-4" />
+                        <span>{t('guides.char_prompt_title')}</span>
+                    </div>
+                    <button
+                        onClick={handleCopy}
+                        className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                    >
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied ? t('guides.copied') : t('guides.copy')}
+                    </button>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                    <pre className="font-mono text-sm text-indigo-300 leading-relaxed whitespace-pre-wrap">{code}</pre>
+                </div>
+            </div>
+
+            <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 mt-8">
+                <h3 className="font-bold text-white mb-2">💡 {t('guides.tip')}</h3>
+                <p className="text-sm text-slate-400">
+                    {t('guides.char_tip')}
+                </p>
             </div>
         </section>
     );

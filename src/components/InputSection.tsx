@@ -74,7 +74,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         }));
         return {
             ...p,
-            topic: p.topic || p.title || p.projectTitle || p.titulo || p.tema_dia || "Untitled Project",
+            topic: p.meta?.titulo_otimizado || p.topic || p.title || p.projectTitle || p.titulo || p.tema_dia || "Untitled Project",
             scenes
         };
     };
