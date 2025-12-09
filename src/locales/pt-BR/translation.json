@@ -191,7 +191,13 @@
         "generation_cancelled": "Geração cancelada.",
         "preview_failed": "Falha ao gerar áudio de prévia.",
         "regenerate_script": "Recriar Roteiro",
-        "confirm_regenerate_script": "Recriar o roteiro? Isso substituirá todas as cenas atuais."
+        "confirm_regenerate_script": "Recriar o roteiro? Isso substituirá todas as cenas atuais.",
+        "select_character": "Selecionar Personagem",
+        "search_character": "Buscar personagem...",
+        "no_characters_found": "Nenhum personagem encontrado",
+        "clear_all": "Limpar tudo",
+        "default_character": "Padrão",
+        "selected_count": "{{count}} selecionados"
     },
     "scene": {
         "regenerate_title": "Recriar {{type}}?",

@@ -65,7 +65,7 @@ export const SceneCharacterPicker: React.FC<SceneCharacterPickerProps> = ({
                     <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-500" />
                     <input
                         className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-600"
-                        placeholder={t('script.search_character') || "Search..."}
+                        placeholder={t('script.search_character', 'Search...')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         autoFocus
@@ -95,7 +95,7 @@ export const SceneCharacterPicker: React.FC<SceneCharacterPickerProps> = ({
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${selectedCharacterIds.length === 0 ? 'border-indigo-400 text-indigo-400' : 'border-slate-700 text-slate-500'}`}>
                             <span className="text-[10px] font-bold">AUTO</span>
                         </div>
-                        <span className="text-[9px] text-slate-400 font-medium truncate w-full text-center">Default</span>
+                        <span className="text-[9px] text-slate-400 font-medium truncate w-full text-center">{t('script.default_character', 'Default')}</span>
                     </button>
 
                     {filteredChars.map(c => {
@@ -123,13 +123,13 @@ export const SceneCharacterPicker: React.FC<SceneCharacterPickerProps> = ({
 
                 {filteredChars.length === 0 && (
                     <div className="text-center py-4 text-xs text-slate-500">
-                        No characters found
+                        {t('script.no_characters_found', 'No characters found')}
                     </div>
                 )}
             </div>
 
             <div className="p-2 bg-slate-800/50 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500">
-                <span>{selectedCharacterIds.length} selected</span>
+                <span>{t('script.selected_count', { count: selectedCharacterIds.length })}</span>
                 {selectedCharacterIds.length > 0 && (
                     <button
                         onClick={() => {
@@ -140,7 +140,7 @@ export const SceneCharacterPicker: React.FC<SceneCharacterPickerProps> = ({
                         }}
                         className="text-indigo-400 hover:text-white transition-colors"
                     >
-                        Clear all
+                        {t('script.clear_all', 'Clear all')}
                     </button>
                 )}
             </div>

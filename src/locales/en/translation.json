@@ -190,7 +190,13 @@
         "generation_cancelled": "Generation cancelled.",
         "preview_failed": "Failed to generate preview audio.",
         "regenerate_script": "Regenerate Script",
-        "confirm_regenerate_script": "Regenerate script? This will replace current scenes."
+        "confirm_regenerate_script": "Regenerate script? This will replace current scenes.",
+        "select_character": "Select Character",
+        "search_character": "Search character...",
+        "no_characters_found": "No characters found",
+        "clear_all": "Clear all",
+        "default_character": "Default",
+        "selected_count": "{{count}} selected"
     },
     "scene": {
         "regenerate_title": "Regenerate {{type}}?",
