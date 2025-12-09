@@ -10,6 +10,7 @@ import { SafeImage } from '../common/SafeImage';
 import { SafeVideo } from '../common/SafeVideo';
 import { useTranslation } from 'react-i18next';
 import { SceneCharacterPicker } from './SceneCharacterPicker';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 
 interface SceneCardProps {
     scene: Scene;
@@ -58,11 +59,21 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     });
     const [isLoadingMedia, setIsLoadingMedia] = useState(false);
 
+    const { targetRef, isIntersecting } = useIntersectionObserver({ rootMargin: '200px' });
+    const [hasBeenVisible, setHasBeenVisible] = useState(false);
+
+    useEffect(() => {
+        if (isIntersecting) setHasBeenVisible(true);
+    }, [isIntersecting]);
+
     useEffect(() => {
         // Sync with props if they update (e.g. after regeneration)
         if (scene.imageUrl) setMediaData(prev => ({ ...prev, imageUrl: scene.imageUrl }));
         if (scene.audioUrl) setMediaData(prev => ({ ...prev, audioUrl: scene.audioUrl }));
         if (scene.videoUrl) setMediaData(prev => ({ ...prev, videoUrl: scene.videoUrl }));
+
+        // Only fetch if visible (lazy load)
+        if (!hasBeenVisible) return;
 
         const loadMedia = async () => {
             const missingImage = scene.imageStatus === 'completed' && !scene.imageUrl && !mediaData.imageUrl;
@@ -84,7 +95,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
             }
         };
         loadMedia();
-    }, [scene.id, scene.imageStatus, scene.audioStatus, scene.videoStatus, scene.imageUrl, scene.audioUrl, scene.videoUrl]);
+    }, [scene.id, scene.imageStatus, scene.audioStatus, scene.videoStatus, scene.imageUrl, scene.audioUrl, scene.videoUrl, hasBeenVisible]);
 
     useEffect(() => {
         // Sync local state with prop if it changes externally (or on remount if parent persisted it)
@@ -245,7 +256,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                 onConfirm={() => modalConfig.type && triggerRegeneration(modalConfig.type)}
                 onCancel={() => setModalConfig({ isOpen: false, type: null })}
             />
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col hover:border-slate-600 transition-colors h-full shadow-lg">
+            <div ref={targetRef} className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col hover:border-slate-600 transition-colors h-full shadow-lg">
                 <div className="aspect-[9/16] bg-slate-900 relative group border-b border-slate-700/50">
                     {showVideo && hasVideo ? (
                         <SafeVideo
