@@ -50,7 +50,7 @@
         "characters_title": "Consistência de Personagens",
         "characters_desc": "Aprenda a definir personagens para manter a identidade visual nas cenas.",
         "char_prompt_title": "Template de Definição de Personagem",
-        "char_prompt_code": "Nome: [NOME]\nDescrição Visual: [DESCRIÇÃO DETALHADA]\n- Idade/Gênero: ...\n- Estilo de Cabelo/Cor: ...\n- Roupas: ...\n- Características Distintas: ...\n- Estilo Artístico: [ex: Realista, Anime]\n\n(Copie isso para o modal 'Novo Personagem' para melhores resultados com Gemini/Veo)",
+        "char_prompt_code": "Descrição Visual: [DESCRIÇÃO DETALHADA]\n- Idade/Gênero: ...\n- Estilo de Cabelo/Cor: ...\n- Roupas: ...\n- Características Distintas: ...\n- Estilo Artístico: [ex: Realista, Anime]\n\n(Copie isso para o campo 'Descrição Visual' no modal 'Novo Personagem')",
         "char_tip": "Envie 3-5 imagens do mesmo personagem em ângulos diferentes para fixar a identidade."
     },
     "folders": {

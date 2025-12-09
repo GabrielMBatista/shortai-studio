@@ -50,7 +50,7 @@
         "characters_title": "Character Consistency",
         "characters_desc": "Learn how to define characters for consistent visual identity across scenes.",
         "char_prompt_title": "Character Definition Template",
-        "char_prompt_code": "Name: [NAME]\nVisual Description: [DETAILED DESCRIPTION]\n- Age/Gender: ...\n- Hair Style/Color: ...\n- Clothing: ...\n- Distinctive Features: ...\n- Art Style: [e.g., Realistic, Anime]\n\n(Copy this into the 'New Character' modal for best results with Gemini/Veo)",
+        "char_prompt_code": "Visual Description: [DETAILED DESCRIPTION]\n- Age/Gender: ...\n- Hair Style/Color: ...\n- Clothing: ...\n- Distinctive Features: ...\n- Art Style: [e.g., Realistic, Anime]\n\n(Copy this into the 'Visual Description' field in the 'New Character' modal)",
         "char_tip": "Upload 3-5 images of the same character in different angles to lock their identity."
     },
     "folders": {
