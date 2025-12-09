@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Youtube, RefreshCw, CheckCircle, Clock, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Plus, Youtube, RefreshCw, CheckCircle, Clock, AlertTriangle, ExternalLink, UploadCloud } from 'lucide-react';
+import { ScheduleUploadModal } from './ScheduleUploadModal';
 
 interface Channel {
     id: string;
@@ -13,7 +14,7 @@ interface Channel {
 interface TransferJob {
     id: string;
     driveFileName: string;
-    status: 'QUEUED' | 'PROCESSING' | 'WAITING_QUOTA' | 'COMPLETED' | 'FAILED';
+    status: 'QUEUED' | 'PROCESSING' | 'WAITING_QUOTA' | 'COMPLETED' | 'FAILED' | 'SCHEDULED';
     progress: number;
     youtubeVideoId: string | null;
     createdAt: string;
@@ -27,6 +28,7 @@ const ChannelsPage: React.FC = () => {
     const [jobs, setJobs] = useState<TransferJob[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
@@ -60,8 +62,6 @@ const ChannelsPage: React.FC = () => {
     }, []);
 
     const handleConnect = () => {
-        // Redirect to Google Sign In with forced consent to ensure we get refresh token
-        // and necessary scopes.
         window.location.href = `${apiUrl}/auth/signin/google?callbackUrl=${window.location.origin}`;
     };
 
@@ -77,12 +77,13 @@ const ChannelsPage: React.FC = () => {
             case 'PROCESSING': return 'bg-blue-500/10 text-blue-400';
             case 'FAILED': return 'bg-red-500/10 text-red-400';
             case 'WAITING_QUOTA': return 'bg-yellow-500/10 text-yellow-400';
+            case 'SCHEDULED': return 'bg-purple-500/10 text-purple-400';
             default: return 'bg-slate-700 text-slate-400';
         }
     };
 
     return (
-        <div className="flex-1 bg-[#0f172a] p-4 md:p-8 min-h-screen animate-fade-in">
+        <div className="flex-1 bg-[#0f172a] p-4 md:p-8 min-h-screen animate-fade-in relative">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -90,13 +91,22 @@ const ChannelsPage: React.FC = () => {
                         <h1 className="text-3xl font-bold text-white mb-2">{t('channels.title', 'Channel Manager')}</h1>
                         <p className="text-slate-400">{t('channels.subtitle', 'Automate your uploads from Drive to YouTube')}</p>
                     </div>
-                    <button
-                        onClick={handleConnect}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-red-600/20"
-                    >
-                        <Plus className="w-5 h-5" />
-                        {t('channels.connect_new', 'Connect Channel')}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsUploadModalOpen(true)}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-indigo-600/20"
+                        >
+                            <UploadCloud className="w-5 h-5" />
+                            {t('channels.upload_new', 'Upload & Schedule')}
+                        </button>
+                        <button
+                            onClick={handleConnect}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-red-600/20"
+                        >
+                            <Plus className="w-5 h-5" />
+                            {t('channels.connect_new', 'Connect Channel')}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -181,6 +191,7 @@ const ChannelsPage: React.FC = () => {
                                                     {job.status === 'COMPLETED' && <CheckCircle className="w-3 h-3" />}
                                                     {job.status === 'FAILED' && <AlertTriangle className="w-3 h-3" />}
                                                     {(job.status === 'PROCESSING' || job.status === 'QUEUED') && <RefreshCw className="w-3 h-3 animate-spin" />}
+                                                    {job.status === 'SCHEDULED' && <Clock className="w-3 h-3" />}
                                                     {job.status}
                                                 </span>
                                                 {job.lastError && (
@@ -225,6 +236,15 @@ const ChannelsPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                <ScheduleUploadModal
+                    isOpen={isUploadModalOpen}
+                    onClose={() => setIsUploadModalOpen(false)}
+                    onSuccess={() => {
+                        // Refresh jobs after a short delay to allow sync to catch up
+                        setTimeout(fetchData, 3000);
+                    }}
+                />
             </div>
         </div>
     );

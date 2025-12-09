@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Scene } from '../types';
-import { Play, Pause, SkipBack, X, Download, VolumeX, Volume2, Loader2, Captions, CaptionsOff, AlertTriangle, Timer, Clock } from 'lucide-react';
+import { Play, Pause, SkipBack, X, Download, VolumeX, Volume2, Loader2, Captions, CaptionsOff, AlertTriangle, Timer, Clock, UploadCloud } from 'lucide-react';
 import { useVideoExport } from '../hooks/useVideoExport';
 import SubtitleOverlay from './SubtitleOverlay';
 import { useTranslation } from 'react-i18next';
 import { getSceneMedia } from '../services/scenes';
 import { SafeImage } from './common/SafeImage';
+import { ScheduleUploadModal } from './ScheduleUploadModal';
 
 interface VideoPlayerProps {
   scenes: Scene[];
@@ -25,6 +26,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
   const [currentTime, setCurrentTime] = useState(0);
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   // Detect mock projects
   const isMock = projectId === '__mock__-tour-project';
@@ -579,9 +581,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           }}
           disabled={isDownloading}
           className={`p-3 rounded-full transition-colors flex items-center justify-center ${isDownloading ? 'text-slate-500 cursor-wait' : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10'}`}
+          title={t('video_player.export_tooltip', 'Export Video')}
         >
           <Download className="w-5 h-5" />
         </button>
+
+        <button
+          id="btn-video-schedule"
+          onClick={() => {
+            if (isMock) return;
+            setShowScheduleModal(true);
+            pausePlayback();
+          }}
+          className="p-3 rounded-full transition-colors flex items-center justify-center text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+          title={t('video_player.schedule_tooltip', 'Schedule Upload')}
+        >
+          <UploadCloud className="w-5 h-5" />
+        </button>
+
         <div className="w-px h-6 bg-white/10 mx-1"></div>
         <button id="btn-toggle-subs" onClick={() => setShowSubtitles(!showSubtitles)} className={`p-3 rounded-full transition-colors ${showSubtitles ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}>{showSubtitles ? <Captions className="w-5 h-5" /> : <CaptionsOff className="w-5 h-5" />}</button>
 
@@ -600,6 +617,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           />
         </div>
       </div>
+
+      <ScheduleUploadModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        preselectedMetadata={{ title: title }}
+        onSuccess={() => {
+          setShowScheduleModal(false);
+          // Optionally guide user to Channels page
+        }}
+      />
 
       {/* Mobile Tips Modal (Outside everything, full screen overlay) */}
       {showMobileTips && (
