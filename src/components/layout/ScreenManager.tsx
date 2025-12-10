@@ -37,6 +37,7 @@ interface ScreenManagerProps {
     // Handlers
     onNewProject: () => void;
     onOpenProject: (p: VideoProject) => void;
+    onEditProject: (p: VideoProject) => void;
     onDeleteProject: (id: string) => void;
     onSetStep: (step: AppStep) => void;
     onUpdateUser: (user: User) => void;
@@ -109,6 +110,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
     fatalError,
     onNewProject,
     onOpenProject,
+    onEditProject,
     onDeleteProject,
     onSetStep,
     onUpdateUser,
@@ -150,6 +152,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                     projects={userProjects}
                     onNewProject={onNewProject}
                     onOpenProject={onOpenProject}
+                    onEditProject={onEditProject}
                     onDeleteProject={onDeleteProject}
                     onRefreshProjects={refreshProjects}
                     isLoading={isLoadingProjects}
@@ -188,6 +191,8 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                     isLoading={isGenerating}
                     loadingMessage={generationMessage}
                     showToast={showToast}
+                    editingProject={project}
+                    onCancelEdit={() => onSetStep(AppStep.DASHBOARD)}
                 />
             )}
 
@@ -205,6 +210,9 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                         scenes={Array.isArray(project.scenes) ? project.scenes : []}
                         generatedTitle={project.generatedTitle}
                         generatedDescription={project.generatedDescription}
+                        generatedShortsHashtags={project.generatedShortsHashtags}
+                        generatedTiktokText={project.generatedTiktokText}
+                        generatedTiktokHashtags={project.generatedTiktokHashtags}
                         onStartImageGeneration={generateAssets}
                         onGenerateImagesOnly={generateImagesOnly}
                         onGenerateAudioOnly={generateAudioOnly}

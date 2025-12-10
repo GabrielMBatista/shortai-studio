@@ -10,10 +10,11 @@ import { SafeImage } from './common/SafeImage';
 interface ProjectCardProps {
     project: VideoProject;
     onOpenProject: (project: VideoProject) => void;
+    onEditProject?: (project: VideoProject) => void;
     onContextMenu: (e: React.MouseEvent, projectId: string) => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onContextMenu }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onEditProject, onContextMenu }) => {
     const { t } = useTranslation();
     const [imageLoaded, setImageLoaded] = React.useState(false);
     const [thumbnailUrl, setThumbnailUrl] = React.useState<string | null>(project.scenes[0]?.imageUrl || null);
@@ -105,7 +106,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onOpenProject, onCon
 
                 <button
                     onClick={(e) => { e.stopPropagation(); onContextMenu(e, project.id); }}
-                    className="absolute top-3 left-3 p-2 bg-slate-900/80 text-white rounded-lg opacity-0 group-hover:opacity-100 hover:bg-slate-800 transition-all transform hover:scale-110 backdrop-blur-sm shadow-lg"
+                    className="absolute top-3 left-3 p-2 bg-slate-900/80 text-white rounded-lg hover:bg-slate-800 transition-all transform hover:scale-110 backdrop-blur-sm shadow-lg"
                 >
                     <MoreVertical className="w-4 h-4" />
                 </button>

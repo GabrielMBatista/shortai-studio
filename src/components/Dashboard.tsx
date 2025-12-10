@@ -15,6 +15,7 @@ interface DashboardProps {
     projects: VideoProject[];
     onNewProject: () => void;
     onOpenProject: (project: VideoProject) => void;
+    onEditProject: (project: VideoProject) => void;
     onDeleteProject: (projectId: string) => void;
     onRefreshProjects: () => void;
     isLoading?: boolean;
@@ -46,6 +47,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     projects,
     onNewProject,
     onOpenProject,
+    onEditProject,
     onDeleteProject,
     onRefreshProjects,
     isLoading = false,
@@ -380,12 +382,23 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <button
                                 onClick={() => {
                                     const p = projects.find(p => p.id === contextMenu.projectId);
-                                    if (p) onOpenProject(p);
+                                    if (p) onEditProject(p);
                                 }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
                             >
                                 <Edit2 className="w-4 h-4" />
                                 {t('common.edit', 'Edit')}
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    const p = projects.find(p => p.id === contextMenu.projectId);
+                                    if (p) onOpenProject(p);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                            >
+                                <PlayCircle className="w-4 h-4" />
+                                {t('common.open', 'Open')}
                             </button>
 
                             <button
@@ -525,6 +538,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             key={project.id}
                                             project={project}
                                             onOpenProject={onOpenProject}
+                                            onEditProject={onEditProject}
                                             onContextMenu={(e, id) => {
                                                 e.preventDefault();
                                                 setContextMenu({ x: e.clientX, y: e.clientY, projectId: id });

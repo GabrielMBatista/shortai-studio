@@ -264,6 +264,30 @@ const App: React.FC = () => {
         }
     };
 
+    const handleEditProject = async (p: VideoProject) => {
+        setIsLoadingProject(true);
+
+        try {
+            const fullProject = await getProject(p.id);
+            if (fullProject) {
+                const sanitizedProject = {
+                    ...fullProject,
+                    scenes: Array.isArray(fullProject.scenes) ? fullProject.scenes : []
+                };
+                setProject(sanitizedProject);
+                localStorage.setItem('shortsai_last_project_id', fullProject.id);
+                handleSetStep(AppStep.INPUT);
+            } else {
+                showToast(t('app.project_load_failed'), 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            showToast(t('app.project_error'), 'error');
+        } finally {
+            setIsLoadingProject(false);
+        }
+    };
+
     const handleRequestDelete = (id: string) => {
         setDeleteModal({ isOpen: true, projectId: id });
     };
@@ -349,6 +373,7 @@ const App: React.FC = () => {
                 fatalError={fatalError}
                 onNewProject={handleNewProject}
                 onOpenProject={handleOpenProject}
+                onEditProject={handleEditProject}
                 onDeleteProject={handleRequestDelete}
                 onSetStep={handleSetStep}
                 onUpdateUser={(u) => { setCurrentUser(u); showToast(t('settings.updated'), 'success'); }}

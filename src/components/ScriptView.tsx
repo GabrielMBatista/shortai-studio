@@ -22,6 +22,9 @@ interface ScriptViewProps {
     scenes: Scene[];
     generatedTitle?: string;
     generatedDescription?: string;
+    generatedShortsHashtags?: string[];
+    generatedTiktokText?: string;
+    generatedTiktokHashtags?: string[];
     onStartImageGeneration: () => void;
     onGenerateImagesOnly: () => void;
     onGenerateAudioOnly: () => void;
@@ -70,20 +73,34 @@ interface ScriptViewProps {
 // Helper to detect mock projects
 const isMockProject = (projectId: string) => projectId === '__mock__-tour-project';
 
-const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ title, description }) => {
+const MetadataCard: React.FC<{
+    title?: string;
+    description?: string;
+    shortsHashtags?: string[];
+    tiktokText?: string;
+    tiktokHashtags?: string[];
+}> = ({ title, description, shortsHashtags, tiktokText, tiktokHashtags }) => {
     const { t } = useTranslation();
     const [isCopiedTitle, setIsCopiedTitle] = useState(false);
     const [isCopiedDesc, setIsCopiedDesc] = useState(false);
+    const [isCopiedShorts, setIsCopiedShorts] = useState(false);
+    const [isCopiedTikTok, setIsCopiedTikTok] = useState(false);
 
-    const copyToClipboard = async (text: string, isTitle: boolean) => {
+    const copyToClipboard = async (text: string, type: 'title' | 'desc' | 'shorts' | 'tiktok') => {
         try {
             await navigator.clipboard.writeText(text);
-            if (isTitle) {
+            if (type === 'title') {
                 setIsCopiedTitle(true);
                 setTimeout(() => setIsCopiedTitle(false), 2000);
-            } else {
+            } else if (type === 'desc') {
                 setIsCopiedDesc(true);
                 setTimeout(() => setIsCopiedDesc(false), 2000);
+            } else if (type === 'shorts') {
+                setIsCopiedShorts(true);
+                setTimeout(() => setIsCopiedShorts(false), 2000);
+            } else if (type === 'tiktok') {
+                setIsCopiedTikTok(true);
+                setTimeout(() => setIsCopiedTikTok(false), 2000);
             }
         } catch (err) { console.error("Failed to copy", err); }
     };
@@ -98,7 +115,7 @@ const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ titl
                 <div>
                     <div className="flex justify-between items-center mb-1">
                         <label className="text-xs font-semibold text-slate-500 uppercase">{t('script.viral_title')}</label>
-                        <button onClick={() => title && copyToClipboard(title, true)} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <button onClick={() => title && copyToClipboard(title, 'title')} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
                             {isCopiedTitle ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedTitle ? t('script.copied') : t('script.copy')}
                         </button>
                     </div>
@@ -107,12 +124,76 @@ const MetadataCard: React.FC<{ title?: string; description?: string }> = ({ titl
                 <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">
                         <label className="text-xs font-semibold text-slate-500 uppercase">{t('script.description_hashtags')}</label>
-                        <button onClick={() => description && copyToClipboard(description, false)} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
+                        <button onClick={() => description && copyToClipboard(description, 'desc')} className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors">
                             {isCopiedDesc ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedDesc ? t('script.copied') : t('script.copy')}
                         </button>
                     </div>
-                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap shadow-inner min-h-[100px]">{description || t('script.generating_desc')}</div>
+                    <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap shadow-inner min-h-[80px]">{description || t('script.generating_desc')}</div>
                 </div>
+
+                {/* YouTube Shorts Hashtags */}
+                {shortsHashtags && shortsHashtags.length > 0 && (
+                    <div>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-xs font-semibold text-red-500 uppercase flex items-center gap-1">
+                                <Youtube className="w-3 h-3" /> Shorts Hashtags
+                            </label>
+                            <button
+                                onClick={() => copyToClipboard(shortsHashtags.join(' '), 'shorts')}
+                                className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                            >
+                                {isCopiedShorts ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedShorts ? t('script.copied') : t('script.copy')}
+                            </button>
+                        </div>
+                        <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 flex flex-wrap gap-1.5 min-h-[60px]">
+                            {shortsHashtags.map((tag, i) => (
+                                <span key={i} className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-md">
+                                    {tag.startsWith('#') ? tag : `#${tag}`}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* TikTok Section */}
+                {(tiktokText || (tiktokHashtags && tiktokHashtags.length > 0)) && (
+                    <div className="border-t border-slate-700/50 pt-4">
+                        <div className="flex items-center gap-2 text-slate-400 mb-3">
+                            <Video className="w-4 h-4" />
+                            <span className="text-xs font-semibold uppercase">TikTok Strategy</span>
+                        </div>
+
+                        {tiktokText && (
+                            <div className="mb-3">
+                                <label className="text-xs font-semibold text-slate-500 uppercase block mb-1">Hook Text</label>
+                                <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 text-xs italic">
+                                    "{tiktokText}"
+                                </div>
+                            </div>
+                        )}
+
+                        {tiktokHashtags && tiktokHashtags.length > 0 && (
+                            <div>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase">Hashtags</label>
+                                    <button
+                                        onClick={() => copyToClipboard(tiktokHashtags.join(' '), 'tiktok')}
+                                        className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
+                                    >
+                                        {isCopiedTikTok ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {isCopiedTikTok ? t('script.copied') : t('script.copy')}
+                                    </button>
+                                </div>
+                                <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 flex flex-wrap gap-1.5">
+                                    {tiktokHashtags.map((tag, i) => (
+                                        <span key={i} className="px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs rounded-md">
+                                            {tag.startsWith('#') ? tag : `#${tag}`}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -173,7 +254,7 @@ const OriginalConceptCard: React.FC<{ topic: string; style: string; onRegenerate
 
 const ScriptView: React.FC<ScriptViewProps> = ({
     projectTopic, projectStyle, projectVoice, projectProvider, projectLanguage, projectVideoModel, projectAudioModel, scenes,
-    generatedTitle, generatedDescription,
+    generatedTitle, generatedDescription, generatedShortsHashtags, generatedTiktokText, generatedTiktokHashtags,
     onStartImageGeneration, onGenerateImagesOnly, onGenerateAudioOnly, onRegenerateAudio, onRegenerateSceneImage, onRegenerateSceneAudio, onRegenerateSceneVideo, onUpdateScene, isGeneratingImages, onCancelGeneration,
     canPreview, onPreview, includeMusic, musicStatus, musicUrl, musicPrompt, onRegenerateMusic, onRegenerateScript,
     isPaused, fatalError, onResume, onSkip, generationMessage, onRemoveScene, onAddScene, onExport, onUpdateProjectSettings, onReorderScenes, projectId, userId, apiKeys,
@@ -662,6 +743,9 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             <MetadataCard
                                 title={generatedTitle}
                                 description={generatedDescription}
+                                shortsHashtags={generatedShortsHashtags}
+                                tiktokText={generatedTiktokText}
+                                tiktokHashtags={generatedTiktokHashtags}
                             />
                             <OriginalConceptCard
                                 topic={projectTopic}

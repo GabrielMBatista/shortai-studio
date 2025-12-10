@@ -31,9 +31,11 @@ interface InputSectionProps {
     isLoading: boolean;
     loadingMessage?: string;
     showToast: (message: string, type: ToastType) => void;
+    editingProject?: import('../types').VideoProject | null;
+    onCancelEdit?: () => void;
 }
 
-const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading, loadingMessage, showToast }) => {
+const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading, loadingMessage, showToast, editingProject, onCancelEdit }) => {
     const { t } = useTranslation();
     const { characters, addCharacter, removeCharacter, isLoading: isCharLoading } = useCharacterLibrary(user);
 
@@ -57,6 +59,31 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     const [voice, setVoice] = useState(() => localStorage.getItem('shortsai_pref_voice') || '');
     const [audioModel, setAudioModel] = useState<string>(() => localStorage.getItem('shortsai_pref_audio_model') || 'eleven_multilingual_v2');
     const [includeMusic, setIncludeMusic] = useState(false);
+
+    // --- Load Editing Project ---
+    useEffect(() => {
+        if (editingProject) {
+            setTopic(editingProject.topic || '');
+            setStyle(editingProject.style || VIDEO_STYLES[0]);
+            setLanguage(editingProject.language || 'en');
+            setVoice(editingProject.voiceName || '');
+            setTtsProvider(editingProject.ttsProvider || 'gemini');
+            setAudioModel(editingProject.audioModel || 'eleven_multilingual_v2');
+            setIncludeMusic(editingProject.includeMusic || false);
+
+            if (editingProject.durationConfig) {
+                setMinDuration(editingProject.durationConfig.min || 60);
+                setMaxDuration(editingProject.durationConfig.max || 70);
+                if (editingProject.durationConfig.targetScenes) {
+                    setTargetScenes(editingProject.durationConfig.targetScenes.toString());
+                }
+            }
+
+            // Load characters
+            const charIds = editingProject.characterIds || [];
+            setSelectedCharIds(charIds);
+        }
+    }, [editingProject]);
 
     // --- Persistence ---
     useEffect(() => { localStorage.setItem('shortsai_pref_language', language); }, [language]);
@@ -322,12 +349,23 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
     return (
         <div className="max-w-6xl mx-auto w-full px-6 py-8 flex flex-col items-center">
-            <div className="text-center mb-12 animate-fade-in-up">
+            <div className="text-center mb-12 animate-fade-in-up relative">
+                {editingProject && onCancelEdit && (
+                    <button
+                        onClick={onCancelEdit}
+                        className="absolute left-0 top-0 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        {t('common.cancel', 'Cancel')}
+                    </button>
+                )}
                 <h1 className="text-4xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight pb-2">
-                    {t('input.title')}
+                    {editingProject ? t('input.edit_title', 'Edit Your Story') : t('input.title')}
                 </h1>
                 <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto whitespace-pre-line">
-                    {t('input.subtitle')}
+                    {editingProject ? t('input.edit_subtitle', 'Adjust settings and regenerate your project') : t('input.subtitle')}
                 </p>
             </div>
 
