@@ -349,18 +349,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
     return (
         <div className="max-w-6xl mx-auto w-full px-6 py-8 flex flex-col items-center">
-            <div className="text-center mb-12 animate-fade-in-up relative">
-                {editingProject && onCancelEdit && (
-                    <button
-                        onClick={onCancelEdit}
-                        className="absolute left-0 top-0 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        {t('common.cancel', 'Cancel')}
-                    </button>
-                )}
+            <div className="text-center mb-12 animate-fade-in-up">
                 <h1 className="text-4xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight pb-2">
                     {editingProject ? t('input.edit_title', 'Edit Your Story') : t('input.title')}
                 </h1>
