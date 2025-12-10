@@ -305,10 +305,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
               playsInline
               onEnded={() => setVideoEnded(true)}
               onPlay={() => {
+                console.log('[VideoPlayer] Video playing:', activeScene.sceneNumber);
                 if (audioRef.current && Math.abs(audioRef.current.currentTime - 0) > 0.5) {
                   audioRef.current.currentTime = 0;
                 }
               }}
+              onError={(e) => {
+                console.error('[VideoPlayer] Video ERROR:', {
+                  sceneNumber: activeScene.sceneNumber,
+                  error: e.currentTarget.error?.message,
+                  code: e.currentTarget.error?.code,
+                  src: videoSrc.substring(0, 150)
+                });
+              }}
+              onLoadStart={() => console.log('[VideoPlayer] Video load START:', activeScene.sceneNumber)}
+              onLoadedMetadata={() => console.log('[VideoPlayer] Video metadata LOADED:', activeScene.sceneNumber)}
+              onLoadedData={() => console.log('[VideoPlayer] Video data LOADED:', activeScene.sceneNumber)}
+              onCanPlay={() => console.log('[VideoPlayer] Video CAN PLAY:', activeScene.sceneNumber)}
             />
           ) : (
             <SafeImage
