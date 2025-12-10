@@ -252,15 +252,24 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
             )}
 
             {step === AppStep.PREVIEW && project && (
-                <VideoPlayer
-                    scenes={Array.isArray(project.scenes) ? project.scenes : []}
-                    onClose={() => onSetStep(AppStep.SCRIPTING)}
-                    bgMusicUrl={project.bgMusicUrl}
-                    title={getDisplayTitle(project)}
-                    projectId={project.id}
-                    onStartTour={onStartTour}
-                    activeTour={activeTour}
-                />
+                <>
+                    {/* Debug: Log scenes when entering preview */}
+                    {console.log('[ScreenManager] Preview scenes:', project.scenes.map(s => ({
+                        sceneNumber: s.sceneNumber,
+                        mediaType: s.mediaType,
+                        hasVideo: !!s.videoUrl,
+                        hasImage: !!s.imageUrl
+                    })))}
+                    <VideoPlayer
+                        scenes={Array.isArray(project.scenes) ? project.scenes : []}
+                        onClose={() => onSetStep(AppStep.SCRIPTING)}
+                        bgMusicUrl={project.bgMusicUrl}
+                        title={getDisplayTitle(project)}
+                        projectId={project.id}
+                        onStartTour={onStartTour}
+                        activeTour={activeTour}
+                    />
+                </>
             )}
 
             {step === AppStep.GUIDES && (

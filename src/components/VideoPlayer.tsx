@@ -31,12 +31,31 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
   // Detect mock projects
   const isMock = projectId === '__mock__-tour-project';
 
-  // Relaxed validity check: rely on status, not URL presence (since lazy loaded)
-  const validScenes = scenes.filter(s => s.imageStatus === 'completed');
-  const activeScene = validScenes[currentSceneIndex];
+  // Use useMemo to ensure validScenes is recalculated when scenes prop changes
+  const validScenes = React.useMemo(() => {
+    return scenes.filter(s => s.imageStatus === 'completed');
+  }, [scenes]);
+
+  // Use useMemo to ensure activeScene is always fresh from validScenes
+  const activeScene = React.useMemo(() => {
+    return validScenes[currentSceneIndex];
+  }, [validScenes, currentSceneIndex]);
 
   const [activeMedia, setActiveMedia] = useState<{ imageUrl?: string | null, audioUrl?: string | null, videoUrl?: string | null }>({});
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+
+  // Debug: Log mediaType when activeScene changes
+  useEffect(() => {
+    if (activeScene) {
+      console.log('[VideoPlayer] Active Scene:', {
+        sceneNumber: activeScene.sceneNumber,
+        mediaType: activeScene.mediaType,
+        hasVideo: !!activeScene.videoUrl,
+        hasImage: !!activeScene.imageUrl,
+        videoStatus: activeScene.videoStatus
+      });
+    }
+  }, [activeScene?.sceneNumber, activeScene?.mediaType, activeScene?.videoUrl]);
 
   useEffect(() => {
     if (!activeScene) return;
