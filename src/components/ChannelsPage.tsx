@@ -122,7 +122,7 @@ const ChannelsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {channels.length > 0 ? (
                         channels.map(channel => (
-                            <div key={channel.id} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800 transition-colors group relative overflow-hidden">
+                            <div key={channel.id} className={`bg-slate-800/50 border ${channel.status === 'error' ? 'border-red-500/50' : 'border-slate-700/50'} rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800 transition-colors group relative overflow-hidden`}>
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-red-600/20 transition-colors"></div>
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-4">
@@ -140,7 +140,14 @@ const ChannelsPage: React.FC = () => {
                                         </div>
                                         <div>
                                             <h3 className="text-white font-bold truncate max-w-[150px]" title={channel.name}>{channel.name}</h3>
-                                            <p className="text-xs text-slate-400 capitalize">{channel.provider} • {channel.status}</p>
+                                            <p className="text-xs text-slate-400 capitalize flex items-center gap-1">
+                                                {channel.provider} • <span className={channel.status === 'error' ? 'text-red-400' : ''}>{channel.status}</span>
+                                            </p>
+                                            {channel.status === 'error' && (
+                                                <button onClick={handleConnect} className="text-xs text-red-400 hover:text-red-300 underline mt-1 flex items-center gap-1">
+                                                    <RefreshCw className="w-3 h-3" /> Reconnect
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     {channel.status === 'active' && <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>}
