@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Youtube, RefreshCw, CheckCircle, Clock, AlertTriangle, ExternalLink, UploadCloud } from 'lucide-react';
-import { ScheduleUploadModal } from './ScheduleUploadModal';
+import { Plus, Youtube, RefreshCw, Clock } from 'lucide-react';
 
 interface Channel {
     id: string;
@@ -18,69 +17,30 @@ interface Channel {
     status: 'active' | 'inactive' | 'error';
 }
 
-interface TransferJob {
-    id: string;
-    driveFileName: string;
-    status: 'QUEUED' | 'PROCESSING' | 'WAITING_QUOTA' | 'COMPLETED' | 'FAILED' | 'SCHEDULED';
-    progress: number;
-    youtubeVideoId: string | null;
-    createdAt: string;
-    completedAt?: string;
-    lastError?: string;
-}
-
 const ChannelsPage: React.FC = () => {
     const { t } = useTranslation();
     const [channels, setChannels] = useState<Channel[]>([]);
-    const [jobs, setJobs] = useState<TransferJob[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
     const fetchData = async () => {
         try {
-            const [channelsRes, jobsRes] = await Promise.all([
-                fetch(`${apiUrl}/channels`),
-                fetch(`${apiUrl}/channels/jobs`)
-            ]);
-
+            const channelsRes = await fetch(`${apiUrl}/channels`);
             if (channelsRes.ok) setChannels(await channelsRes.json());
-            if (jobsRes.ok) setJobs(await jobsRes.json());
         } catch (error) {
             console.error("Failed to fetch channel data", error);
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     };
 
     useEffect(() => {
         fetchData();
-        // Poll for job updates every 10 seconds
-        const interval = setInterval(() => {
-            fetch(`${apiUrl}/channels/jobs`)
-                .then(res => res.ok ? res.json() : [])
-                .then(data => setJobs(data))
-                .catch(e => console.error(e));
-        }, 10000);
-        return () => clearInterval(interval);
     }, []);
 
     const handleConnect = () => {
         window.location.href = `${apiUrl}/auth/signin/google?callbackUrl=${window.location.origin}`;
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'COMPLETED': return 'bg-green-500/10 text-green-400';
-            case 'PROCESSING': return 'bg-blue-500/10 text-blue-400';
-            case 'FAILED': return 'bg-red-500/10 text-red-400';
-            case 'WAITING_QUOTA': return 'bg-yellow-500/10 text-yellow-400';
-            case 'SCHEDULED': return 'bg-purple-500/10 text-purple-400';
-            default: return 'bg-slate-700 text-slate-400';
-        }
     };
 
     const formatNumber = (num?: string) => {
@@ -98,16 +58,9 @@ const ChannelsPage: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-white mb-2">{t('channels.title', 'Channel Manager')}</h1>
-                        <p className="text-slate-400">{t('channels.subtitle', 'Manage your connected YouTube channels and automated uploads')}</p>
+                        <p className="text-slate-400">{t('channels.subtitle', 'Manage your connected YouTube channels')}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setIsUploadModalOpen(true)}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-indigo-600/20"
-                        >
-                            <UploadCloud className="w-5 h-5" />
-                            {t('channels.upload_new', 'Upload & Schedule')}
-                        </button>
                         <button
                             onClick={handleConnect}
                             className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-red-600/20"
@@ -179,8 +132,8 @@ const ChannelsPage: React.FC = () => {
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4 text-slate-600">
                                 <Youtube className="w-8 h-8" />
                             </div>
-                            <h3 className="text-lg font-medium text-white mb-1">No channels connected</h3>
-                            <p className="text-slate-400 mb-4">Connect your YouTube account to start scheduling uploads.</p>
+                            <h3 className="text-lg font-medium text-white mb-1">{isLoading ? 'Loading channels...' : 'No channels connected'}</h3>
+                            <p className="text-slate-400 mb-4">Connect your YouTube account to see your channel stats.</p>
                             <button
                                 onClick={handleConnect}
                                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors"
@@ -190,131 +143,6 @@ const ChannelsPage: React.FC = () => {
                         </div>
                     )}
                 </div>
-
-                {/* Dashboard Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 flex items-center gap-4">
-                        <div className="p-3 bg-blue-500/10 rounded-lg"><RefreshCw className="w-5 h-5 text-blue-400" /></div>
-                        <div>
-                            <p className="text-slate-400 text-xs uppercase tracking-wide">Jobs Processing</p>
-                            <p className="text-xl font-bold text-white">{jobs.filter(j => ['processing', 'queued'].includes(j.status.toLowerCase())).length}</p>
-                        </div>
-                    </div>
-                    <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 flex items-center gap-4">
-                        <div className="p-3 bg-purple-500/10 rounded-lg"><Clock className="w-5 h-5 text-purple-400" /></div>
-                        <div>
-                            <p className="text-slate-400 text-xs uppercase tracking-wide">Scheduled</p>
-                            <p className="text-xl font-bold text-white">{jobs.filter(j => j.status === 'SCHEDULED').length}</p>
-                        </div>
-                    </div>
-                    <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 flex items-center gap-4">
-                        <div className="p-3 bg-green-500/10 rounded-lg"><CheckCircle className="w-5 h-5 text-green-400" /></div>
-                        <div>
-                            <p className="text-slate-400 text-xs uppercase tracking-wide">Completed Today</p>
-                            <p className="text-xl font-bold text-white">{jobs.filter(j => j.status === 'COMPLETED' && new Date(j.createdAt).toDateString() === new Date().toDateString()).length}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Recent Activity Table */}
-                <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden shadow-xl">
-                    <div className="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
-                        <h3 className="font-semibold text-white flex items-center gap-2">
-                            Activity Log
-                            {isRefreshing && <RefreshCw className="w-3 h-3 animate-spin text-slate-500" />}
-                        </h3>
-                        <button onClick={() => { setIsRefreshing(true); fetchData(); }} className="text-sm text-slate-400 hover:text-white transition-colors">
-                            <RefreshCw className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="p-8 text-center text-slate-500">Loading activity...</div>
-                    ) : jobs.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4">
-                                <Clock className="w-8 h-8 text-slate-600" />
-                            </div>
-                            <h3 className="text-lg font-medium text-white mb-1">No activity yet</h3>
-                            <p className="text-slate-400">Connect a channel and upload videos to Drive to start.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm text-slate-400">
-                                <thead className="bg-slate-800/80 text-slate-300 uppercase text-xs font-semibold tracking-wider">
-                                    <tr>
-                                        <th className="px-6 py-4">File Name</th>
-                                        <th className="px-6 py-4">Status</th>
-                                        <th className="px-6 py-4">Progress</th>
-                                        <th className="px-6 py-4">YouTube</th>
-                                        <th className="px-6 py-4">Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700/50">
-                                    {jobs.map((job) => (
-                                        <tr key={job.id} className="hover:bg-slate-800/30 transition-colors group">
-                                            <td className="px-6 py-4 font-medium text-white max-w-[200px] truncate" title={job.driveFileName}>
-                                                {job.driveFileName}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-white/5 ${getStatusColor(job.status)}`}>
-                                                    {job.status === 'COMPLETED' && <CheckCircle className="w-3 h-3" />}
-                                                    {job.status === 'FAILED' && <AlertTriangle className="w-3 h-3" />}
-                                                    {(job.status === 'PROCESSING' || job.status === 'QUEUED') && <RefreshCw className="w-3 h-3 animate-spin" />}
-                                                    {job.status === 'SCHEDULED' && <Clock className="w-3 h-3" />}
-                                                    {job.status}
-                                                </span>
-                                                {job.lastError && (
-                                                    <div className="text-xs text-red-400 mt-1 max-w-[200px] truncate" title={job.lastError}>
-                                                        {job.lastError}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 w-48">
-                                                <div className="w-full bg-slate-700/50 rounded-full h-1.5 overflow-hidden">
-                                                    <div
-                                                        className={`h-1.5 rounded-full transition-all duration-500 ${job.status === 'FAILED' ? 'bg-red-500' : 'bg-indigo-500'}`}
-                                                        style={{ width: `${job.progress}%` }}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-xs text-slate-500 mt-1 block text-right">{job.progress}%</span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {job.youtubeVideoId ? (
-                                                    <a
-                                                        href={`https://youtu.be/${job.youtubeVideoId}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 hover:underline"
-                                                    >
-                                                        <Youtube className="w-4 h-4" />
-                                                        View
-                                                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-slate-600">-</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 flex items-center gap-2 whitespace-nowrap">
-                                                <Clock className="w-3 h-3" />
-                                                {new Date(job.createdAt).toLocaleString()}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                <ScheduleUploadModal
-                    isOpen={isUploadModalOpen}
-                    onClose={() => setIsUploadModalOpen(false)}
-                    onSuccess={() => {
-                        // Refresh jobs after a short delay to allow sync to catch up
-                        setTimeout(fetchData, 3000);
-                    }}
-                />
             </div>
         </div>
     );
