@@ -6,6 +6,7 @@ interface Channel {
     id: string;
     accountId: string;
     name: string;
+    email?: string;
     thumbnail?: string;
     statistics?: {
         subscriberCount: string;
@@ -93,6 +94,11 @@ const ChannelsPage: React.FC = () => {
                                         </div>
                                         <div>
                                             <h3 className="text-white font-bold truncate max-w-[150px]" title={channel.name}>{channel.name}</h3>
+                                            {channel.email && (
+                                                <p className="text-[10px] text-slate-500 truncate max-w-[150px] mb-0.5" title={channel.email}>
+                                                    {channel.email}
+                                                </p>
+                                            )}
                                             <p className="text-xs text-slate-400 capitalize flex items-center gap-1">
                                                 {channel.provider} • <span className={channel.status === 'error' ? 'text-red-400' : ''}>{channel.status}</span>
                                             </p>
