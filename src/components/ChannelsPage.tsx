@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Youtube, RefreshCw, Clock } from 'lucide-react';
+import { Plus, Youtube, RefreshCw, Clock, X, BarChart2, ThumbsUp, MessageCircle, Eye, Calendar, Tag } from 'lucide-react';
 
 interface Channel {
     id: string;
@@ -18,10 +18,161 @@ interface Channel {
     status: 'active' | 'inactive' | 'error';
 }
 
+interface VideoAnalytics {
+    id: string;
+    title: string;
+    description: string;
+    publishedAt: string;
+    thumbnail: string;
+    tags: string[];
+    duration: string;
+    stats: {
+        views: number;
+        likes: number;
+        comments: number;
+    };
+    url: string;
+}
+
+const ChannelVideosModal = ({
+    isOpen,
+    onClose,
+    channelName,
+    videos,
+    isLoading
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    channelName: string;
+    videos: VideoAnalytics[];
+    isLoading: boolean;
+}) => {
+    if (!isOpen) return null;
+
+    // Helper to format ISO duration (PT1H2M10S -> 01:02:10)
+    const formatDuration = (iso: string) => {
+        if (!iso) return '00:00';
+        const match = iso.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+        if (!match) return iso;
+
+        const h = (match[1] || '').replace('H', '');
+        const m = (match[2] || '').replace('M', '');
+        const s = (match[3] || '').replace('S', '');
+
+        const hStr = h ? `${h.padStart(2, '0')}:` : '';
+        const mStr = m ? `${m.padStart(2, '0')}:` : '00:';
+        const sStr = s ? s.padStart(2, '0') : '00';
+
+        return `${hStr}${mStr}${sStr}`;
+    };
+
+    const formatNumber = (num: number) => {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[#0f172a] border border-slate-700 w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/50">
+                    <div>
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <BarChart2 className="w-5 h-5 text-indigo-400" />
+                            Analytics: {channelName}
+                        </h2>
+                        <p className="text-sm text-slate-400">Last 20 uploaded videos performance</p>
+                    </div>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-800 rounded-lg">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-4">
+                            <RefreshCw className="w-8 h-8 animate-spin text-indigo-500" />
+                            <p>Analyzing channel videos...</p>
+                        </div>
+                    ) : videos.length === 0 ? (
+                        <div className="text-center text-slate-500 py-12">No videos found for this channel.</div>
+                    ) : (
+                        <div className="space-y-4">
+                            {videos.map((video) => (
+                                <div key={video.id} className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 flex flex-col md:flex-row gap-4 hover:bg-slate-800/60 transition-colors group">
+                                    {/* Thumbnail */}
+                                    <div className="relative shrink-0 w-full md:w-48 aspect-video rounded-lg overflow-hidden bg-slate-900">
+                                        <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+                                        <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                                            {formatDuration(video.duration)}
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <a href={video.url} target="_blank" rel="noreferrer" className="block">
+                                            <h3 className="text-white font-semibold truncate group-hover:text-indigo-400 transition-colors" title={video.title}>
+                                                {video.title}
+                                            </h3>
+                                        </a>
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 mb-3">
+                                            <Calendar className="w-3 h-3" />
+                                            {new Date(video.publishedAt).toLocaleDateString()}
+                                            <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                                            {new Date(video.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+
+                                        {/* Stats Grid */}
+                                        <div className="grid grid-cols-3 gap-4 max-w-sm mb-3">
+                                            <div className="flex items-center gap-2" title="Views">
+                                                <Eye className="w-4 h-4 text-emerald-400" />
+                                                <span className="text-sm font-medium text-slate-200">{formatNumber(video.stats.views)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2" title="Likes">
+                                                <ThumbsUp className="w-4 h-4 text-blue-400" />
+                                                <span className="text-sm font-medium text-slate-200">{formatNumber(video.stats.likes)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2" title="Comments">
+                                                <MessageCircle className="w-4 h-4 text-purple-400" />
+                                                <span className="text-sm font-medium text-slate-200">{formatNumber(video.stats.comments)}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Tags */}
+                                        {video.tags && video.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mt-auto">
+                                                {video.tags.slice(0, 5).map(tag => (
+                                                    <span key={tag} className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-slate-700/50 text-slate-400 rounded-full border border-slate-700">
+                                                        <Tag className="w-2.5 h-2.5" />
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                                {video.tags.length > 5 && (
+                                                    <span className="text-[10px] text-slate-500 px-1 py-0.5 self-center">+{video.tags.length - 5}</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Main Component
 const ChannelsPage: React.FC = () => {
     const { t } = useTranslation();
     const [channels, setChannels] = useState<Channel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Analytics Stats
+    const [selectedChannel, setSelectedChannel] = useState<{ id: string, name: string, accountId: string } | null>(null);
+    const [channelVideos, setChannelVideos] = useState<VideoAnalytics[]>([]);
+    const [isLoadingVideos, setIsLoadingVideos] = useState(false);
 
     const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
@@ -39,6 +190,26 @@ const ChannelsPage: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    const fetchChannelVideos = async (channelId: string, accountId: string, name: string) => {
+        setSelectedChannel({ id: channelId, accountId, name });
+        setIsLoadingVideos(true);
+        setChannelVideos([]); // Clear previous
+
+        try {
+            const res = await fetch(`${apiUrl}/channels/${channelId}/videos?accountId=${accountId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setChannelVideos(data);
+            } else {
+                console.error("Failed to fetch videos");
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoadingVideos(false);
+        }
+    };
 
     const handleConnect = () => {
         window.location.href = `${apiUrl}/auth/signin/google?callbackUrl=${window.location.origin}`;
@@ -78,6 +249,7 @@ const ChannelsPage: React.FC = () => {
                         channels.map(channel => (
                             <div key={channel.id} className={`bg-slate-800/50 border ${channel.status === 'error' ? 'border-red-500/50' : 'border-slate-700/50'} rounded-xl p-6 backdrop-blur-sm hover:bg-slate-800 transition-colors group relative overflow-hidden`}>
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-red-600/20 transition-colors"></div>
+
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="relative">
@@ -112,7 +284,7 @@ const ChannelsPage: React.FC = () => {
                                     {channel.status === 'active' && <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>}
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2 py-4 border-t border-slate-700/50 mb-2">
+                                <div className="grid grid-cols-3 gap-2 py-4 border-t border-slate-700/50 mb-4">
                                     <div className="text-center">
                                         <p className="text-lg font-bold text-white">{formatNumber(channel.statistics?.subscriberCount)}</p>
                                         <p className="text-[10px] uppercase tracking-wider text-slate-500">Subs</p>
@@ -127,7 +299,18 @@ const ChannelsPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
+                                {/* Action Button */}
+                                {channel.status === 'active' && (
+                                    <button
+                                        onClick={() => fetchChannelVideos(channel.id, channel.accountId, channel.name)}
+                                        className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-sm font-medium transition-colors border border-slate-600/30"
+                                    >
+                                        <BarChart2 className="w-4 h-4" />
+                                        Analyze Content
+                                    </button>
+                                )}
+
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-3 pt-2 border-t border-slate-700/30">
                                     <Clock className="w-3.5 h-3.5" />
                                     Last synced: {new Date(channel.lastSync).toLocaleDateString()}
                                 </div>
@@ -149,6 +332,15 @@ const ChannelsPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Analytics Modal */}
+                <ChannelVideosModal
+                    isOpen={!!selectedChannel}
+                    onClose={() => setSelectedChannel(null)}
+                    channelName={selectedChannel?.name || ''}
+                    videos={channelVideos}
+                    isLoading={isLoadingVideos}
+                />
             </div>
         </div>
     );
