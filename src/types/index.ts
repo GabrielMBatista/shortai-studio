@@ -11,7 +11,8 @@ export enum AppStep {
   PREVIEW = 'PREVIEW',
   ADMIN = 'ADMIN',
   GUIDES = 'GUIDES',
-  CHANNELS = 'CHANNELS'
+  CHANNELS = 'CHANNELS',
+  PERSONAS = 'PERSONAS' // Galeria de personas
 }
 
 // ...

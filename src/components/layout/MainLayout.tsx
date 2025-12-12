@@ -88,8 +88,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         </div>
 
                         {/* Module Switcher - Shadcn Style */}
-                        {currentUser && (step === AppStep.DASHBOARD || step === AppStep.CHANNELS) && (
-                            <Tabs value={step === AppStep.CHANNELS ? 'channels' : 'studio'} onValueChange={(v) => onSetStep(v === 'channels' ? AppStep.CHANNELS : AppStep.DASHBOARD)}>
+                        {currentUser && (step === AppStep.DASHBOARD || step === AppStep.CHANNELS || step === AppStep.PERSONAS) && (
+                            <Tabs value={step === AppStep.CHANNELS ? 'channels' : step === AppStep.PERSONAS ? 'personas' : 'studio'}
+                                onValueChange={(v) => {
+                                    if (v === 'channels') onSetStep(AppStep.CHANNELS);
+                                    else if (v === 'personas') onSetStep(AppStep.PERSONAS);
+                                    else onSetStep(AppStep.DASHBOARD);
+                                }}>
                                 <TabsList className="bg-transparent">
                                     <TabsTrigger
                                         value="studio"
@@ -102,6 +107,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         className="data-[state=active]:bg-transparent data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-4"
                                     >
                                         Channels
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="personas"
+                                        className="data-[state=active]:bg-transparent data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-4"
+                                    >
+                                        Personas
                                     </TabsTrigger>
                                 </TabsList>
                             </Tabs>
