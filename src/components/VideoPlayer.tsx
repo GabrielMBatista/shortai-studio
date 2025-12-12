@@ -191,6 +191,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
     }
   }, [isPlaying, activeScene]);
 
+  // Reset video element when changing scenes
+  useEffect(() => {
+    // Reset video to beginning when scene changes
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.load(); // Force reload of new source
+    }
+  }, [currentSceneIndex, activeMedia.videoUrl]);
+
   // Set music volume
   useEffect(() => {
     if (musicRef.current) {
@@ -300,32 +309,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
 
 
 
-
           return shouldUseVideo ? (
             <video
+              key={`video-${currentSceneIndex}-${videoSrc}`}
               ref={videoRef}
               src={videoSrc}
               poster={activeMedia.imageUrl || activeScene.imageUrl || undefined}
               className={`w-full h-full object-cover ${videoEnded ? 'transition-transform duration-[20s] ease-linear scale-110' : 'scale-100'}`}
               muted={true}
               playsInline
+              preload="auto"
               onEnded={() => setVideoEnded(true)}
-              onPlay={() => {
-                if (audioRef.current && Math.abs(audioRef.current.currentTime - 0) > 0.5) {
-                  audioRef.current.currentTime = 0;
-                }
-              }}
-              // When video is ready, if we are playing, force play
-              onCanPlay={() => {
-                if (isPlaying && videoRef.current && videoRef.current.paused) {
-                  const playPromise = videoRef.current.play();
-                  if (playPromise) {
-                    playPromise.catch(e => {
-                      if (e.name !== 'AbortError') console.error("Auto-play error:", e);
-                    });
-                  }
-                }
-              }}
               onError={(e) => {
                 // Only log real errors, not aborts/empties
                 if (e.currentTarget.error) {
