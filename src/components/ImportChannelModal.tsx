@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 interface Account {
     id: string;
     provider: string;
+    email?: string | null;
+    name?: string | null;
+    avatar?: string | null;
 }
 
 interface DiscoveredChannel {
@@ -174,12 +177,18 @@ export default function ImportChannelModal({ isOpen, onClose, onImportSuccess }:
                                             className="flex items-center justify-between p-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500/50 rounded-xl transition-all group disabled:opacity-50"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
-                                                    <Youtube className="w-5 h-5 text-slate-400" />
-                                                </div>
+                                                {account.avatar ? (
+                                                    <img src={account.avatar} alt={account.name || 'Account'} className="w-10 h-10 rounded-full" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                                                        <Youtube className="w-5 h-5 text-slate-400" />
+                                                    </div>
+                                                )}
                                                 <div className="text-left">
-                                                    <div className="font-medium text-white">Google Account</div>
-                                                    <div className="text-xs text-slate-500 font-mono">{account.id.substring(0, 8)}...</div>
+                                                    <div className="font-medium text-white">{account.name || account.email || 'Google Account'}</div>
+                                                    <div className="text-xs text-slate-500 font-mono">
+                                                        {account.email ? account.email : account.id.substring(0, 8) + '...'}
+                                                    </div>
                                                 </div>
                                             </div>
                                             {loadingDiscovery && selectedAccountId === account.id ? (
