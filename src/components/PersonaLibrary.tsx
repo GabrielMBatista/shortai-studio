@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Sparkles, MessageCircle, Crown, Star } from 'lucide-react';
+import { ArrowLeft, Sparkles, MessageCircle, Crown, Star, Plus } from 'lucide-react';
 import { Persona } from '../types/personas';
 import { usePersonas } from '../hooks/usePersonas';
 import PersonaSidebarList from './PersonaSidebarList';
 import CreatePersonaModal from './CreatePersonaModal';
-import PersonaChatModal from './PersonaChatModal';
+import { PersonaDetailsView } from './Personas/PersonaDetailsView';
 import { Card, Button, Badge } from './ui';
 
 interface PersonaLibraryProps {
@@ -18,10 +18,13 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [chatPersona, setChatPersona] = useState<Persona | null>(null);
 
     const selectedPersona = selectedPersonaId ? personas.find(p => p.id === selectedPersonaId) : null;
-    const displayPersonas = selectedPersonaId ? (selectedPersona ? [selectedPersona] : []) : personas;
+    const displayPersonas = selectedPersonaId ? [] : personas;
+
+    const handleBackToPersonas = () => {
+        setSelectedPersonaId(null);
+    };
 
     const getInitials = (name: string) => {
         return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
@@ -56,40 +59,63 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
             {/* Main Content */}
             <div className="flex-1 bg-[#0f172a] relative flex flex-col overflow-y-auto">
                 <div className="w-full px-6 py-8">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-8 animate-fade-in-up">
-                        <div className="flex items-center gap-4">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                leftIcon={<ArrowLeft className="w-5 h-5" />}
-                                onClick={onBack}
-                            >
-                                Back
-                            </Button>
-                            <div>
-                                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                                    <Sparkles className="w-7 h-7 text-indigo-400" />
-                                    {t('personas.library_title', 'Persona Library')}
-                                </h1>
-                                <p className="text-slate-400 mt-1">
-                                    {selectedPersona
-                                        ? `Viewing: ${selectedPersona.name}`
-                                        : t('personas.library_subtitle', 'Explore and manage AI scriptwriting personas.')
-                                    }
-                                </p>
+                    {/* Header - só em All Personas */}
+                    {!selectedPersona && (
+                        <div className="flex items-center justify-between mb-8 animate-fade-in-up">
+                            <div className="flex items-center gap-4">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    leftIcon={<ArrowLeft className="w-5 h-5" />}
+                                    onClick={onBack}
+                                >
+                                    Back
+                                </Button>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                                        <Sparkles className="w-7 h-7 text-indigo-400" />
+                                        {t('personas.library_title', 'Persona Library')}
+                                    </h1>
+                                    <p className="text-slate-400 mt-1">
+                                        {t('personas.library_subtitle', 'Explore and manage AI scriptwriting personas.')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="text-sm text-slate-500">
+                                    {displayPersonas.length} persona{displayPersonas.length !== 1 ? 's' : ''}
+                                </div>
+                                <Button
+                                    variant="primary"
+                                    size="md"
+                                    leftIcon={<Plus className="w-5 h-5" />}
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                >
+                                    Create Persona
+                                </Button>
                             </div>
                         </div>
-                        <div className="text-sm text-slate-500">
-                            {displayPersonas.length} persona{displayPersonas.length !== 1 ? 's' : ''}
-                        </div>
-                    </div>
+                    )}
 
                     {/* Content */}
                     {error ? (
                         <Card variant="glass" padding="lg" className="bg-red-900/20 border-red-500/50 text-center">
                             <p className="text-red-400 font-medium">{error}</p>
                         </Card>
+                    ) : selectedPersona ? (
+                        // Persona Details View (Chat + Info)
+                        <div className="animate-fade-in-up">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                leftIcon={<ArrowLeft className="w-4 h-4" />}
+                                onClick={handleBackToPersonas}
+                                className="mb-6"
+                            >
+                                Back to Personas
+                            </Button>
+                            <PersonaDetailsView persona={selectedPersona} />
+                        </div>
                     ) : loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {Array.from({ length: 6 }).map((_, i) => (
@@ -111,6 +137,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
                             <p className="text-slate-400">No personas found</p>
                         </Card>
                     ) : (
+                        // Personas Grid - só em All Personas
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
                             {displayPersonas.map(persona => (
                                 <Card
@@ -118,6 +145,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
                                     variant="glass"
                                     padding="lg"
                                     hoverable
+                                    onClick={() => setSelectedPersonaId(persona.id)}
                                     className="group flex flex-col h-full"
                                 >
                                     {/* Header with Avatar */}
@@ -196,7 +224,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
                                             variant="primary"
                                             size="sm"
                                             leftIcon={<MessageCircle className="w-4 h-4" />}
-                                            onClick={(e) => { e.stopPropagation(); setChatPersona(persona); }}
+                                            onClick={(e) => { e.stopPropagation(); setSelectedPersonaId(persona.id); }}
                                         >
                                             Chat
                                         </Button>
@@ -208,20 +236,15 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* Modals */}
+            {/* Create Modal */}
             <CreatePersonaModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSubmit={async (data) => { await createPersona(data); }}
-            />
-
-            <PersonaChatModal
-                isOpen={!!chatPersona}
-                onClose={() => setChatPersona(null)}
-                persona={chatPersona}
             />
         </div>
     );
 };
 
 export default PersonaLibrary;
+
