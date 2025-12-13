@@ -6,6 +6,7 @@ import JSON5 from 'json5';
 import { VIDEO_STYLES, AVAILABLE_LANGUAGES, TTSProvider, User, AVAILABLE_VOICES, IS_SUNO_ENABLED } from '../types';
 import { useCharacterLibrary } from '../hooks/useCharacterLibrary';
 import { useChannels } from '../hooks/useChannels';
+import { usePersonas } from '../hooks/usePersonas';
 import Loader from './Loader';
 import { ToastType } from './Toast';
 
@@ -36,9 +37,10 @@ interface InputSectionProps {
     loadingMessage?: string;
     showToast: (message: string, type: ToastType) => void;
     editingProject?: import('../types').VideoProject | null;
+    initialPersonaId?: string | null;
 }
 
-const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading, loadingMessage, showToast, editingProject }) => {
+const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading, loadingMessage, showToast, editingProject, initialPersonaId }) => {
     const { t } = useTranslation();
     const { characters, addCharacter, removeCharacter, isLoading: isCharLoading } = useCharacterLibrary(user);
     const { channels } = useChannels();
@@ -46,6 +48,15 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     // --- State Management ---
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+    const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId || null);
+
+    // Update if initial changes (e.g. returning from Persona Library)
+    useEffect(() => {
+        if (initialPersonaId) setSelectedPersonaId(initialPersonaId);
+    }, [initialPersonaId]);
+
+    // Fetch Personas for Selector
+    const { personas } = usePersonas();
 
     // Script & Config
     const [topic, setTopic] = useState('');
@@ -357,7 +368,10 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     false,
                     undefined, // folderId
                     selectedChannelId, // 🆕 Pass channel
-                    selectedChannelId ? channels.find(ch => ch.id === selectedChannelId)?.personaId : null // 🆕 Pass persona
+                    // logic: if channel selected, use channel's persona. Else use manually selected persona.
+                    selectedChannelId
+                        ? (channels.find(ch => ch.id === selectedChannelId)?.personaId || null)
+                        : selectedPersonaId
                 );
             }
         } catch (e) {
@@ -386,8 +400,11 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:border-slate-600 transition-colors">
                         <ChannelPersonaSelector
                             channels={channels}
+                            personas={personas}
                             selectedChannelId={selectedChannelId}
+                            selectedPersonaId={selectedPersonaId}
                             onChannelSelect={setSelectedChannelId}
+                            onPersonaSelect={setSelectedPersonaId}
                             disabled={isBusy}
                         />
                     </div>

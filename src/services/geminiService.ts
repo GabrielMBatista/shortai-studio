@@ -14,7 +14,8 @@ export const generateScript = async (
   topic: string,
   style: string,
   language: string = 'English',
-  config: { minDuration: number; maxDuration: number; targetScenes?: number } = { minDuration: 55, maxDuration: 65 }
+  config: { minDuration: number; maxDuration: number; targetScenes?: number } = { minDuration: 55, maxDuration: 65 },
+  options?: { personaId?: string; channelId?: string }
 ): Promise<{
   scenes: Scene[];
   metadata: {
@@ -37,7 +38,9 @@ export const generateScript = async (
       style,
       language,
       durationConfig: { min: config.minDuration, max: config.maxDuration, targetScenes: config.targetScenes },
-      apiKeys: user.apiKeys
+      apiKeys: user.apiKeys,
+      personaId: options?.personaId,
+      channelId: options?.channelId
     })
   });
 

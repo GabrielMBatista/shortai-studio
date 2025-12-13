@@ -22,9 +22,11 @@ export const useProjectCreation = (
         durationConfig: { min: number; max: number; targetScenes?: number } = { min: 55, max: 65 },
         audioModel?: string,
         skipNavigation: boolean = false,
-        folderId?: string
+        folderId?: string,
+        channelId?: string | null,
+        personaId?: string | null
     ): Promise<void> => {
-        if (!user) { onError("User not authenticated."); return; }
+        if (!user) { onError("User not authenticated"); return; }
 
         let scenes: any[] = [];
         let metadata: any = { title: "", description: "" };
@@ -113,7 +115,9 @@ export const useProjectCreation = (
                                     bgMusicStatus: includeMusic ? 'pending' : undefined,
                                     bgMusicPrompt: includeMusic ? "Inspirational background music" : "",
                                     status: 'draft',
-                                    folderId: dayId
+                                    folderId: dayId,
+                                    channelId: channelId || undefined,
+                                    personaId: personaId || undefined
                                 };
 
                                 const saved = await saveProject(newProject, true);
@@ -187,7 +191,7 @@ export const useProjectCreation = (
                     minDuration: durationConfig.min,
                     maxDuration: durationConfig.max,
                     targetScenes: durationConfig.targetScenes
-                });
+                }, { personaId: personaId || undefined, channelId: channelId || undefined });
                 scenes = result.scenes;
 
                 // Store metadata separately (not concatenated)
@@ -247,7 +251,9 @@ export const useProjectCreation = (
                 bgMusicStatus: includeMusic ? 'pending' : undefined,
                 bgMusicPrompt,
                 status: 'draft',
-                folderId
+                folderId: folderId || undefined,
+                channelId: channelId || undefined,
+                personaId: personaId || undefined
             };
 
             const savedProject = await saveProject(newProject, true);

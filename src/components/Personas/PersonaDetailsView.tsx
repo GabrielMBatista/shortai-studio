@@ -11,9 +11,10 @@ interface Message {
 
 interface PersonaDetailsViewProps {
     persona: Persona;
+    onCreateProject?: () => void;
 }
 
-export function PersonaDetailsView({ persona }: PersonaDetailsViewProps) {
+export function PersonaDetailsView({ persona, onCreateProject }: PersonaDetailsViewProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -140,6 +141,19 @@ export function PersonaDetailsView({ persona }: PersonaDetailsViewProps) {
                                         #{tag}
                                     </span>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Actions */}
+                        {onCreateProject && (
+                            <div className="mt-6 pt-4 border-t border-white/10">
+                                <Button
+                                    variant="primary"
+                                    leftIcon={<Sparkles className="w-4 h-4" />}
+                                    onClick={onCreateProject}
+                                >
+                                    Create Project with this Persona
+                                </Button>
                             </div>
                         )}
                     </div>

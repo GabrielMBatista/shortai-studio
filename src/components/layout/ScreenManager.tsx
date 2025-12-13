@@ -90,6 +90,8 @@ interface ScreenManagerProps {
     getDisplayTitle: (p: VideoProject) => string;
     onStartTour: (tour: 'settings' | 'creation' | 'script' | 'preview' | 'export' | 'folders') => void;
     activeTour: 'settings' | 'creation' | 'script' | 'preview' | 'export' | 'folders' | null;
+    selectedInputPersonaId: string | null;
+    setSelectedInputPersonaId: (id: string | null) => void;
 }
 
 const ScreenManager: React.FC<ScreenManagerProps> = ({
@@ -140,7 +142,9 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
     onExport,
     getDisplayTitle,
     onStartTour,
-    activeTour
+    activeTour,
+    selectedInputPersonaId,
+    setSelectedInputPersonaId
 }) => {
     const { t } = useTranslation();
 
@@ -178,7 +182,13 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
             )}
 
             {step === AppStep.PERSONAS && currentUser && (
-                <PersonaLibrary onBack={() => onSetStep(AppStep.DASHBOARD)} />
+                <PersonaLibrary
+                    onBack={() => onSetStep(AppStep.DASHBOARD)}
+                    onSelectPersonaForProject={(personaId) => {
+                        setSelectedInputPersonaId(personaId);
+                        onSetStep(AppStep.INPUT);
+                    }}
+                />
             )}
 
             {step === AppStep.SHOWS && currentUser && currentUser.role === 'ADMIN' && (
@@ -200,6 +210,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                     loadingMessage={generationMessage}
                     showToast={showToast}
                     editingProject={project}
+                    initialPersonaId={selectedInputPersonaId}
                 />
             )}
 

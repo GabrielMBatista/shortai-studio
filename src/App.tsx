@@ -43,6 +43,9 @@ const App: React.FC = () => {
         totalPages
     } = useProjects(currentUser?.id, selectedFolderId, showArchived);
 
+    // Persona Selection State (Flow Optimization)
+    const [selectedInputPersonaId, setSelectedInputPersonaId] = useState<string | null>(null);
+
     // Reset page when filters change
     useEffect(() => {
         setPage(1);
@@ -400,6 +403,8 @@ const App: React.FC = () => {
                 getDisplayTitle={getDisplayTitle}
                 onStartTour={handleStartTour}
                 activeTour={activeTour}
+                selectedInputPersonaId={selectedInputPersonaId}
+                setSelectedInputPersonaId={setSelectedInputPersonaId}
             />
         </MainLayout>
     );

@@ -199,6 +199,8 @@ export interface VideoProject {
 
   // Organization
   folderId?: string | null;
+  channelId?: string | null;
+  personaId?: string | null;
   isArchived?: boolean;
   tags?: string[];
 }

@@ -10,9 +10,10 @@ import { Card, Button, Badge } from './ui';
 
 interface PersonaLibraryProps {
     onBack: () => void;
+    onSelectPersonaForProject?: (personaId: string) => void;
 }
 
-const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
+const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersonaForProject }) => {
     const { t } = useTranslation();
     const { personas, loading, error, createPersona, updatePersona, deletePersona } = usePersonas();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -133,7 +134,10 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
                             >
                                 Back to Personas
                             </Button>
-                            <PersonaDetailsView persona={selectedPersona} />
+                            <PersonaDetailsView
+                                persona={selectedPersona}
+                                onCreateProject={onSelectPersonaForProject ? () => onSelectPersonaForProject(selectedPersona.id) : undefined}
+                            />
                         </div>
                     ) : loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
