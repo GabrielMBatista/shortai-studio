@@ -54,6 +54,17 @@ export const personasApi = {
         return res.json();
     },
 
+    async delete(id: string): Promise<void> {
+        const res = await fetch(`${API_URL}/personas/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({ error: 'Failed to delete persona' }));
+            throw new Error(error.error || 'Failed to delete persona');
+        }
+    },
+
     async chat(id: string, message: string, history: any[] = []): Promise<{ response: string }> {
         const res = await fetch(`${API_URL}/personas/${id}/chat`, {
             method: 'POST',

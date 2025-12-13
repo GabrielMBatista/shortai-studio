@@ -38,11 +38,32 @@ export function usePersonas() {
         }
     };
 
+    const updatePersona = async (id: string, data: any) => {
+        try {
+            const updatedPersona = await personasApi.update(id, data);
+            setPersonas(prev => prev.map(p => p.id === id ? updatedPersona : p));
+            return updatedPersona;
+        } catch (err: any) {
+            throw err;
+        }
+    };
+
+    const deletePersona = async (id: string) => {
+        try {
+            await personasApi.delete(id);
+            setPersonas(prev => prev.filter(p => p.id !== id));
+        } catch (err: any) {
+            throw err;
+        }
+    };
+
     return {
         personas,
         loading,
         error,
         refetch: loadPersonas,
-        createPersona
+        createPersona,
+        updatePersona,
+        deletePersona
     };
 }

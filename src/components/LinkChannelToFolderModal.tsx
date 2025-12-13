@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, Link, Youtube, Unlink } from 'lucide-react';
 import { Channel } from '../types/personas';
-import { Button, Card, Modal } from './ui';
+import { Button, Card } from './ui';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from './ui/Modal';
 
 interface LinkChannelToFolderModalProps {
     isOpen: boolean;
@@ -52,14 +53,16 @@ export default function LinkChannelToFolderModal({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
-            <Modal.Header onClose={onClose}>
-                <Modal.Title>
-                    <Link className="w-5 h-5" />
-                    Link Channel to Folder
-                </Modal.Title>
-            </Modal.Header>
+            <ModalHeader>
+                <ModalTitle>
+                    <div className="flex items-center gap-2">
+                        <Link className="w-5 h-5" />
+                        Link Channel to Folder
+                    </div>
+                </ModalTitle>
+            </ModalHeader>
 
-            <Modal.Body>
+            <ModalBody>
                 <div className="space-y-4">
                     {/* Folder Info */}
                     <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
@@ -144,9 +147,9 @@ export default function LinkChannelToFolderModal({
                         </div>
                     </div>
                 </div>
-            </Modal.Body>
+            </ModalBody>
 
-            <Modal.Footer>
+            <ModalFooter>
                 <Button variant="ghost" onClick={onClose} disabled={isLinking}>
                     Cancel
                 </Button>
@@ -159,7 +162,7 @@ export default function LinkChannelToFolderModal({
                 >
                     {currentChannelId ? 'Update Link' : 'Link Channel'}
                 </Button>
-            </Modal.Footer>
+            </ModalFooter>
         </Modal>
     );
 }
