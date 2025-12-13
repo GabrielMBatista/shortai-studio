@@ -56,5 +56,17 @@ export const channelsApi = {
             throw new Error(error.error || 'Failed to assign persona');
         }
         return res.json();
+    },
+
+    async sync(channelId: string): Promise<Channel> {
+        const res = await fetch(`${API_URL}/channels/${channelId}/sync`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({ error: 'Failed to sync channel' }));
+            throw new Error(error.error || 'Failed to sync channel');
+        }
+        return res.json();
     }
 };

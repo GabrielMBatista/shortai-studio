@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useChannels } from '../hooks/useChannels';
+import { channelsApi } from '../api/channels';
 import ChannelPersonaSelector from './ChannelPersonaSelector';
 import ChannelSidebarList from './ChannelSidebarList';
 import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, ArrowLeft, Plus, Download } from 'lucide-react';
@@ -55,8 +56,10 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
     const handleSync = async (channel: Channel) => {
         setSyncingIds(prev => new Set(prev).add(channel.id));
         try {
-            // In a real app, call API to sync channel data
-            await refetch(); // Refresh all channels
+            // Call API to sync channel data
+            await channelsApi.sync(channel.id);
+            await refetch(); // Refresh all channels local list
+            console.log('Synced channel:', channel.name);
             console.log('Synced channel:', channel.name);
         } catch (error) {
             console.error('Failed to sync channel:', error);
