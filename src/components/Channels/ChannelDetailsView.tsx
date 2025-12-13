@@ -87,9 +87,33 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                     ))}
                 </div>
             ) : videos.length === 0 ? (
-                <Card variant="glass" padding="lg" className="text-center py-12">
-                    <Youtube className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <p className="text-slate-400">No videos found</p>
+                <Card variant="glass" padding="lg" className="text-center py-16">
+                    <div className="max-w-md mx-auto space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                            <Youtube className="w-8 h-8 text-slate-500" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white">No Videos Available</h3>
+                        <p className="text-slate-400 text-sm">
+                            Unable to load videos for this channel. This could be because:
+                        </p>
+                        <ul className="text-left text-sm text-slate-400 space-y-2 max-w-xs mx-auto">
+                            <li className="flex gap-2">
+                                <span className="text-slate-600">•</span>
+                                <span>The channel hasn't been synced yet</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="text-slate-600">•</span>
+                                <span>The backend endpoint is not configured</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="text-slate-600">•</span>
+                                <span>The channel has no published videos</span>
+                            </li>
+                        </ul>
+                        <div className="pt-4 text-xs text-slate-500">
+                            Check browser console (F12) for detailed error logs
+                        </div>
+                    </div>
                 </Card>
             ) : (
                 <>

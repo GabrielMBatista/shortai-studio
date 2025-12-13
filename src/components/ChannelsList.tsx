@@ -75,17 +75,36 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
 
         // Load videos for this channel
         setChannelVideos([]);
+        setIsLoadingVideos(true);
+
         try {
             const apiUrl = import.meta.env.VITE_API_URL || '/api';
-            const res = await fetch(`${apiUrl}/channels/${channel.id}/videos`, {
+
+            // Use accountId in the URL path if available (original working format)
+            const url = channel.googleAccountId
+                ? `${apiUrl}/channels/${channel.id}/videos?accountId=${channel.googleAccountId}`
+                : `${apiUrl}/channels/${channel.id}/videos`;
+
+            console.log('[ChannelsList] Loading videos from:', url);
+
+            const response = await fetch(url, {
                 credentials: 'include'
             });
-            if (res.ok) {
-                const data = await res.json();
-                setChannelVideos(data.videos || []);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
             }
-        } catch (error) {
-            console.error('Failed to load videos:', error);
+
+            const data = await response.json();
+            const videos = Array.isArray(data) ? data : (data.videos || []);
+
+            console.log('[ChannelsList] Loaded', videos.length, 'videos');
+            setChannelVideos(videos);
+        } catch (err) {
+            console.error('[ChannelsList] Failed to fetch videos:', err);
+            setChannelVideos([]);
+        } finally {
+            setIsLoadingVideos(false);
         }
     };
 
