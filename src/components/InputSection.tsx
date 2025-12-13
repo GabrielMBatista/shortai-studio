@@ -382,16 +382,6 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
             <form onSubmit={handleSubmit} className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* LEFT COLUMN */}
                 <div className="lg:col-span-7 space-y-8">
-                    <ScriptConfig
-                        topic={topic} setTopic={setTopic}
-                        language={language} setLanguage={setLanguage}
-                        minDuration={minDuration} setMinDuration={setMinDuration}
-                        maxDuration={maxDuration} setMaxDuration={setMaxDuration}
-                        targetScenes={targetScenes} setTargetScenes={setTargetScenes}
-                        isBusy={isBusy}
-                        bulkProjectsCount={bulkProjects.length}
-                    />
-
                     {/* Channel & Persona Selector */}
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:border-slate-600 transition-colors">
                         <ChannelPersonaSelector
@@ -401,6 +391,16 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                             disabled={isBusy}
                         />
                     </div>
+
+                    <ScriptConfig
+                        topic={topic} setTopic={setTopic}
+                        language={language} setLanguage={setLanguage}
+                        minDuration={minDuration} setMinDuration={setMinDuration}
+                        maxDuration={maxDuration} setMaxDuration={setMaxDuration}
+                        targetScenes={targetScenes} setTargetScenes={setTargetScenes}
+                        isBusy={isBusy}
+                        bulkProjectsCount={bulkProjects.length}
+                    />
 
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
                         <StyleSelector

@@ -1,129 +1,22 @@
 import React, { useState } from 'react';
 import { useChannels } from '../hooks/useChannels';
 import ChannelPersonaSelector from './ChannelPersonaSelector';
-import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Calendar, ThumbsUp, MessageCircle, Tag, X, Star, Sparkles } from 'lucide-react';
+import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Channel } from '../types/personas';
-
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+import { ChannelVideosModal } from './Channels/ChannelVideosModal';
+import { FavoriteChannelDashboard } from './Channels/FavoriteChannelDashboard';
+import { formatNumber } from '../utils/format';
 
 interface VideoAnalytics {
     id: string;
     title: string;
+    url: string;
+    thumbnail?: string;
     description?: string;
     publishedAt?: string;
-    thumbnail?: string;
     tags?: string[];
-    duration?: string;
-    stats: {
-        views: number;
-        likes: number;
-        comments: number;
-    };
-    url: string;
-}
-
-interface ChannelVideosModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    channelName: string;
-    videos: VideoAnalytics[];
-    isLoading: boolean;
-}
-
-function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoading }: ChannelVideosModalProps) {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-                <div className="p-6 border-b border-slate-700 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <BarChart2 className="w-6 h-6 text-indigo-400" />
-                            {channelName} - Videos
-                        </h2>
-                        <p className="text-sm text-slate-400 mt-1">Recent videos and analytics</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
-                        <X className="w-5 h-5 text-slate-400" />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6">
-                    {isLoading ? (
-                        <div className="text-center py-12">
-                            <RefreshCw className="w-8 h-8 animate-spin text-indigo-400 mx-auto mb-4" />
-                            <p className="text-slate-400">Loading videos...</p>
-                        </div>
-                    ) : videos.length === 0 ? (
-                        <div className="text-center py-12">
-                            <Video className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400">No videos found</p>
-                        </div>
-                    ) : (
-                        <div className="grid gap-4">
-                            {videos.map(video => (
-                                <div key={video.id} className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-900 transition-all">
-                                    <div className="flex gap-4">
-                                        {video.thumbnail && (
-                                            <img
-                                                src={video.thumbnail}
-                                                alt={video.title}
-                                                className="w-32 h-20 rounded-lg object-cover flex-shrink-0"
-                                            />
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-white font-semibold mb-2 line-clamp-2">{video.title}</h3>
-                                            <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
-                                                <div className="flex items-center gap-1">
-                                                    <Eye className="w-3 h-3" />
-                                                    {video.stats.views.toLocaleString()}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <ThumbsUp className="w-3 h-3" />
-                                                    {video.stats.likes.toLocaleString()}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <MessageCircle className="w-3 h-3" />
-                                                    {video.stats.comments.toLocaleString()}
-                                                </div>
-                                                {video.publishedAt && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {new Date(video.publishedAt).toLocaleDateString()}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {video.tags && video.tags.length > 0 && (
-                                                <div className="flex items-center gap-1 flex-wrap">
-                                                    <Tag className="w-3 h-3 text-slate-500" />
-                                                    {video.tags.slice(0, 3).map(tag => (
-                                                        <span key={tag} className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <a
-                                            href={video.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg transition-colors flex items-center gap-1 h-fit"
-                                        >
-                                            <Youtube className="w-3 h-3" />
-                                            Watch
-                                        </a>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+    stats: { views: number; likes: number; comments: number };
 }
 
 export default function ChannelsList() {
@@ -155,14 +48,11 @@ export default function ChannelsList() {
 
         setSyncingIds(prev => new Set(prev).add(channel.id));
         try {
-            // Optimistic update logic or just refetch could go here
-            // Assuming there is an endpoint to force sync specific channel, otherwise we rely on refetch()
-            await fetch(`${apiUrl}/channels/sync`, { // Hypothetical batch sync or specific
+            await fetch(`${apiUrl}/channels/sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ channelIds: [channel.id] })
             });
-            // For now, since specific sync might not be implemented, we sleep or refetch
             await refetch();
         } catch (err) {
             console.error("Sync failed", err);
@@ -181,9 +71,7 @@ export default function ChannelsList() {
 
         try {
             const response = await fetch(`${apiUrl}/channels/${channel.id}/videos?accountId=${channel.googleAccountId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch videos');
-            }
+            if (!response.ok) throw new Error('Failed to fetch videos');
             const videos: VideoAnalytics[] = await response.json();
             setChannelVideos(videos);
         } catch (err) {
@@ -193,8 +81,6 @@ export default function ChannelsList() {
             setIsLoadingVideos(false);
         }
     };
-
-    // ... (rest of logic)
 
     return (
         <>
@@ -402,7 +288,7 @@ export default function ChannelsList() {
                             {/* Actions */}
                             <div className="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-between gap-3">
                                 <button
-                                    onClick={() => fetchChannelVideos(channel)}
+                                    onClick={() => handleViewAnalytics(channel)}
                                     className="flex-1 flex items-center justify-center gap-2 py-2 bg-slate-700/30 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors"
                                 >
                                     <BarChart2 className="w-3.5 h-3.5" />
@@ -433,10 +319,4 @@ export default function ChannelsList() {
             )}
         </>
     );
-}
-
-function formatNumber(num: number): string {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
 }
