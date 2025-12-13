@@ -35,32 +35,40 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
     const topVideo = videos.length > 0 ? [...videos].sort((a, b) => b.stats.views - a.stats.views)[0] : null;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <BarChart2 className="w-7 h-7 text-indigo-400" />
-                        {channelName}
-                    </h2>
-                    <p className="text-slate-400 mt-1">Video Analytics & Insights</p>
+            <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                        <BarChart2 className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-bold text-white">{channelName}</h2>
+                        <p className="text-slate-400 mt-1">Video Analytics & Insights</p>
+                    </div>
                 </div>
-            </div>
 
-            {/* Tabs */}
-            <div className="flex items-center gap-2">
-                <button
-                    onClick={() => setActiveTab('overview')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-                >
-                    Overview
-                </button>
-                <button
-                    onClick={() => setActiveTab('videos')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'videos' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-                >
-                    Videos ({videos.length})
-                </button>
+                {/* Tabs */}
+                <div className="flex items-center gap-2 border-b border-slate-800 pb-1">
+                    <button
+                        onClick={() => setActiveTab('overview')}
+                        className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-all ${activeTab === 'overview'
+                            ? 'text-white bg-indigo-600 shadow-lg'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            }`}
+                    >
+                        Overview
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('videos')}
+                        className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-all ${activeTab === 'videos'
+                            ? 'text-white bg-indigo-600 shadow-lg'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            }`}
+                    >
+                        Videos <span className="ml-1 opacity-70">({videos.length})</span>
+                    </button>
+                </div>
             </div>
 
             {/* Content */}
@@ -142,23 +150,35 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                     )}
 
                     {activeTab === 'videos' && (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {videos.map(video => (
-                                <Card key={video.id} variant="glass" padding="md" hoverable>
-                                    <div className="flex gap-4">
+                                <Card key={video.id} variant="glass" padding="none" hoverable className="overflow-hidden group">
+                                    <div className="flex gap-4 p-5">
+                                        {/* Thumbnail */}
                                         {video.thumbnail && (
-                                            <img
-                                                src={video.thumbnail}
-                                                alt={video.title}
-                                                className="w-48 h-28 rounded-lg object-cover flex-shrink-0"
-                                            />
+                                            <div className="relative w-48 h-28 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800">
+                                                <img
+                                                    src={video.thumbnail}
+                                                    alt={video.title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <Youtube className="w-8 h-8 text-white" />
+                                                </div>
+                                            </div>
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-white font-semibold mb-2 line-clamp-2">{video.title}</h3>
 
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0 space-y-3">
+                                            {/* Title */}
+                                            <h3 className="text-white font-semibold line-clamp-2 group-hover:text-indigo-400 transition-colors leading-snug">
+                                                {video.title}
+                                            </h3>
+
+                                            {/* Description */}
                                             {video.description && (
-                                                <div className="mb-3">
-                                                    <p className={`text-sm text-slate-400 ${!expandedDescriptions.has(video.id) && video.description.length > 150 ? 'line-clamp-2' : ''}`}>
+                                                <div>
+                                                    <p className={`text-sm text-slate-400 leading-relaxed ${!expandedDescriptions.has(video.id) && video.description.length > 150 ? 'line-clamp-2' : ''}`}>
                                                         {video.description}
                                                     </p>
                                                     {video.description.length > 150 && (
@@ -169,35 +189,60 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                                                                 else next.add(video.id);
                                                                 setExpandedDescriptions(next);
                                                             }}
-                                                            className="text-xs text-indigo-400 hover:text-indigo-300 mt-1"
+                                                            className="text-xs text-indigo-400 hover:text-indigo-300 mt-1 font-medium"
                                                         >
-                                                            {expandedDescriptions.has(video.id) ? 'Show less' : 'Show more'}
+                                                            {expandedDescriptions.has(video.id) ? '− Show less' : '+ Show more'}
                                                         </button>
                                                     )}
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
-                                                <div className="flex items-center gap-1"><Eye className="w-3 h-3" />{video.stats.views.toLocaleString()}</div>
-                                                <div className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" />{video.stats.likes.toLocaleString()}</div>
-                                                <div className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{video.stats.comments.toLocaleString()}</div>
-                                                {video.publishedAt && <div className="flex items-center gap-1"><Calendar className="w-3 h-3" />{new Date(video.publishedAt).toLocaleDateString()}</div>}
+                                            {/* Stats */}
+                                            <div className="flex items-center gap-4 text-sm text-slate-400">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Eye className="w-4 h-4" />
+                                                    <span className="font-medium">{video.stats.views.toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <ThumbsUp className="w-4 h-4" />
+                                                    <span className="font-medium">{video.stats.likes.toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <MessageCircle className="w-4 h-4" />
+                                                    <span className="font-medium">{video.stats.comments.toLocaleString()}</span>
+                                                </div>
+                                                {video.publishedAt && (
+                                                    <div className="flex items-center gap-1.5 ml-auto">
+                                                        <Calendar className="w-4 h-4" />
+                                                        <span>{new Date(video.publishedAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                )}
                                             </div>
 
+                                            {/* Tags */}
                                             {video.tags && video.tags.length > 0 && (
-                                                <div className="flex items-start gap-1 flex-wrap">
-                                                    <Tag className="w-3 h-3 text-slate-500 mt-0.5 flex-shrink-0" />
-                                                    {video.tags.map(tag => <span key={tag} className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">{tag}</span>)}
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <Tag className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                                                    {video.tags.slice(0, 5).map(tag => (
+                                                        <span key={tag} className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-400 hover:bg-slate-700 transition-colors">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                    {video.tags.length > 5 && (
+                                                        <span className="text-xs text-slate-500">+{video.tags.length - 5}</span>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
+
+                                        {/* Watch Button */}
                                         <a
                                             href={video.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex-shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg transition-colors flex items-center gap-1 h-fit"
+                                            className="flex-shrink-0 self-start px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 shadow-lg hover:shadow-red-500/50 hover:scale-105"
                                         >
-                                            <Youtube className="w-3 h-3" />
+                                            <Youtube className="w-4 h-4" />
                                             Watch
                                         </a>
                                     </div>
