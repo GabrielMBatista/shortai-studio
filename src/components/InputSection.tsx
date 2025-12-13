@@ -5,6 +5,7 @@ import JSON5 from 'json5';
 
 import { VIDEO_STYLES, AVAILABLE_LANGUAGES, TTSProvider, User, AVAILABLE_VOICES, IS_SUNO_ENABLED } from '../types';
 import { useCharacterLibrary } from '../hooks/useCharacterLibrary';
+import { useChannels } from '../hooks/useChannels';
 import Loader from './Loader';
 import { ToastType } from './Toast';
 
@@ -12,6 +13,7 @@ import { ScriptConfig } from './CreateProject/ScriptConfig';
 import { StyleSelector } from './CreateProject/StyleSelector';
 import { CharacterManager } from './CreateProject/CharacterManager';
 import { AudioStudio } from './CreateProject/AudioStudio';
+import { ChannelPersonaSelector } from './CreateProject/ChannelPersonaSelector';
 
 interface InputSectionProps {
     user: User | null;
@@ -26,7 +28,9 @@ interface InputSectionProps {
         durationConfig: { min: number, max: number, targetScenes?: number },
         audioModel?: string,
         skipNavigation?: boolean,
-        folderId?: string
+        folderId?: string,
+        channelId?: string | null,  // 🆕 NOVO
+        personaId?: string | null    // 🆕 NOVO
     ) => Promise<void>;
     isLoading: boolean;
     loadingMessage?: string;
@@ -37,9 +41,11 @@ interface InputSectionProps {
 const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading, loadingMessage, showToast, editingProject }) => {
     const { t } = useTranslation();
     const { characters, addCharacter, removeCharacter, isLoading: isCharLoading } = useCharacterLibrary(user);
+    const { channels } = useChannels();
 
     // --- State Management ---
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
 
     // Script & Config
     const [topic, setTopic] = useState('');
@@ -330,13 +336,29 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         config,
                         audioModel,
                         !isLast,
-                        targetFolderId
+                        targetFolderId,
+                        selectedChannelId, // 🆕 Pass channel
+                        selectedChannelId ? channels.find(ch => ch.id === selectedChannelId)?.personaId : null // 🆕 Pass persona
                     );
                     processed++;
                 }
                 showToast(`Successfully queued ${processed} projects!`, 'success');
             } else {
-                await onGenerate(topic, style, voice, ttsProvider, language, selectedRefs, includeMusic && IS_SUNO_ENABLED, config, audioModel, false);
+                await onGenerate(
+                    topic,
+                    style,
+                    voice,
+                    ttsProvider,
+                    language,
+                    selectedRefs,
+                    includeMusic && IS_SUNO_ENABLED,
+                    config,
+                    audioModel,
+                    false,
+                    undefined, // folderId
+                    selectedChannelId, // 🆕 Pass channel
+                    selectedChannelId ? channels.find(ch => ch.id === selectedChannelId)?.personaId : null // 🆕 Pass persona
+                );
             }
         } catch (e) {
             console.error(e);
@@ -369,6 +391,16 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         isBusy={isBusy}
                         bulkProjectsCount={bulkProjects.length}
                     />
+
+                    {/* Channel & Persona Selector */}
+                    <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:border-slate-600 transition-colors">
+                        <ChannelPersonaSelector
+                            channels={channels}
+                            selectedChannelId={selectedChannelId}
+                            onChannelSelect={setSelectedChannelId}
+                            disabled={isBusy}
+                        />
+                    </div>
 
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
                         <StyleSelector

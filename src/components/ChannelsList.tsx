@@ -1,11 +1,130 @@
 import React, { useState } from 'react';
 import { useChannels } from '../hooks/useChannels';
 import ChannelPersonaSelector from './ChannelPersonaSelector';
-import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Calendar, ThumbsUp, MessageCircle, Tag, X, Star } from 'lucide-react';
+import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Calendar, ThumbsUp, MessageCircle, Tag, X, Star, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Channel } from '../types/personas';
 
-// ... (VideoAnalytics interface and ChannelVideosModal remain same)
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+
+interface VideoAnalytics {
+    id: string;
+    title: string;
+    description?: string;
+    publishedAt?: string;
+    thumbnail?: string;
+    tags?: string[];
+    duration?: string;
+    stats: {
+        views: number;
+        likes: number;
+        comments: number;
+    };
+    url: string;
+}
+
+interface ChannelVideosModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    channelName: string;
+    videos: VideoAnalytics[];
+    isLoading: boolean;
+}
+
+function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoading }: ChannelVideosModalProps) {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <div className="p-6 border-b border-slate-700 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <BarChart2 className="w-6 h-6 text-indigo-400" />
+                            {channelName} - Videos
+                        </h2>
+                        <p className="text-sm text-slate-400 mt-1">Recent videos and analytics</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
+                        <X className="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6">
+                    {isLoading ? (
+                        <div className="text-center py-12">
+                            <RefreshCw className="w-8 h-8 animate-spin text-indigo-400 mx-auto mb-4" />
+                            <p className="text-slate-400">Loading videos...</p>
+                        </div>
+                    ) : videos.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Video className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                            <p className="text-slate-400">No videos found</p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-4">
+                            {videos.map(video => (
+                                <div key={video.id} className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-900 transition-all">
+                                    <div className="flex gap-4">
+                                        {video.thumbnail && (
+                                            <img
+                                                src={video.thumbnail}
+                                                alt={video.title}
+                                                className="w-32 h-20 rounded-lg object-cover flex-shrink-0"
+                                            />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-white font-semibold mb-2 line-clamp-2">{video.title}</h3>
+                                            <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
+                                                <div className="flex items-center gap-1">
+                                                    <Eye className="w-3 h-3" />
+                                                    {video.stats.views.toLocaleString()}
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <ThumbsUp className="w-3 h-3" />
+                                                    {video.stats.likes.toLocaleString()}
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <MessageCircle className="w-3 h-3" />
+                                                    {video.stats.comments.toLocaleString()}
+                                                </div>
+                                                {video.publishedAt && (
+                                                    <div className="flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {new Date(video.publishedAt).toLocaleDateString()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {video.tags && video.tags.length > 0 && (
+                                                <div className="flex items-center gap-1 flex-wrap">
+                                                    <Tag className="w-3 h-3 text-slate-500" />
+                                                    {video.tags.slice(0, 3).map(tag => (
+                                                        <span key={tag} className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <a
+                                            href={video.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex-shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg transition-colors flex items-center gap-1 h-fit"
+                                        >
+                                            <Youtube className="w-3 h-3" />
+                                            Watch
+                                        </a>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function ChannelsList() {
     const { t } = useTranslation();
@@ -56,17 +175,138 @@ export default function ChannelsList() {
         }
     };
 
+    const handleViewAnalytics = async (channel: Channel) => {
+        setSelectedChannel({ id: channel.id, name: channel.name });
+        setIsLoadingVideos(true);
+
+        try {
+            const response = await fetch(`${apiUrl}/channels/${channel.id}/videos?accountId=${channel.googleAccountId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch videos');
+            }
+            const videos: VideoAnalytics[] = await response.json();
+            setChannelVideos(videos);
+        } catch (err) {
+            console.error('[ChannelsList] Failed to fetch videos:', err);
+            setChannelVideos([]);
+        } finally {
+            setIsLoadingVideos(false);
+        }
+    };
+
     // ... (rest of logic)
 
     return (
         <>
             <div className="space-y-6">
+                {/* Favorite Channel Dashboard */}
+                {(() => {
+                    const favoriteChannel = channels.find(ch => favorites.has(ch.id));
+                    if (!favoriteChannel) return null;
+
+                    return (
+                        <div className="bg-gradient-to-br from-yellow-500/10 via-slate-800/50 to-slate-800/50 border border-yellow-500/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                                <h2 className="text-lg font-bold text-white">Favorite Channel</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Channel Info */}
+                                <div className="md:col-span-2 flex items-start gap-4">
+                                    {favoriteChannel.thumbnail && (
+                                        <img
+                                            src={favoriteChannel.thumbnail}
+                                            alt={favoriteChannel.name}
+                                            className="w-20 h-20 rounded-full border-2 border-yellow-500/50 flex-shrink-0"
+                                        />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-2xl font-bold text-white mb-2">{favoriteChannel.name}</h3>
+                                        {favoriteChannel.description && (
+                                            <p className="text-sm text-slate-400 line-clamp-2 mb-3">{favoriteChannel.description}</p>
+                                        )}
+                                        <div className="flex items-center gap-3 text-xs">
+                                            <div className="flex items-center gap-1 text-slate-400">
+                                                <Youtube className="w-3 h-3 text-red-500" />
+                                                YouTube
+                                            </div>
+                                            {favoriteChannel.persona && (
+                                                <div className="flex items-center gap-1 px-2 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-lg text-indigo-300">
+                                                    <Sparkles className="w-3 h-3" />
+                                                    {favoriteChannel.persona.name}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Quick Stats */}
+                                <div className="grid grid-cols-3 md:grid-cols-1 gap-3 bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                                    <div className="text-center">
+                                        <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
+                                            <Users className="w-3 h-3" />
+                                            Subs
+                                        </div>
+                                        <div className="text-xl font-bold text-yellow-400">
+                                            {favoriteChannel.subscriberCount ? formatNumber(favoriteChannel.subscriberCount) : '-'}
+                                        </div>
+                                    </div>
+                                    <div className="text-center md:border-t border-slate-700/50 md:pt-3">
+                                        <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
+                                            <Video className="w-3 h-3" />
+                                            Videos
+                                        </div>
+                                        <div className="text-xl font-bold text-white">
+                                            {favoriteChannel.videoCount ?? '-'}
+                                        </div>
+                                    </div>
+                                    <div className="text-center md:border-t border-slate-700/50 md:pt-3">
+                                        <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
+                                            <Eye className="w-3 h-3" />
+                                            Views
+                                        </div>
+                                        <div className="text-xl font-bold text-white">
+                                            {favoriteChannel.viewCount ? formatNumber(Number(favoriteChannel.viewCount)) : '-'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quick Actions */}
+                            <div className="mt-4 pt-4 border-t border-slate-700/50 flex items-center gap-2">
+                                <button
+                                    onClick={() => handleViewAnalytics(favoriteChannel)}
+                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                                >
+                                    <BarChart2 className="w-4 h-4" />
+                                    View Analytics
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleSync(favoriteChannel); }}
+                                    className={`px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors flex items-center gap-2 ${syncingIds.has(favoriteChannel.id) ? 'animate-pulse' : ''}`}
+                                    disabled={syncingIds.has(favoriteChannel.id)}
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${syncingIds.has(favoriteChannel.id) ? 'animate-spin' : ''}`} />
+                                    {syncingIds.has(favoriteChannel.id) ? 'Syncing...' : 'Sync Now'}
+                                </button>
+                                {favoriteChannel.lastSyncedAt && (
+                                    <span className="text-xs text-slate-500 ml-auto">
+                                        Last synced: {new Date(favoriteChannel.lastSyncedAt).toLocaleString()}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })()}
+
                 {/* Channels Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {channels.map(channel => (
                         <div
                             key={channel.id}
-                            className={`bg-slate-800/50 border rounded-xl p-6 hover:bg-slate-800 transition-all group flex flex-col h-full relative ${favorites.has(channel.id) ? 'border-yellow-500/30 bg-slate-800/80 shadow-[0_0_15px_rgba(234,179,8,0.1)]' : 'border-slate-700/50'
+                            onClick={() => handleViewAnalytics(channel)}
+                            className={`bg-slate-800/50 border rounded-xl p-6 hover:bg-slate-800 transition-all group flex flex-col h-full relative cursor-pointer ${favorites.has(channel.id) ? 'border-yellow-500/30 bg-slate-800/80 shadow-[0_0_15px_rgba(234,179,8,0.1)]' : 'border-slate-700/50'
                                 }`}
                         >
                             {/* Channel Header */}
@@ -97,8 +337,8 @@ export default function ChannelsList() {
                                     <button
                                         onClick={(e) => { e.stopPropagation(); toggleFavorite(channel.id); }}
                                         className={`p-1.5 rounded-lg transition-colors ${favorites.has(channel.id)
-                                                ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-400/10'
-                                                : 'text-slate-600 hover:text-yellow-400 hover:bg-slate-700'
+                                            ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-400/10'
+                                            : 'text-slate-600 hover:text-yellow-400 hover:bg-slate-700'
                                             }`}
                                         title={favorites.has(channel.id) ? "Unfavorite" : "Favorite"}
                                     >

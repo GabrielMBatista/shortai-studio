@@ -55,7 +55,10 @@ interface ScreenManagerProps {
         includeMusic: boolean,
         durationConfig?: { min: number; max: number; targetScenes?: number },
         audioModel?: string,
-        skipNavigation?: boolean
+        skipNavigation?: boolean,
+        folderId?: string,
+        channelId?: string | null,  // 🆕
+        personaId?: string | null    // 🆕
     ) => Promise<void>;
     generateAssets: () => Promise<void>;
     generateImagesOnly: () => Promise<void>;
