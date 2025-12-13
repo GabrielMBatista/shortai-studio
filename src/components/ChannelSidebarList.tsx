@@ -8,6 +8,8 @@ interface ChannelSidebarListProps {
     channels: Channel[];
     selectedChannelId: string | null;
     onSelectChannel: (channelId: string | null) => void;
+    onViewAnalytics?: (channel: Channel) => void;
+    onManageChannel?: (channel: Channel) => void;
     isCollapsed: boolean;
     onToggleCollapse: () => void;
     className?: string;
@@ -18,6 +20,8 @@ export default function ChannelSidebarList({
     channels,
     selectedChannelId,
     onSelectChannel,
+    onViewAnalytics,
+    onManageChannel,
     isCollapsed,
     onToggleCollapse,
     className,
@@ -144,12 +148,12 @@ export default function ChannelSidebarList({
                                                 </button>
 
                                                 {menuOpenId === channel.id && (
-                                                    <div className="absolute right-0 top-6 w-40 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
+                                                    <div className="absolute right-0 top-6 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setMenuOpenId(null);
-                                                                // TODO: View analytics
+                                                                onViewAnalytics?.(channel);
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                         >
@@ -159,11 +163,11 @@ export default function ChannelSidebarList({
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setMenuOpenId(null);
-                                                                // TODO: Manage persona
+                                                                onManageChannel?.(channel);
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                         >
-                                                            <Sparkles className="w-3 h-3" /> Manage Persona
+                                                            <Edit2 className="w-3 h-3" /> Manage Channel
                                                         </button>
                                                     </div>
                                                 )}

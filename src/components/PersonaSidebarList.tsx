@@ -8,6 +8,8 @@ interface PersonaSidebarListProps {
     selectedPersonaId: string | null;
     onSelectPersona: (personaId: string | null) => void;
     onCreatePersona: () => void;
+    onEditPersona: (persona: Persona) => void;
+    onDeletePersona: (personaId: string) => void;
     isCollapsed: boolean;
     onToggleCollapse: () => void;
     className?: string;
@@ -19,6 +21,8 @@ export default function PersonaSidebarList({
     selectedPersonaId,
     onSelectPersona,
     onCreatePersona,
+    onEditPersona,
+    onDeletePersona,
     isCollapsed,
     onToggleCollapse,
     className,
@@ -199,7 +203,7 @@ export default function PersonaSidebarList({
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setMenuOpenId(null);
-                                                                // TODO: Edit persona
+                                                                onEditPersona(persona);
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                         >
@@ -209,7 +213,9 @@ export default function PersonaSidebarList({
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setMenuOpenId(null);
-                                                                // TODO: Delete persona
+                                                                if (confirm(`Delete persona "${persona.name}"?`)) {
+                                                                    onDeletePersona(persona.id);
+                                                                }
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                                         >

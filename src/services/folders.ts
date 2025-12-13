@@ -17,10 +17,11 @@ export const createFolder = async (name: string, parentId?: string) => {
     });
 };
 
-export const updateFolder = async (id: string, name?: string, parentId?: string | null) => {
+export const updateFolder = async (id: string, name?: string, parentId?: string | null, channelId?: string | null) => {
     const body: any = {};
     if (name !== undefined) body.name = name;
     if (parentId !== undefined) body.parent_id = parentId;
+    if (channelId !== undefined) body.channelId = channelId;
 
     return await apiFetch(`/folders/${id}`, {
         method: 'PATCH',

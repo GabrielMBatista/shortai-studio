@@ -14,16 +14,33 @@ interface PersonaLibraryProps {
 
 const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { personas, loading, error, createPersona } = usePersonas();
+    const { personas, loading, error, createPersona, updatePersona, deletePersona } = usePersonas();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [editingPersona, setEditingPersona] = useState<Persona | null>(null);
 
     const selectedPersona = selectedPersonaId ? personas.find(p => p.id === selectedPersonaId) : null;
     const displayPersonas = selectedPersonaId ? [] : personas;
 
     const handleBackToPersonas = () => {
         setSelectedPersonaId(null);
+    };
+
+    const handleEditPersona = (persona: Persona) => {
+        setEditingPersona(persona);
+        setIsCreateModalOpen(true); // Reuse create modal for editing
+    };
+
+    const handleDeletePersona = async (personaId: string) => {
+        try {
+            await deletePersona(personaId);
+            if (selectedPersonaId === personaId) {
+                setSelectedPersonaId(null);
+            }
+        } catch (error) {
+            console.error('Failed to delete persona:', error);
+        }
     };
 
     const getInitials = (name: string) => {
@@ -51,6 +68,8 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack }) => {
                 selectedPersonaId={selectedPersonaId}
                 onSelectPersona={setSelectedPersonaId}
                 onCreatePersona={() => setIsCreateModalOpen(true)}
+                onEditPersona={handleEditPersona}
+                onDeletePersona={handleDeletePersona}
                 isCollapsed={isSidebarCollapsed}
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 isLoading={loading}
