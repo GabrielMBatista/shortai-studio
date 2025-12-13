@@ -4,7 +4,7 @@ import ChannelPersonaSelector from './ChannelPersonaSelector';
 import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Channel } from '../types/personas';
-import { ChannelAnalyticsPanel } from './Channels/ChannelAnalyticsPanel';
+import { ChannelVideosModal } from './Channels/ChannelVideosModal';
 import { FavoriteChannelDashboard } from './Channels/FavoriteChannelDashboard';
 import { formatNumber } from '../utils/format';
 
@@ -303,9 +303,9 @@ export default function ChannelsList() {
                 </div>
             </div>
 
-            {/* Analytics Panel */}
+            {/* Analytics Modal */}
             {selectedChannel && (
-                <ChannelAnalyticsPanel
+                <ChannelVideosModal
                     isOpen={!!selectedChannel}
                     onClose={() => setSelectedChannel(null)}
                     channelName={selectedChannel.name}
