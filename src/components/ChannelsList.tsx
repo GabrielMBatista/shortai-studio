@@ -4,7 +4,7 @@ import ChannelPersonaSelector from './ChannelPersonaSelector';
 import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Channel } from '../types/personas';
-import { ChannelVideosModal } from './Channels/ChannelVideosModal';
+import { ChannelAnalyticsPanel } from './Channels/ChannelAnalyticsPanel';
 import { FavoriteChannelDashboard } from './Channels/FavoriteChannelDashboard';
 import { formatNumber } from '../utils/format';
 
@@ -48,11 +48,7 @@ export default function ChannelsList() {
 
         setSyncingIds(prev => new Set(prev).add(channel.id));
         try {
-            await fetch(`${apiUrl}/channels/sync`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ channelIds: [channel.id] })
-            });
+            // Refetch channels - backend syncroniza automaticamente no GET
             await refetch();
         } catch (err) {
             console.error("Sync failed", err);
@@ -307,9 +303,9 @@ export default function ChannelsList() {
                 </div>
             </div>
 
-            {/* Analytics Modal */}
+            {/* Analytics Panel */}
             {selectedChannel && (
-                <ChannelVideosModal
+                <ChannelAnalyticsPanel
                     isOpen={!!selectedChannel}
                     onClose={() => setSelectedChannel(null)}
                     channelName={selectedChannel.name}

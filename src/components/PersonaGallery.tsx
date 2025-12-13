@@ -101,77 +101,110 @@ export default function PersonaGallery() {
 function PersonaCard({ persona, onChat }: { persona: Persona, onChat: () => void }) {
     const getBadges = () => {
         const badges = [];
-        if (persona.isOfficial) badges.push({ icon: Star, text: 'Official', color: 'text-blue-400' });
-        if (persona.isFeatured) badges.push({ icon: Sparkles, text: 'Featured', color: 'text-emerald-400' });
-        if (persona.isPremium) badges.push({ icon: Crown, text: 'Premium', color: 'text-amber-400' });
+        if (persona.isOfficial) badges.push({ icon: Star, text: 'Official', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' });
+        if (persona.isFeatured) badges.push({ icon: Sparkles, text: 'Featured', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' });
+        if (persona.isPremium) badges.push({ icon: Crown, text: 'Premium', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' });
         return badges;
     };
 
     const badges = getBadges();
 
+    // Generate color from name for avatar
+    const getInitials = (name: string) => {
+        return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+    };
+
+    const getAvatarColor = (name: string) => {
+        const colors = [
+            'bg-gradient-to-br from-indigo-500 to-purple-500',
+            'bg-gradient-to-br from-emerald-500 to-cyan-500',
+            'bg-gradient-to-br from-amber-500 to-orange-500',
+            'bg-gradient-to-br from-pink-500 to-rose-500',
+            'bg-gradient-to-br from-blue-500 to-indigo-500',
+        ];
+        const index = name.length % colors.length;
+        return colors[index];
+    };
+
     return (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800 hover:border-indigo-500/50 transition-all cursor-pointer group flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">
-                        {persona.name}
-                    </h3>
-                    {persona.category && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-slate-700/50 text-slate-400 text-xs rounded">
-                            {persona.category}
-                        </span>
+        <div className="group relative bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:bg-slate-800/60 hover:border-indigo-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/10">
+            {/* Gradient Overlay on Hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+            <div className="relative p-6 flex flex-col h-full">
+                {/* Header with Avatar */}
+                <div className="flex items-start gap-4 mb-4">
+                    {/* Avatar */}
+                    <div className={`w-16 h-16 rounded-xl ${getAvatarColor(persona.name)} flex items-center justify-center text-white font-bold text-xl shadow-lg flex-shrink-0 ring-2 ring-white/10`}>
+                        {getInitials(persona.name)}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors mb-1 truncate">
+                            {persona.name}
+                        </h3>
+                        {persona.category && (
+                            <span className="inline-block px-2.5 py-1 bg-slate-700/50 text-slate-300 text-xs rounded-lg font-medium">
+                                {persona.category}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Badges */}
+                {badges.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {badges.map((badge, i) => (
+                            <div key={i} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${badge.color}`}>
+                                <badge.icon className="w-3.5 h-3.5" />
+                                <span>{badge.text}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Description */}
+                <div className="flex-1 mb-4">
+                    {persona.description && (
+                        <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">
+                            {persona.description}
+                        </p>
                     )}
                 </div>
-            </div>
 
-            {/* Badges */}
-            {badges.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {badges.map((badge, i) => (
-                        <div key={i} className={`flex items-center gap-1 text-xs ${badge.color}`}>
-                            <badge.icon className="w-3 h-3" />
-                            <span>{badge.text}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Description */}
-            <div className="flex-1">
-                {persona.description && (
-                    <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-                        {persona.description}
-                    </p>
+                {/* Tags */}
+                {persona.tags && persona.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                        {persona.tags.slice(0, 4).map(tag => (
+                            <span key={tag} className="px-2 py-1 bg-slate-900/50 text-slate-500 text-[11px] rounded-md font-mono">
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
                 )}
-            </div>
 
-            {/* Stats */}
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-700/50 mt-4">
-                <div className="flex items-center gap-3">
-                    <div><span className="font-medium text-slate-400">{persona.usageCount}</span> uses</div>
-                    <div>Temp: <span className="text-slate-400 font-mono">{persona.temperature}</span></div>
+                {/* Stats & Action */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-700/50 mt-auto">
+                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                        <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                            <span className="font-medium text-slate-400">{persona.usageCount}</span> uses
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                            <span className="font-mono text-slate-400">{persona.temperature}</span> temp
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onChat(); }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40 hover:scale-105"
+                    >
+                        <MessageCircle className="w-4 h-4" />
+                        Chat
+                    </button>
                 </div>
-
-                <button
-                    onClick={(e) => { e.stopPropagation(); onChat(); }}
-                    className="p-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg transition-colors flex items-center gap-2"
-                >
-                    <MessageCircle className="w-4 h-4" />
-                    Chat
-                </button>
             </div>
-
-            {/* Tags */}
-            {persona.tags && persona.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                    {persona.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="px-2 py-0.5 bg-slate-900/50 text-slate-500 text-[10px] rounded">
-                            #{tag}
-                        </span>
-                    ))}
-                </div>
-            )}
         </div>
     );
 }
