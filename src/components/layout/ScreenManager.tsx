@@ -9,8 +9,8 @@ import AdminDashboard from '../AdminDashboard';
 import Loader from '../Loader';
 import ShowsView from '../ShowsView';
 import GuideView from '../GuideView';
-import ChannelsPage from '../ChannelsPage';
-import PersonaLibrary from '../PersonaLibrary';
+import ChannelsPage from '../Channels/ChannelsPage';
+import PersonaLibrary from '../Personas/PersonaLibrary';
 import { useTranslation } from 'react-i18next';
 
 interface ScreenManagerProps {

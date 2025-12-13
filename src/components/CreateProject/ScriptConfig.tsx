@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Layers, Clock, ChevronDown } from 'lucide-react';
+import { Layers, Clock, Sparkles, Send, Loader2, Bot } from 'lucide-react';
 import { AVAILABLE_LANGUAGES } from '../../types';
+import { Persona } from '../../types/personas';
+import { personasApi } from '../../api/personas';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    Textarea,
+    Select,
+    Button,
+    Input
+} from '../ui';
 
 interface ScriptConfigProps {
     topic: string;
@@ -16,6 +28,7 @@ interface ScriptConfigProps {
     setTargetScenes: (value: string) => void;
     isBusy: boolean;
     bulkProjectsCount: number;
+    activePersona?: Persona | null;
 }
 
 export const ScriptConfig: React.FC<ScriptConfigProps> = ({
@@ -25,33 +38,96 @@ export const ScriptConfig: React.FC<ScriptConfigProps> = ({
     maxDuration, setMaxDuration,
     targetScenes, setTargetScenes,
     isBusy,
-    bulkProjectsCount
+    bulkProjectsCount,
+    activePersona
 }) => {
     const { t } = useTranslation();
+    const [personaPrompt, setPersonaPrompt] = useState('');
+    const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+
+    const handleAskPersona = async () => {
+        if (!activePersona || !personaPrompt.trim()) return;
+
+        setIsGeneratingPrompt(true);
+        try {
+            // Context to guide the persona to generate a topic
+            const systemContext = `
+You are an expert creative assistant. The user will give you a rough idea or keyword.
+Your task is to Write a detailed, engaging VIDEO TITLE and CONCEPT/TOPIC based on that idea.
+It should be optimized for a short video script.
+Directly output the topic/concept. Do not add conversational filler like "Here is an idea:".
+            `.trim();
+
+            const history = [{ role: 'user' as const, parts: [{ text: systemContext }] }];
+            const response = await personasApi.chat(activePersona.id, `Generate a video concept for: ${personaPrompt}`, history);
+
+            if (response && response.response) {
+                setTopic(response.response);
+                setPersonaPrompt(''); // Clear input after success
+            }
+        } catch (error) {
+            console.error('Failed to ask persona:', error);
+            // Optional: Show toast error
+        } finally {
+            setIsGeneratingPrompt(false);
+        }
+    };
 
     return (
-        <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:border-slate-600 transition-colors">
-            <div className="mb-6">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                        <Layers className="w-4 h-4 text-indigo-400" />
+        <Card variant="glass" hoverable>
+            <CardHeader>
+                <CardTitle className="flex items-center justify-between text-lg">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+                            <Layers className="w-4 h-4 text-indigo-400" />
+                        </div>
+                        {t('input.concept_title')}
                     </div>
-                    {t('input.concept_title')}
-                </h3>
+                </CardTitle>
                 <p className="text-sm text-slate-500 ml-9">{t('input.concept_subtitle')}</p>
-            </div>
+            </CardHeader>
 
-            <div className="space-y-4">
+            <CardContent className="space-y-4">
+                {/* AI Persona Prompt Generator */}
+                {activePersona && (
+                    <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-3 mb-4 animate-fade-in">
+                        <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+                            <Bot className="w-3 h-3" />
+                            Ask {activePersona.name} for an idea
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={personaPrompt}
+                                onChange={(e) => setPersonaPrompt(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAskPersona()}
+                                placeholder={`"A story about..." or "Explain quantum physics..."`}
+                                className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none placeholder:text-slate-600 transition-all"
+                                disabled={isGeneratingPrompt || isBusy}
+                            />
+                            <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={handleAskPersona}
+                                disabled={!personaPrompt.trim() || isGeneratingPrompt || isBusy}
+                                isLoading={isGeneratingPrompt}
+                                className="shrink-0"
+                            >
+                                <Sparkles className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="relative group">
-                    <label htmlFor="input-topic" className="sr-only">Topic</label>
-                    <textarea
+                    <Textarea
+                        label="Topic / Script Concept"
                         id="input-topic"
                         name="topic"
                         value={topic}
                         onChange={(e) => setTopic(e.target.value)}
                         placeholder={t('input.topic_placeholder')}
-                        className={`w-full bg-slate-900/50 border rounded-xl px-4 py-4 text-white text-lg placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/50 outline-none h-32 resize-none transition-all group-hover:bg-slate-900 ${bulkProjectsCount > 0 ? 'border-green-500/50 focus:border-green-500' : 'border-slate-700 focus:border-indigo-500'
-                            }`}
+                        className={`h-32 ${bulkProjectsCount > 0 ? 'border-green-500/50 focus:border-green-500' : ''}`}
                         disabled={isBusy}
                     />
                     <div className="absolute bottom-3 right-3 text-xs text-slate-600 font-mono">
@@ -63,30 +139,21 @@ export const ScriptConfig: React.FC<ScriptConfigProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="input-language" className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">{t('input.output_language')}</label>
-                        <div className="relative">
-                            <select
-                                id="input-language"
-                                name="language"
-                                value={language}
-                                onChange={(e) => setLanguage(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white appearance-none cursor-pointer hover:border-slate-600 transition-colors"
-                                disabled={isBusy}
-                            >
-                                {AVAILABLE_LANGUAGES.map((l) => <option key={l.code} value={l.label}>{l.label}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
-                        </div>
-                    </div>
+                    <Select
+                        label={t('input.output_language')}
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        disabled={isBusy}
+                    >
+                        {AVAILABLE_LANGUAGES.map((l) => <option key={l.code} value={l.label}>{l.label}</option>)}
+                    </Select>
 
                     {/* DURATION CONFIG */}
                     <div className="flex flex-col">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 flex items-center gap-1">
+                        <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-1">
                             <Clock className="w-3 h-3" /> {t('input.target_duration')}
                         </label>
-                        <div id="input-duration" className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-3">
-                            <label htmlFor="minDuration" className="sr-only">Min Duration</label>
+                        <div id="input-duration" className="flex items-center gap-2 bg-slate-900/50 border border-slate-700/50 rounded-xl px-3 py-3 h-[50px]">
                             <input
                                 id="minDuration"
                                 name="minDuration"
@@ -101,7 +168,6 @@ export const ScriptConfig: React.FC<ScriptConfigProps> = ({
                                 disabled={isBusy}
                             />
                             <span className="text-slate-500 text-xs">{t('input.to')}</span>
-                            <label htmlFor="maxDuration" className="sr-only">Max Duration</label>
                             <input
                                 id="maxDuration"
                                 name="maxDuration"
@@ -139,7 +205,7 @@ export const ScriptConfig: React.FC<ScriptConfigProps> = ({
                         <span className="text-[10px] text-slate-500">{t('input.leave_empty_auto')}</span>
                     </div>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 };

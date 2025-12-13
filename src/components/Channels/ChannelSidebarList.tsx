@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Youtube, Plus, MoreVertical, Edit2, Trash2, ChevronLeft, ChevronRight, PanelLeft, Sparkles, Star, Users, Video as VideoIcon, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Channel } from '../types/personas';
-import { formatNumber } from '../utils/format';
+import { Channel } from '../../types/personas';
+import { formatNumber } from '../../utils/format';
 
 interface ChannelSidebarListProps {
     channels: Channel[];

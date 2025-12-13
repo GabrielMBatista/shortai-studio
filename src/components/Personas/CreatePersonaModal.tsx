@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Sparkles, AlertCircle, Info, Tag } from 'lucide-react';
-import { CreatePersonaData, Persona } from '../types/personas';
+import { CreatePersonaData, Persona } from '../../types/personas';
 import { useTranslation } from 'react-i18next';
 
 interface CreatePersonaModalProps {

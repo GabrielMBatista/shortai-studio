@@ -8,6 +8,8 @@ import { analyzeCharacterFeatures } from '../../services/geminiService';
 import Loader from '../Loader';
 import ConfirmModal from '../ConfirmModal';
 import { ToastType } from '../Toast';
+import { Input, Textarea, Button } from '../ui';
+
 
 interface CharacterManagerProps {
     characters: SavedCharacter[];
@@ -124,31 +126,36 @@ export const CharacterManager: React.FC<CharacterManagerProps> = ({
                         <h4 className="text-xs font-bold text-white uppercase">{t('input.add_char_title')}</h4>
                         <button type="button" onClick={() => setIsAddingChar(false)} className="text-slate-500 hover:text-white"><X className="w-4 h-4" /></button>
                     </div>
-                    <input
-                        id="charName"
-                        name="charName"
-                        type="text" placeholder={t('input.char_name_placeholder')} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-2 focus:border-indigo-500 outline-none"
-                        value={newCharName} onChange={e => setNewCharName(e.target.value)}
-                    />
-
-                    <div className="relative">
-                        <textarea
-                            id="charDesc"
-                            name="charDesc"
-                            placeholder={t('input.char_desc_placeholder')} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-2 h-20 focus:border-indigo-500 outline-none resize-none pr-10"
-                            value={newCharDesc} onChange={e => setNewCharDesc(e.target.value)}
+                    <div className="space-y-3 mb-3">
+                        <Input
+                            id="charName"
+                            name="charName"
+                            placeholder={t('input.char_name_placeholder')}
+                            value={newCharName}
+                            onChange={e => setNewCharName(e.target.value)}
                         />
-                        {newCharImages.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={handleAutoDescription}
-                                disabled={isAnalyzing}
-                                className="absolute bottom-4 right-2 p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors shadow-lg"
-                                title={t('input.auto_describe_title')}
-                            >
-                                {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                            </button>
-                        )}
+
+                        <div className="relative">
+                            <Textarea
+                                id="charDesc"
+                                name="charDesc"
+                                placeholder={t('input.char_desc_placeholder')}
+                                value={newCharDesc}
+                                onChange={e => setNewCharDesc(e.target.value)}
+                                className="h-20 pr-10"
+                            />
+                            {newCharImages.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleAutoDescription}
+                                    disabled={isAnalyzing}
+                                    className="absolute bottom-4 right-2 p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors shadow-lg"
+                                    title={t('input.auto_describe_title')}
+                                >
+                                    {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex gap-2 mb-3 overflow-x-auto p-1">
@@ -160,7 +167,16 @@ export const CharacterManager: React.FC<CharacterManagerProps> = ({
                             <img key={i} src={img} className="w-14 h-14 rounded-lg object-cover border border-slate-700 shadow-md" />
                         ))}
                     </div>
-                    <button type="button" onClick={handleSaveChar} disabled={isCharLoading || !newCharName} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2 rounded-lg transition-colors">{t('input.save_character')}</button>
+                    <Button
+                        type="button"
+                        onClick={handleSaveChar}
+                        disabled={isCharLoading || !newCharName}
+                        isLoading={isCharLoading}
+                        fullWidth
+                        size="sm"
+                    >
+                        {t('input.save_character')}
+                    </Button>
                 </div>
             )}
 

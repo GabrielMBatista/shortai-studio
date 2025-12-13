@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Link, Youtube, Unlink } from 'lucide-react';
-import { Channel } from '../types/personas';
-import { Button, Card } from './ui';
-import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from './ui/Modal';
+import { Channel } from '../../types/personas';
+import { Button, Card } from '../ui';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '../ui/Modal';
 
 interface LinkChannelToFolderModalProps {
     isOpen: boolean;

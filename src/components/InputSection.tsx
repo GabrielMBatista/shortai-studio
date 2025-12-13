@@ -9,6 +9,7 @@ import { useChannels } from '../hooks/useChannels';
 import { usePersonas } from '../hooks/usePersonas';
 import Loader from './Loader';
 import { ToastType } from './Toast';
+import { Button } from './ui/Button';
 
 import { ScriptConfig } from './CreateProject/ScriptConfig';
 import { StyleSelector } from './CreateProject/StyleSelector';
@@ -382,6 +383,20 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
     const isBusy = isLoading || isSubmitting;
 
+    // --- Active Persona Logic ---
+    const activePersona = React.useMemo(() => {
+        if (selectedChannelId) {
+            const channel = channels.find(c => c.id === selectedChannelId);
+            if (channel?.personaId) {
+                return personas.find(p => p.id === channel.personaId) || null;
+            }
+        }
+        if (selectedPersonaId) {
+            return personas.find(p => p.id === selectedPersonaId) || null;
+        }
+        return null;
+    }, [selectedChannelId, selectedPersonaId, channels, personas]);
+
     return (
         <div className="max-w-6xl mx-auto w-full px-6 py-8 flex flex-col items-center">
             <div className="text-center mb-12 animate-fade-in-up">
@@ -417,6 +432,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         targetScenes={targetScenes} setTargetScenes={setTargetScenes}
                         isBusy={isBusy}
                         bulkProjectsCount={bulkProjects.length}
+                        activePersona={activePersona}
                     />
 
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
@@ -453,26 +469,23 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
                 {/* FOOTER ACTION */}
                 <div className="lg:col-span-12 mt-4 pb-12">
-                    <button
+                    <Button
                         id="btn-generate"
                         type="submit"
                         disabled={!topic.trim() || isBusy}
-                        className="group relative w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-size-200 hover:bg-pos-100 text-white text-xl font-bold py-6 rounded-2xl shadow-2xl shadow-indigo-900/40 flex items-center justify-center gap-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 transform"
-                        style={{ backgroundSize: '200% auto' }}
+                        isLoading={isBusy}
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        className="py-6 text-xl shadow-2xl shadow-indigo-900/40"
+                        leftIcon={!isBusy ? <Sparkles className="w-6 h-6 text-indigo-200" /> : undefined}
+                        rightIcon={!isBusy ? <ArrowRight className="w-6 h-6 opacity-60" /> : undefined}
                     >
-                        {isBusy ? (
-                            <div className="flex items-center gap-4 py-2">
-                                <Loader size="sm" />
-                                <span className="animate-pulse">{isSubmitting ? t('input.generating') : (loadingMessage || t('input.processing'))}</span>
-                            </div>
-                        ) : (
-                            <>
-                                <Sparkles className="w-7 h-7 text-indigo-200 group-hover:text-white transition-colors" />
-                                <span>{bulkProjects.length > 0 ? `Generate ${bulkProjects.length} Projects` : t('input.generate_button')}</span>
-                                <ArrowRight className="w-7 h-7 opacity-60 group-hover:translate-x-1 transition-transform" />
-                            </>
-                        )}
-                    </button>
+                        {isBusy
+                            ? (isSubmitting ? t('input.generating') : (loadingMessage || t('input.processing')))
+                            : (bulkProjects.length > 0 ? `Generate ${bulkProjects.length} Projects` : t('input.generate_button'))
+                        }
+                    </Button>
                     <p className="text-center text-slate-500 text-xs mt-4">
                         {t('input.footer_desc')} <br />
                         <span className="text-indigo-400 font-semibold">{t('input.daily_limit')}</span>

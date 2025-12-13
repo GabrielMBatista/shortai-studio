@@ -1,10 +1,11 @@
 import React from 'react';
-import { Youtube, Sparkles, CheckCircle2, ChevronDown, UserCircle2 } from 'lucide-react';
-import { Channel, Persona, PersonaBasic } from '../../types/personas';
+import { Youtube, Sparkles, CheckCircle2, UserCircle2 } from 'lucide-react';
+import { Channel, Persona } from '../../types/personas';
+import { Select } from '../ui/Select';
 
 interface ChannelPersonaSelectorProps {
     channels: Channel[];
-    personas?: Persona[]; // Optional for backward compatibility, but required for feature
+    personas?: Persona[];
     selectedChannelId: string | null;
     selectedPersonaId?: string | null;
     onChannelSelect: (channelId: string | null) => void;
@@ -23,59 +24,43 @@ export const ChannelPersonaSelector: React.FC<ChannelPersonaSelectorProps> = ({
 }) => {
     const selectedChannel = channels.find(ch => ch.id === selectedChannelId);
     const selectedPersona = personas.find(p => p.id === selectedPersonaId);
-
-    // Effective Persona: Channel's persona overrides manual selection if channel is active
     const activePersona = selectedChannel?.persona || selectedPersona;
 
     return (
         <div className="space-y-4">
             {/* Channel Selector */}
-            <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 flex items-center gap-1">
-                    <Youtube className="w-3 h-3" />
-                    Channel (Recommended)
-                </label>
-                <div className="relative">
-                    <select
-                        value={selectedChannelId || ''}
-                        onChange={(e) => onChannelSelect(e.target.value || null)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white appearance-none cursor-pointer hover:border-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={disabled}
-                    >
-                        <option value="">No Channel (Independent Project)</option>
-                        {channels.map(channel => (
-                            <option key={channel.id} value={channel.id}>
-                                {channel.name} {channel.persona ? `(Masked by ${channel.persona.name})` : ''}
-                            </option>
-                        ))}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
-                </div>
-            </div>
+            <Select
+                label="Channel (Recommended)"
+                leftIcon={<Youtube className="w-4 h-4" />}
+                value={selectedChannelId || ''}
+                onChange={(e) => onChannelSelect(e.target.value || null)}
+                disabled={disabled}
+            >
+                <option value="">No Channel (Independent Project)</option>
+                {channels.map(channel => (
+                    <option key={channel.id} value={channel.id}>
+                        {channel.name} {channel.persona ? `(Masked by ${channel.persona.name})` : ''}
+                    </option>
+                ))}
+            </Select>
 
-            {/* Persona Selector (Only if No Channel or Channel has no Persona? - No, only if No Channel for now to keep it simple, or if Channel allows override? Let's stick to: If Channel selected, it drives. If not, you pick.) */}
+            {/* Persona Selector */}
             {!selectedChannel && onPersonaSelect && (
                 <div className="animate-fade-in">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1 flex items-center gap-1">
-                        <UserCircle2 className="w-3 h-3" />
-                        Persona (Optional)
-                    </label>
-                    <div className="relative">
-                        <select
-                            value={selectedPersonaId || ''}
-                            onChange={(e) => onPersonaSelect(e.target.value || null)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white appearance-none cursor-pointer hover:border-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={disabled}
-                        >
-                            <option value="">No Persona (Generic Style)</option>
-                            {personas.map(persona => (
-                                <option key={persona.id} value={persona.id}>
-                                    {persona.name} {persona.category ? `(${persona.category})` : ''}
-                                </option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
-                    </div>
+                    <Select
+                        label="Persona (Optional)"
+                        leftIcon={<UserCircle2 className="w-4 h-4" />}
+                        value={selectedPersonaId || ''}
+                        onChange={(e) => onPersonaSelect(e.target.value || null)}
+                        disabled={disabled}
+                    >
+                        <option value="">No Persona (Generic Style)</option>
+                        {personas.map(persona => (
+                            <option key={persona.id} value={persona.id}>
+                                {persona.name} {persona.category ? `(${persona.category})` : ''}
+                            </option>
+                        ))}
+                    </Select>
                 </div>
             )}
 

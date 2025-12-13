@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Persona } from '../types/personas';
-import { usePersonas } from '../hooks/usePersonas';
+import { Persona } from '../../types/personas';
+import { usePersonas } from '../../hooks/usePersonas';
 import { Sparkles, Crown, Star, Filter, MessageCircle } from 'lucide-react';
 import PersonaChatModal from './PersonaChatModal';
 

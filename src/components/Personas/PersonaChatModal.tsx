@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Bot, User as UserIcon, Loader2, Trash2 } from 'lucide-react';
-import { Persona } from '../types/personas';
-import { personasApi } from '../api/personas';
+import { Persona } from '../../types/personas';
+import { personasApi } from '../../api/personas';
 
 interface Message {
     role: 'user' | 'model';
@@ -114,8 +114,8 @@ export default function PersonaChatModal({ isOpen, onClose, persona }: PersonaCh
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
-                                    ? 'bg-indigo-600 text-white rounded-br-none'
-                                    : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
+                                ? 'bg-indigo-600 text-white rounded-br-none'
+                                : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
                                 }`}>
                                 <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</div>
                             </div>

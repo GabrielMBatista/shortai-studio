@@ -4,9 +4,10 @@
  */
 
 export * from './Button';
-export * from './Card';
 export * from './Input';
-export * from './Modal';
-export * from './Badge';
-export * from './Spinner';
+export * from './Card';
 export * from './tabs';
+export * from './Badge';
+export * from './Modal';
+export * from './Spinner';
+export * from './Select';

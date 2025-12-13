@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Plus, MoreVertical, Edit2, Trash2, ChevronLeft, ChevronRight, PanelLeft, Star, Crown, Filter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Persona } from '../types/personas';
+import { Persona } from '../../types/personas';
 
 interface PersonaSidebarListProps {
     personas: Persona[];

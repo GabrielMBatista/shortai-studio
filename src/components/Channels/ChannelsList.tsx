@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { useChannels } from '../hooks/useChannels';
-import { channelsApi } from '../api/channels';
-import ChannelPersonaSelector from './ChannelPersonaSelector';
+import { useChannels } from '../../hooks/useChannels';
+import { channelsApi } from '../../api/channels';
 import ChannelSidebarList from './ChannelSidebarList';
 import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, ArrowLeft, Plus, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Channel } from '../types/personas';
-import { ChannelDetailsView } from './Channels/ChannelDetailsView';
-import { FavoriteChannelDashboard } from './Channels/FavoriteChannelDashboard';
-import { formatNumber } from '../utils/format';
-import { Button, Card, Badge } from './ui';
+import { Channel } from '../../types/personas';
+import { ChannelDetailsView } from './ChannelDetailsView';
+import { FavoriteChannelDashboard } from './FavoriteChannelDashboard';
+import { formatNumber } from '../../utils/format';
+import { Button, Card, Badge } from '../ui';
 
 interface VideoAnalytics {
     id: string;

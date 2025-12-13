@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Sparkles, MessageCircle, Crown, Star, Plus } from 'lucide-react';
-import { Persona } from '../types/personas';
-import { usePersonas } from '../hooks/usePersonas';
+import { Persona } from '../../types/personas';
+import { usePersonas } from '../../hooks/usePersonas';
 import PersonaSidebarList from './PersonaSidebarList';
 import CreatePersonaModal from './CreatePersonaModal';
-import { PersonaDetailsView } from './Personas/PersonaDetailsView';
-import { Card, Button, Badge } from './ui';
+import { PersonaDetailsView } from './PersonaDetailsView';
+import { Card, Button, Badge } from '../ui';
 
 interface PersonaLibraryProps {
     onBack: () => void;
