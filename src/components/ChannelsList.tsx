@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useChannels } from '../hooks/useChannels';
 import ChannelPersonaSelector from './ChannelPersonaSelector';
 import ChannelSidebarList from './ChannelSidebarList';
-import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, ArrowLeft } from 'lucide-react';
+import { Youtube, Users, Video, Eye, RefreshCw, BarChart2, Star, Sparkles, ArrowLeft, Plus, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Channel } from '../types/personas';
 import { ChannelDetailsView } from './Channels/ChannelDetailsView';
@@ -21,7 +21,12 @@ interface VideoAnalytics {
     stats: { views: number; likes: number; comments: number };
 }
 
-export default function ChannelsList() {
+interface ChannelsListProps {
+    onConnect?: () => void;
+    onImport?: () => void;
+}
+
+export default function ChannelsList({ onConnect, onImport }: ChannelsListProps = {}) {
     const { t } = useTranslation();
     const { channels, loading, error, refetch, updateChannel } = useChannels();
     const [selectedChannel, setSelectedChannel] = useState<{ id: string, name: string } | null>(null);
@@ -84,11 +89,20 @@ export default function ChannelsList() {
     const handleBackToChannels = () => {
         setSelectedChannel(null);
         setChannelVideos([]);
+        setSelectedChannelId(null); // Reset sidebar selection too
     };
 
-    const filteredChannels = selectedChannelId
-        ? channels.filter(ch => ch.id === selectedChannelId)
-        : channels;
+    // Auto-load analytics when a channel is selected from sidebar
+    React.useEffect(() => {
+        if (selectedChannelId && selectedChannelId !== selectedChannel?.id) {
+            const channel = channels.find(ch => ch.id === selectedChannelId);
+            if (channel) {
+                handleViewAnalytics(channel);
+            }
+        }
+    }, [selectedChannelId, channels]);
+
+    const filteredChannels = selectedChannelId ? [] : channels;
 
     return (
         <div className="flex min-h-[calc(100vh-64px)]">
@@ -109,6 +123,41 @@ export default function ChannelsList() {
             {/* Main Content */}
             <div className="flex-1 bg-[#0f172a] relative flex flex-col overflow-y-auto">
                 <div className="w-full px-6 py-8">
+                    {/* Header */}
+                    {!selectedChannel && (
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 animate-fade-in-up">
+                            <div>
+                                <h1 className="text-3xl font-bold text-white mb-2">
+                                    {t('channels.title', 'Channel Manager')}
+                                </h1>
+                                <p className="text-slate-400">
+                                    {t('channels.subtitle', 'Manage connected channels & AI personas')}
+                                </p>
+                            </div>
+                            {onImport && onConnect && (
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        variant="secondary"
+                                        size="md"
+                                        leftIcon={<Download className="w-5 h-5" />}
+                                        onClick={onImport}
+                                    >
+                                        {t('channels.import_existing', 'Import Channel')}
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        size="md"
+                                        leftIcon={<Plus className="w-5 h-5" />}
+                                        onClick={onConnect}
+                                        className="bg-red-600 hover:bg-red-700 shadow-red-600/20"
+                                    >
+                                        {t('channels.connect_new', 'Connect Channel')}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {error ? (
                         <Card variant="glass" padding="lg" className="bg-red-900/20 border-red-500/50 text-center">
                             <p className="text-red-400 font-medium">{error}</p>
