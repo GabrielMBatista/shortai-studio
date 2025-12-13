@@ -52,5 +52,19 @@ export const personasApi = {
             throw new Error(error.error || 'Failed to update persona');
         }
         return res.json();
+    },
+
+    async chat(id: string, message: string, history: any[] = []): Promise<{ response: string }> {
+        const res = await fetch(`${API_URL}/personas/${id}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ message, history })
+        });
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({ error: 'Failed to chat with persona' }));
+            throw new Error(error.error || 'Failed to chat with persona');
+        }
+        return res.json();
     }
 };

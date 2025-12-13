@@ -39,6 +39,7 @@ export interface Channel {
     viewCount?: bigint;
     lastSyncedAt?: string;
     persona?: PersonaBasic;
+    googleAccountId: string; // Added to match backend and fix access issue
     account?: {
         id: string;
         provider: string;

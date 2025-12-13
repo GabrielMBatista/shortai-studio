@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Persona } from '../types/personas';
 import { usePersonas } from '../hooks/usePersonas';
-import { Sparkles, Crown, Star, Filter } from 'lucide-react';
+import { Sparkles, Crown, Star, Filter, MessageCircle } from 'lucide-react';
+import PersonaChatModal from './PersonaChatModal';
 
 export default function PersonaGallery() {
     const { personas, loading, error } = usePersonas();
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [chatPersona, setChatPersona] = useState<Persona | null>(null);
 
     const categories = useMemo(() => {
         const cats = new Set(personas.map(p => p.category).filter(Boolean));
@@ -45,7 +47,7 @@ export default function PersonaGallery() {
                         <Sparkles className="w-6 h-6 text-indigo-400" />
                         Persona Library
                     </h2>
-                    <p className="text-slate-400 mt-1">Choose your AI scriptwriter style</p>
+                    <p className="text-slate-400 mt-1">Choose your AI scriptwriter style or chat with them directly</p>
                 </div>
                 <div className="text-sm text-slate-500">
                     {filteredPersonas.length} persona{filteredPersonas.length !== 1 ? 's' : ''} available
@@ -60,8 +62,8 @@ export default function PersonaGallery() {
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedCategory === cat
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white'
                             }`}
                     >
                         {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -77,15 +79,26 @@ export default function PersonaGallery() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredPersonas.map(persona => (
-                        <PersonaCard key={persona.id} persona={persona} />
+                        <PersonaCard
+                            key={persona.id}
+                            persona={persona}
+                            onChat={() => setChatPersona(persona)}
+                        />
                     ))}
                 </div>
             )}
+
+            {/* Chat Modal */}
+            <PersonaChatModal
+                isOpen={!!chatPersona}
+                onClose={() => setChatPersona(null)}
+                persona={chatPersona}
+            />
         </div>
     );
 }
 
-function PersonaCard({ persona }: { persona: Persona }) {
+function PersonaCard({ persona, onChat }: { persona: Persona, onChat: () => void }) {
     const getBadges = () => {
         const badges = [];
         if (persona.isOfficial) badges.push({ icon: Star, text: 'Official', color: 'text-blue-400' });
@@ -97,7 +110,7 @@ function PersonaCard({ persona }: { persona: Persona }) {
     const badges = getBadges();
 
     return (
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800 hover:border-indigo-500/50 transition-all cursor-pointer group">
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover:bg-slate-800 hover:border-indigo-500/50 transition-all cursor-pointer group flex flex-col h-full">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -125,23 +138,28 @@ function PersonaCard({ persona }: { persona: Persona }) {
             )}
 
             {/* Description */}
-            {persona.description && (
-                <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-                    {persona.description}
-                </p>
-            )}
+            <div className="flex-1">
+                {persona.description && (
+                    <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+                        {persona.description}
+                    </p>
+                )}
+            </div>
 
             {/* Stats */}
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-700/50">
-                <div>
-                    <span className="font-medium text-slate-400">{persona.usageCount}</span> uses
-                </div>
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-700/50 mt-4">
                 <div className="flex items-center gap-3">
+                    <div><span className="font-medium text-slate-400">{persona.usageCount}</span> uses</div>
                     <div>Temp: <span className="text-slate-400 font-mono">{persona.temperature}</span></div>
-                    <div>Type: <span className={`font-medium ${persona.type === 'SYSTEM' ? 'text-blue-400' : 'text-purple-400'}`}>
-                        {persona.type}
-                    </span></div>
                 </div>
+
+                <button
+                    onClick={(e) => { e.stopPropagation(); onChat(); }}
+                    className="p-2 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                </button>
             </div>
 
             {/* Tags */}

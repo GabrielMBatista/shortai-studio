@@ -149,10 +149,11 @@ export default function ChannelsList() {
         setSelectedChannel({ id: channel.id, name: channel.name });
         setIsLoadingVideos(true);
 
-        const accId = channel.account?.id;
+        // Use derived account ID from relation or direct FK
+        const accId = channel.account?.id || channel.googleAccountId;
 
         if (!accId) {
-            console.error("Missing accountId for video analytics");
+            console.error("Missing accountId (and googleAccountId) for video analytics");
             setIsLoadingVideos(false);
             return;
         }
