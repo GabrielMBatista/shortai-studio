@@ -95,10 +95,10 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                     <div>
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-indigo-400" />
-                            {persona ? 'Edit Persona' : 'Create New Persona'}
+                            {persona ? t('persona_form.edit_title') : t('persona_form.create_title')}
                         </h2>
                         <p className="text-sm text-slate-400">
-                            {persona ? 'Update your AI personality settings.' : 'Define a custom AI personality for your scripts.'}
+                            {persona ? t('persona_form.edit_subtitle') : t('persona_form.create_subtitle')}
                         </p>
                     </div>
                     <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-800 rounded-lg">
@@ -110,19 +110,19 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Name</label>
+                            <label className="text-sm font-medium text-slate-300">{t('persona_form.name_label')}</label>
                             <input
                                 type="text"
                                 required
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-600"
-                                placeholder="e.g. Tech Reviewer, History Buff"
+                                placeholder={t('persona_form.name_placeholder')}
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Category</label>
+                            <label className="text-sm font-medium text-slate-300">{t('persona_form.category_label')}</label>
                             <select
                                 value={formData.category}
                                 onChange={e => setFormData({ ...formData, category: e.target.value })}
@@ -139,12 +139,12 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Description</label>
+                        <label className="text-sm font-medium text-slate-300">{t('persona_form.desc_label')}</label>
                         <textarea
                             value={formData.description}
                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                             className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-600 resize-none h-20"
-                            placeholder="Brief description of this persona's purpose..."
+                            placeholder={t('persona_form.desc_placeholder')}
                         />
                     </div>
 
@@ -153,11 +153,11 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                             required
                             label={
                                 <span className="flex items-center gap-2">
-                                    System Instructions
+                                    {t('persona_form.instructions_label')}
                                     <div className="group relative">
                                         <Info className="w-4 h-4 text-slate-500 cursor-help" />
                                         <div className="absolute left-full ml-2 top-0 w-64 p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                            The core instructions that define how the AI behaves. Be specific about tone, style, and structure.
+                                            {t('persona_form.instructions_tooltip')}
                                         </div>
                                     </div>
                                 </span>
@@ -172,7 +172,7 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="flex items-center justify-between text-sm font-medium text-slate-300">
-                                <span>Creativity (Temperature)</span>
+                                <span>{t('persona_form.temp_label')}</span>
                                 <span className="text-indigo-400 font-mono">{formData.temperature}</span>
                             </label>
                             <input
@@ -185,13 +185,13 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                                 className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                             />
                             <div className="flex justify-between text-xs text-slate-500">
-                                <span>Precise</span>
-                                <span>Creative</span>
+                                <span>{t('persona_form.temp_precise')}</span>
+                                <span>{t('persona_form.temp_creative')}</span>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Tags</label>
+                            <label className="text-sm font-medium text-slate-300">{t('persona_form.tags_label')}</label>
                             <div className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 flex flex-wrap gap-2 min-h-[46px] items-center">
                                 {formData.tags?.map(tag => (
                                     <span key={tag} className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">
@@ -207,7 +207,7 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                                     onChange={e => setTagInput(e.target.value)}
                                     onKeyDown={handleAddTag}
                                     className="bg-transparent border-none text-sm text-white focus:ring-0 p-1 flex-1 min-w-[80px]"
-                                    placeholder="Add tag..."
+                                    placeholder={t('persona_form.add_tag')}
                                 />
                             </div>
                         </div>
@@ -221,7 +221,7 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                         onClick={onClose}
                         className="px-4 py-2 hover:bg-slate-800 text-slate-300 rounded-lg transition-colors font-medium"
                     >
-                        Cancel
+                        {t('persona_form.cancel')}
                     </button>
                     <button
                         onClick={handleSubmit}
@@ -233,7 +233,7 @@ export default function CreatePersonaModal({ isOpen, onClose, onSubmit, persona 
                         ) : (
                             <Save className="w-4 h-4" />
                         )}
-                        {persona ? 'Update Persona' : 'Create Persona'}
+                        {persona ? t('persona_form.submit_update') : t('persona_form.submit_create')}
                     </button>
                 </div>
             </div>

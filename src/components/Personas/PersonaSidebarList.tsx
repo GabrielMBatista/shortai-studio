@@ -67,13 +67,13 @@ export default function PersonaSidebarList({
         <div className={`bg-slate-900 md:bg-slate-900/50 border-r border-slate-800 flex flex-col gap-2 h-screen transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-72'} ${className || ''}`}>
             {/* Header */}
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 mb-2`}>
-                {!isCollapsed && <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Personas</h3>}
+                {!isCollapsed && <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">{t('nav.personas')}</h3>}
                 <div className="flex gap-1">
                     {!isCollapsed && (
                         <button
                             onClick={onCreatePersona}
                             className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-slate-800 rounded transition-colors"
-                            title="Create Persona"
+                            title={t('persona_form.submit_create')}
                         >
                             <Plus className="w-4 h-4" />
                         </button>
@@ -108,7 +108,7 @@ export default function PersonaSidebarList({
                                     : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white'
                                     }`}
                             >
-                                {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                                {cat === 'all' ? t('personas.all_categories') : cat.charAt(0).toUpperCase() + cat.slice(1)}
                             </button>
                         ))}
                     </div>
@@ -124,15 +124,15 @@ export default function PersonaSidebarList({
                         ? 'bg-indigo-500/20 text-indigo-400'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         } ${isCollapsed ? 'justify-center flex-col gap-1 py-3' : ''}`}
-                    title={isCollapsed ? 'All Personas' : undefined}
+                    title={isCollapsed ? t('personas.all_personas') : undefined}
                 >
                     <Sparkles className="w-4 h-4 flex-shrink-0" />
                     {!isCollapsed ? (
                         <>
-                            <span className="truncate flex-1 text-left">All Personas</span>
+                            <span className="truncate flex-1 text-left">{t('personas.all_personas')}</span>
                             {filteredPersonas.length > 0 && <span className="text-xs text-slate-500">({filteredPersonas.length})</span>}
                         </>
-                    ) : <span className="text-[10px] font-bold">ALL</span>}
+                    ) : <span className="text-[10px] font-bold">{t('folders.all')}</span>}
                 </button>
 
                 {/* Persona List */}
@@ -207,19 +207,19 @@ export default function PersonaSidebarList({
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                         >
-                                                            <Edit2 className="w-3 h-3" /> Edit
+                                                            <Edit2 className="w-3 h-3" /> {t('common.edit')}
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setMenuOpenId(null);
-                                                                if (confirm(`Delete persona "${persona.name}"?`)) {
+                                                                if (confirm(`${t('input.delete_char_confirm')} "${persona.name}"?`)) {
                                                                     onDeletePersona(persona.id);
                                                                 }
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                                         >
-                                                            <Trash2 className="w-3 h-3" /> Delete
+                                                            <Trash2 className="w-3 h-3" /> {t('common.delete')}
                                                         </button>
                                                     </div>
                                                 )}

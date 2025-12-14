@@ -25,7 +25,10 @@
         "preview_tour": "Tour de Preview",
         "export_tour": "Tour de Exportação",
         "folders_tour": "Tour de Pastas",
-        "guides": "Guias e Modelos"
+        "guides": "Guias e Modelos",
+        "studio": "Estúdio",
+        "channels": "Canais",
+        "personas": "Personas"
     },
     "guides": {
         "title": "Guias & Templates",
@@ -445,5 +448,45 @@
         "est_cost": "Custo Est. (Este Projeto)",
         "audio": "Áudio",
         "video": "Vídeo"
+    },
+    "personas": {
+        "library_title": "Biblioteca de Personas",
+        "library_subtitle": "Escolha o estilo do seu roteirista de IA ou converse diretamente com ele",
+        "loading": "Carregando personas...",
+        "available": "personas disponíveis",
+        "available_single": "persona disponível",
+        "all_categories": "Todas",
+        "no_results": "Nenhuma persona encontrada nesta categoria",
+        "official": "Oficial",
+        "featured": "Destaque",
+        "premium": "Premium",
+        "uses": "usos",
+        "temp": "temp",
+        "chat_button": "Conversar",
+        "clear_chat_title": "Limpar Chat",
+        "default_category": "Assistente de IA",
+        "back_to_list": "Voltar para Personas",
+        "all_personas": "Todas as Personas"
+    },
+    "persona_form": {
+        "create_title": "Criar Nova Persona",
+        "edit_title": "Editar Persona",
+        "create_subtitle": "Defina uma personalidade de IA personalizada para seus roteiros.",
+        "edit_subtitle": "Atualize as configurações da sua personalidade de IA.",
+        "name_label": "Nome",
+        "name_placeholder": "ex: Analista de Tech, Historiador",
+        "category_label": "Categoria",
+        "desc_label": "Descrição",
+        "desc_placeholder": "Breve descrição do propósito desta persona...",
+        "instructions_label": "Instruções do Sistema",
+        "instructions_tooltip": "As instruções principais que definem como a IA se comporta. Seja específico sobre tom, estilo e estrutura.",
+        "temp_label": "Criatividade (Temperatura)",
+        "temp_precise": "Preciso",
+        "temp_creative": "Criativo",
+        "tags_label": "Tags",
+        "add_tag": "Add tag...",
+        "cancel": "Cancelar",
+        "submit_create": "Criar Persona",
+        "submit_update": "Atualizar Persona"
     }
 }

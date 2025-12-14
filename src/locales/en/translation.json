@@ -25,7 +25,10 @@
         "preview_tour": "Preview Tour",
         "export_tour": "Export Tour",
         "folders_tour": "Folders Tour",
-        "guides": "Guides & Templates"
+        "guides": "Guides & Templates",
+        "studio": "Studio",
+        "channels": "Channels",
+        "personas": "Personas"
     },
     "guides": {
         "title": "Guides & Templates",
@@ -421,5 +424,45 @@
         "actions": "Actions",
         "active": "Active",
         "blocked": "Blocked"
+    },
+    "personas": {
+        "library_title": "Persona Library",
+        "library_subtitle": "Choose your AI scriptwriter style or chat with them directly",
+        "loading": "Loading personas...",
+        "available": "personas available",
+        "available_single": "persona available",
+        "all_categories": "All",
+        "no_results": "No personas found for this category",
+        "official": "Official",
+        "featured": "Featured",
+        "premium": "Premium",
+        "uses": "uses",
+        "temp": "temp",
+        "chat_button": "Chat",
+        "clear_chat_title": "Clear Chat",
+        "default_category": "AI Assistant",
+        "back_to_list": "Back to Personas",
+        "all_personas": "All Personas"
+    },
+    "persona_form": {
+        "create_title": "Create New Persona",
+        "edit_title": "Edit Persona",
+        "create_subtitle": "Define a custom AI personality for your scripts.",
+        "edit_subtitle": "Update your AI personality settings.",
+        "name_label": "Name",
+        "name_placeholder": "e.g. Tech Reviewer, History Buff",
+        "category_label": "Category",
+        "desc_label": "Description",
+        "desc_placeholder": "Brief description of this persona's purpose...",
+        "instructions_label": "System Instructions",
+        "instructions_tooltip": "The core instructions that define how the AI behaves. Be specific about tone, style, and structure.",
+        "temp_label": "Creativity (Temperature)",
+        "temp_precise": "Precise",
+        "temp_creative": "Creative",
+        "tags_label": "Tags",
+        "add_tag": "Add tag...",
+        "cancel": "Cancel",
+        "submit_create": "Create Persona",
+        "submit_update": "Update Persona"
     }
 }

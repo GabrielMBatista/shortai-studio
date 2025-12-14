@@ -82,15 +82,15 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                 {t('input.chat_with', { name: persona.name })}
                             </h2>
-                            <p className="text-xs text-slate-400">
-                                {persona.category || 'AI Assistant'} • Temp: {persona.temperature}
+                            <p className="text-xs text-slate-400 capitalize">
+                                {persona.category || t('personas.default_category')} • {t('personas.temp')}: {persona.temperature}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleClear}
-                            title="Clear Chat"
+                            title={t('personas.clear_chat_title')}
                             className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-800"
                         >
                             <Trash2 className="w-5 h-5" />

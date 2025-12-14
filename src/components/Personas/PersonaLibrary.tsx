@@ -89,7 +89,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                                     leftIcon={<ArrowLeft className="w-5 h-5" />}
                                     onClick={onBack}
                                 >
-                                    Back
+                                    {t('common.back')}
                                 </Button>
                                 <div>
                                     <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -103,7 +103,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="text-sm text-slate-500">
-                                    {displayPersonas.length} persona{displayPersonas.length !== 1 ? 's' : ''}
+                                    {displayPersonas.length} {displayPersonas.length !== 1 ? t('personas.available') : t('personas.available_single')}
                                 </div>
                                 <Button
                                     variant="primary"
@@ -111,7 +111,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                                     leftIcon={<Plus className="w-5 h-5" />}
                                     onClick={() => setIsCreateModalOpen(true)}
                                 >
-                                    Create Persona
+                                    {t('persona_form.submit_create')}
                                 </Button>
                             </div>
                         </div>
@@ -132,7 +132,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                                 onClick={handleBackToPersonas}
                                 className="mb-6"
                             >
-                                Back to Personas
+                                {t('personas.back_to_list')}
                             </Button>
                             <PersonaDetailsView
                                 persona={selectedPersona}
@@ -157,7 +157,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                     ) : displayPersonas.length === 0 ? (
                         <Card variant="glass" padding="lg" className="text-center py-12">
                             <Sparkles className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400">No personas found</p>
+                            <p className="text-slate-400">{t('personas.no_results')}</p>
                         </Card>
                     ) : (
                         // Personas Grid - só em All Personas
@@ -194,17 +194,17 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                                         <div className="flex flex-wrap gap-2 mb-4">
                                             {persona.isOfficial && (
                                                 <Badge variant="primary" size="sm" dot>
-                                                    <Star className="w-3 h-3" /> Official
+                                                    <Star className="w-3 h-3" /> {t('personas.official')}
                                                 </Badge>
                                             )}
                                             {persona.isFeatured && (
                                                 <Badge variant="success" size="sm" dot>
-                                                    <Sparkles className="w-3 h-3" /> Featured
+                                                    <Sparkles className="w-3 h-3" /> {t('personas.featured')}
                                                 </Badge>
                                             )}
                                             {persona.isPremium && (
                                                 <Badge variant="warning" size="sm" dot>
-                                                    <Crown className="w-3 h-3" /> Premium
+                                                    <Crown className="w-3 h-3" /> {t('personas.premium')}
                                                 </Badge>
                                             )}
                                         </div>
@@ -235,11 +235,11 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                                         <div className="flex items-center gap-4 text-xs text-slate-500">
                                             <div className="flex items-center gap-1">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                                <span className="font-medium text-slate-400">{persona.usageCount || 0}</span> uses
+                                                <span className="font-medium text-slate-400">{persona.usageCount || 0}</span> {t('personas.uses')}
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                                <span className="font-mono text-slate-400">{persona.temperature}</span> temp
+                                                <span className="font-mono text-slate-400">{persona.temperature}</span> {t('personas.temp')}
                                             </div>
                                         </div>
 
@@ -249,7 +249,7 @@ const PersonaLibrary: React.FC<PersonaLibraryProps> = ({ onBack, onSelectPersona
                                             leftIcon={<MessageCircle className="w-4 h-4" />}
                                             onClick={(e) => { e.stopPropagation(); setSelectedPersonaId(persona.id); }}
                                         >
-                                            Chat
+                                            {t('personas.chat_button')}
                                         </Button>
                                     </div>
                                 </Card>

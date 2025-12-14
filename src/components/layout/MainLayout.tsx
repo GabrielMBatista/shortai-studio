@@ -100,19 +100,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         value="studio"
                                         className="data-[state=active]:bg-transparent data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-4"
                                     >
-                                        Studio
+                                        {t('nav.studio')}
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="channels"
                                         className="data-[state=active]:bg-transparent data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-4"
                                     >
-                                        Channels
+                                        {t('nav.channels')}
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="personas"
                                         className="data-[state=active]:bg-transparent data-[state=active]:text-white data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none px-4"
                                     >
-                                        Personas
+                                        {t('nav.personas')}
                                     </TabsTrigger>
                                 </TabsList>
                             </Tabs>

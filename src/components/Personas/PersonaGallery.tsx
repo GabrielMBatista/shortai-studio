@@ -3,8 +3,10 @@ import { Persona } from '../../types/personas';
 import { usePersonas } from '../../hooks/usePersonas';
 import { Sparkles, Crown, Star, Filter, MessageCircle } from 'lucide-react';
 import PersonaChatModal from './PersonaChatModal';
+import { useTranslation } from 'react-i18next';
 
 export default function PersonaGallery() {
+    const { t } = useTranslation();
     const { personas, loading, error } = usePersonas();
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [chatPersona, setChatPersona] = useState<Persona | null>(null);
@@ -24,7 +26,7 @@ export default function PersonaGallery() {
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading personas...</p>
+                    <p className="text-slate-400">{t('personas.loading')}</p>
                 </div>
             </div>
         );
@@ -45,12 +47,12 @@ export default function PersonaGallery() {
                 <div>
                     <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                         <Sparkles className="w-6 h-6 text-indigo-400" />
-                        Persona Library
+                        {t('personas.library_title')}
                     </h2>
-                    <p className="text-slate-400 mt-1">Choose your AI scriptwriter style or chat with them directly</p>
+                    <p className="text-slate-400 mt-1">{t('personas.library_subtitle')}</p>
                 </div>
                 <div className="text-sm text-slate-500">
-                    {filteredPersonas.length} persona{filteredPersonas.length !== 1 ? 's' : ''} available
+                    {filteredPersonas.length} {filteredPersonas.length !== 1 ? t('personas.available') : t('personas.available_single')}
                 </div>
             </div>
 
@@ -66,7 +68,7 @@ export default function PersonaGallery() {
                             : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white'
                             }`}
                     >
-                        {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        {cat === 'all' ? t('personas.all_categories') : cat.charAt(0).toUpperCase() + cat.slice(1)}
                     </button>
                 ))}
             </div>
@@ -74,7 +76,7 @@ export default function PersonaGallery() {
             {/* Grid */}
             {filteredPersonas.length === 0 ? (
                 <div className="text-center py-12 text-slate-500">
-                    No personas found for this category
+                    {t('personas.no_results')}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -99,11 +101,13 @@ export default function PersonaGallery() {
 }
 
 function PersonaCard({ persona, onChat }: { persona: Persona, onChat: () => void }) {
+    const { t } = useTranslation();
+
     const getBadges = () => {
         const badges = [];
-        if (persona.isOfficial) badges.push({ icon: Star, text: 'Official', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' });
-        if (persona.isFeatured) badges.push({ icon: Sparkles, text: 'Featured', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' });
-        if (persona.isPremium) badges.push({ icon: Crown, text: 'Premium', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' });
+        if (persona.isOfficial) badges.push({ icon: Star, text: t('personas.official'), color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' });
+        if (persona.isFeatured) badges.push({ icon: Sparkles, text: t('personas.featured'), color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' });
+        if (persona.isPremium) badges.push({ icon: Crown, text: t('personas.premium'), color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' });
         return badges;
     };
 
@@ -188,11 +192,11 @@ function PersonaCard({ persona, onChat }: { persona: Persona, onChat: () => void
                     <div className="flex items-center gap-4 text-xs text-slate-500">
                         <div className="flex items-center gap-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                            <span className="font-medium text-slate-400">{persona.usageCount}</span> uses
+                            <span className="font-medium text-slate-400">{persona.usageCount}</span> {t('personas.uses')}
                         </div>
                         <div className="flex items-center gap-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                            <span className="font-mono text-slate-400">{persona.temperature}</span> temp
+                            <span className="font-mono text-slate-400">{persona.temperature}</span> {t('personas.temp')}
                         </div>
                     </div>
 
@@ -201,7 +205,7 @@ function PersonaCard({ persona, onChat }: { persona: Persona, onChat: () => void
                         className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40 hover:scale-105"
                     >
                         <MessageCircle className="w-4 h-4" />
-                        Chat
+                        {t('personas.chat_button')}
                     </button>
                 </div>
             </div>
