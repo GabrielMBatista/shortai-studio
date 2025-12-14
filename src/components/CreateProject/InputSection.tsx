@@ -11,11 +11,132 @@ import Loader from '../Common/Loader';
 import { ToastType } from '../Common/Toast';
 import { Button } from '../ui/Button';
 
-import { ScriptConfig } from './ScriptConfig';
-import { StyleSelector } from './StyleSelector';
-import { CharacterManager } from './CharacterManager';
-import { AudioStudio } from './AudioStudio';
-import { ChannelPersonaSelector } from './ChannelPersonaSelector';
+import { repairTruncatedJson } from '../../utils/jsonRepair';
+
+// ...
+
+useEffect(() => {
+    const trimmed = topic.trim();
+    setJsonParseError(null); // Reset error
+
+    if (!trimmed) {
+        if (bulkProjects.length > 0) setBulkProjects([]);
+        return;
+    }
+
+    const tryParse = (str: string) => {
+        try { return JSON5.parse(str); } catch (e: any) { return e.message; }
+    };
+
+    let json = null;
+    let foundProjects: any[] = [];
+    let error = null;
+
+    const firstBrace = trimmed.indexOf('{');
+    const lastBrace = trimmed.lastIndexOf('}');
+    const firstBracket = trimmed.indexOf('[');
+    const lastBracket = trimmed.lastIndexOf(']');
+
+    // Naive check: does it look like JSON?
+    const looksLikeJson = (firstBrace === 0) || (firstBracket === 0);
+
+    if (firstBrace !== -1) {
+        // Attempt 1: Parse what we have (if complete)
+        // If lastBrace > firstBrace, it might be complete, OR it might be a nested object closing but not the root.
+        // But usually raw string won't have trailing garbage if it was just pasted.
+
+        // Try repairing immediately if it looks incomplete or just try parsing raw first
+        let candidate = trimmed.substring(firstBrace);
+        let result = tryParse(candidate);
+
+        if (typeof result === 'object' && result !== null) {
+            json = result;
+        } else {
+            // Attempt 2: Repair
+            const repaired = repairTruncatedJson(candidate);
+            result = tryParse(repaired);
+
+            if (typeof result === 'object' && result !== null) {
+                json = result;
+                // Optional: Notify user we auto-fixed it?
+                // showToast("Auto-repaired incomplete JSON", "info");
+            } else if (looksLikeJson && typeof result === 'string') {
+                error = result;
+            }
+        }
+    }
+
+    // Array fallback
+    if (!json && firstBracket !== -1) {
+        let candidate = trimmed.substring(firstBracket);
+        let result = tryParse(candidate);
+
+        if (Array.isArray(result)) {
+            json = result;
+            error = null;
+        } else {
+            const repaired = repairTruncatedJson(candidate);
+            result = tryParse(repaired);
+            if (Array.isArray(result)) {
+                json = result;
+                error = null;
+            }
+        }
+    }
+
+    if (json) {
+        foundProjects = extractProjects(json);
+    } else if (looksLikeJson && !error) {
+        const attempt = tryParse(trimmed);
+        if (typeof attempt === 'string') error = attempt;
+    }
+
+    if (error && !json) {
+        setJsonParseError(error);
+        setBulkProjects([]);
+        return;
+    }
+
+    if (foundProjects.length > 0) {
+        setBulkProjects(foundProjects);
+        showToast(t('input.json_detected', { count: foundProjects.length }), 'success');
+    } else {
+        setBulkProjects([]);
+    }
+
+    // Auto-duration logic
+    const projectData = foundProjects.length === 1 ? foundProjects[0] : (json && (json.scenes || json.script) ? normalizeProject(json) : null);
+    if (projectData) {
+        // ... (rest of logic same)
+        const scenes = projectData.scenes;
+        if (Array.isArray(scenes) && scenes.length > 0) {
+            const count = scenes.length;
+            const totalDuration = scenes.reduce((acc: number, s: any) => {
+                const d = s.duration || s.durationSeconds || s.duration_seconds || s.estimated_duration;
+                if (!d && s.narration) {
+                    const words = s.narration.split(/\s+/).length;
+                    return acc + Math.max(3, words / 2.5);
+                }
+                const val = typeof d === 'string' ? parseFloat(d) : Number(d);
+                return acc + (isNaN(val) ? 5 : val);
+            }, 0);
+
+            if (totalDuration > 0) {
+                const newMin = Math.round(Math.max(5, totalDuration - 5));
+                const newMax = Math.round(totalDuration + 5);
+                setMinDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMin) > 2 ? newMin : prev));
+                setMaxDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMax) > 2 ? newMax : prev));
+
+                if (!bulkProjects.length) {
+                    showToast(t('input.duration_adjusted', { seconds: Math.round(totalDuration) }), 'success');
+                }
+            }
+            if (count > 0) {
+                setTargetScenes(count.toString());
+            }
+        }
+    }
+}, [topic]);
 
 interface InputSectionProps {
     user: User | null;
@@ -178,38 +299,71 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         return projects;
     };
 
+    // --- State for JSON Validation ---
+    const [jsonParseError, setJsonParseError] = useState<string | null>(null);
+
     useEffect(() => {
         const trimmed = topic.trim();
+        setJsonParseError(null); // Reset error
+
         if (!trimmed) {
             if (bulkProjects.length > 0) setBulkProjects([]);
             return;
         }
 
         const tryParse = (str: string) => {
-            try { return JSON5.parse(str); } catch (e) { return null; }
+            try { return JSON5.parse(str); } catch (e: any) { return e.message; }
         };
 
         let json = null;
         let foundProjects: any[] = [];
+        let error = null;
 
         const firstBrace = trimmed.indexOf('{');
         const lastBrace = trimmed.lastIndexOf('}');
         const firstBracket = trimmed.indexOf('[');
         const lastBracket = trimmed.lastIndexOf(']');
 
+        // Naive check: does it look like JSON?
+        const looksLikeJson = (firstBrace === 0) || (firstBracket === 0);
+
         if (firstBrace !== -1 && lastBrace > firstBrace) {
-            json = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
+            const result = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
+            if (typeof result === 'object' && result !== null) {
+                json = result;
+            } else if (looksLikeJson && typeof result === 'string') {
+                error = result;
+            }
+        } else if (looksLikeJson && (lastBrace === -1 || lastBrace < firstBrace)) {
+            error = "Incomplete JSON: Missing closing brace '}'";
         }
 
         if ((!json || (!json.scenes && !Array.isArray(json) && !json.cronograma)) && firstBracket !== -1 && lastBracket > firstBracket) {
-            const arrayJson = tryParse(trimmed.substring(firstBracket, lastBracket + 1));
+            const substring = trimmed.substring(firstBracket, lastBracket + 1);
+            const arrayJson = tryParse(substring);
             if (Array.isArray(arrayJson)) {
                 json = arrayJson;
+                error = null; // Clear error if array parse succeeded
+            } else if (looksLikeJson && typeof arrayJson === 'string') {
+                // Only set error if object parse also failed
+                if (!error) error = arrayJson;
             }
         }
 
         if (json) {
             foundProjects = extractProjects(json);
+        } else if (looksLikeJson && !error) {
+            // If it looks like JSON but we couldn't parse logic
+            // error = "Invalid JSON format";
+            // Note: tryParse returns message on catch now.
+            const attempt = tryParse(trimmed);
+            if (typeof attempt === 'string') error = attempt;
+        }
+
+        if (error) {
+            setJsonParseError(error);
+            setBulkProjects([]);
+            return;
         }
 
         if (foundProjects.length > 0) {
@@ -436,6 +590,18 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         activePersona={activePersona}
                         selectedChannelId={selectedChannelId}
                     />
+
+                    {jsonParseError && (
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-4 rounded-xl text-sm animate-pulse-fast transition-all">
+                            <div className="flex items-center gap-2 mb-1 font-semibold">
+                                ⚠️ JSON Parsing Error
+                            </div>
+                            <code className="block whitespace-pre-wrap font-mono text-xs opacity-90 break-all">
+                                {jsonParseError}
+                            </code>
+                            <p className="mt-2 text-xs opacity-75">Check for missing closing braces {'}}'} or commas.</p>
+                        </div>
+                    )}
 
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">
                         <StyleSelector
