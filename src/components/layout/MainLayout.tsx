@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { AppStep, VideoProject, User } from '../../types';
-import Loader from '../Loader';
-import Toast, { ToastType } from '../Toast';
-import ConfirmModal from '../ConfirmModal';
-import Tutorial from '../Tutorial';
-import QuotaHud from '../QuotaHud';
+import Loader from '../Common/Loader';
+import Toast, { ToastType } from '../Common/Toast';
+import ConfirmModal from '../Common/ConfirmModal';
+import Tutorial from '../Screens/Tutorial';
+import QuotaHud from '../Dashboard/QuotaHud';
 import { Film, LogOut, ChevronLeft, Shield, HelpCircle, Globe, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Step } from 'react-joyride';

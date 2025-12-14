@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Save, User as UserIcon, Search, CheckCircle2, Loader2, Edit2 } from 'lucide-react';
-import { SavedCharacter, User } from '../types';
-import { useCharacterLibrary } from '../hooks/useCharacterLibrary';
+import { SavedCharacter, User } from '../../types';
+import { useCharacterLibrary } from '../../hooks/useCharacterLibrary';
 
 interface ProjectSettingsModalProps {
     isOpen: boolean;
@@ -142,8 +142,8 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
                                                 key={c.id}
                                                 onClick={() => toggleCharacter(c.id)}
                                                 className={`group relative flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${isSelected
-                                                        ? 'bg-indigo-500/10 border-indigo-500/50'
-                                                        : 'bg-slate-800/50 border-transparent hover:bg-slate-800'
+                                                    ? 'bg-indigo-500/10 border-indigo-500/50'
+                                                    : 'bg-slate-800/50 border-transparent hover:bg-slate-800'
                                                     }`}
                                             >
                                                 <div className={`w-14 h-14 rounded-full border-2 overflow-hidden relative ${isSelected ? 'border-indigo-400' : 'border-slate-700'}`}>

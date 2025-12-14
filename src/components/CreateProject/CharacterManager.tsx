@@ -5,9 +5,9 @@ import {
 } from 'lucide-react';
 import { SavedCharacter } from '../../types';
 import { analyzeCharacterFeatures } from '../../services/geminiService';
-import Loader from '../Loader';
-import ConfirmModal from '../ConfirmModal';
-import { ToastType } from '../Toast';
+import Loader from '../Common/Loader';
+import ConfirmModal from '../Common/ConfirmModal';
+import { ToastType } from '../Common/Toast';
 import { Input, Textarea, Button } from '../ui';
 
 

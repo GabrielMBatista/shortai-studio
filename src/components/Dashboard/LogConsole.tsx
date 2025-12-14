@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Terminal, Search, Filter, AlertCircle, CheckCircle, Clock, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import Loader from './Loader';
+import Loader from '../Common/Loader';
 
 interface LogEntry {
     id: string;

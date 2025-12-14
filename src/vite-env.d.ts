@@ -1,5 +1,4 @@
-// Reference to vite/client removed to avoid type error
-// /// <reference types="vite/client" />
+/// <reference types="vite/client" />
 
 interface ImportMetaEnv {
   readonly VITE_ENABLE_SUNO: string;

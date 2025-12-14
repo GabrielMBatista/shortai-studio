@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeToQuota } from '../services/quotaService';
+import { subscribeToQuota } from '../../services/quotaService';
 import { Activity, Minimize2, Maximize2, Zap, Image as ImageIcon, Video, Mic } from 'lucide-react';
-import { VideoProject } from '../types';
+import { VideoProject } from '../../types';
 
 interface QuotaHudProps {
     project?: VideoProject | null;

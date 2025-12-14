@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/lib/queryClient';
 import App from './src/App';
-import Loader from './src/components/Loader';
+import Loader from './src/components/Common/Loader';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

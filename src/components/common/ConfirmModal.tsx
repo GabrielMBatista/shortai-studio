@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter, Button } from './ui';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter, Button } from '../ui';
 
 interface ConfirmModalProps {
   isOpen: boolean;

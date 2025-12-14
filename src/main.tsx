@@ -5,7 +5,7 @@ import './i18n'; // Initialize i18n
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import App from './App';
-import Loader from './components/Loader';
+import Loader from './components/Common/Loader';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

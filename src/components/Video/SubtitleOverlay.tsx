@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { getWordTimings } from '../utils/videoUtils';
-import { SUBTITLE_STYLES } from '../utils/styleConstants';
+import { getWordTimings } from '../../utils/videoUtils';
+import { SUBTITLE_STYLES } from '../../utils/styleConstants';
 
 interface SubtitleOverlayProps {
   text: string;
@@ -51,7 +51,7 @@ const SubtitleOverlay: React.FC<SubtitleOverlayProps> = ({ text, duration, curre
         {visibleTimings.map((t, i) => {
           const absoluteIndex = start + i;
           const isActive = absoluteIndex === activeWordIndex;
-          
+
           return (
             <span
               key={absoluteIndex}
