@@ -161,10 +161,10 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 animate-fade-in-up">
                             <div>
                                 <h1 className="text-3xl font-bold text-white mb-2">
-                                    {t('channels.title', 'Channel Manager')}
+                                    {t('channels.title')}
                                 </h1>
                                 <p className="text-slate-400">
-                                    {t('channels.subtitle', 'Manage connected channels & AI personas')}
+                                    {t('channels.subtitle')}
                                 </p>
                             </div>
                             {onImport && onConnect && (
@@ -175,7 +175,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                         leftIcon={<Download className="w-5 h-5" />}
                                         onClick={onImport}
                                     >
-                                        {t('channels.import_existing', 'Import Channel')}
+                                        {t('channels.import_existing')}
                                     </Button>
                                     <Button
                                         variant="primary"
@@ -184,7 +184,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                         onClick={onConnect}
                                         className="bg-red-600 hover:bg-red-700 shadow-red-600/20"
                                     >
-                                        {t('channels.connect_new', 'Connect Channel')}
+                                        {t('channels.connect_new')}
                                     </Button>
                                 </div>
                             )}
@@ -205,7 +205,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                 onClick={handleBackToChannels}
                                 className="mb-6"
                             >
-                                Back to Channels
+                                {t('channels.back_to_list')}
                             </Button>
                             <ChannelDetailsView
                                 channelName={selectedChannel.name}
@@ -291,7 +291,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                                     <div className="text-sm font-bold text-white">
                                                         {channel.subscriberCount ? formatNumber(channel.subscriberCount) : '-'}
                                                     </div>
-                                                    <div className="text-[10px] text-slate-500">subs</div>
+                                                    <div className="text-[10px] text-slate-500">{t('channels.stats_subs')}</div>
                                                 </div>
                                                 <div className="bg-slate-900/50 rounded-lg p-3 text-center">
                                                     <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
@@ -300,7 +300,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                                     <div className="text-sm font-bold text-white">
                                                         {channel.videoCount ?? '-'}
                                                     </div>
-                                                    <div className="text-[10px] text-slate-500">videos</div>
+                                                    <div className="text-[10px] text-slate-500">{t('channels.stats_videos')}</div>
                                                 </div>
                                                 <div className="bg-slate-900/50 rounded-lg p-3 text-center">
                                                     <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
@@ -309,7 +309,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                                     <div className="text-sm font-bold text-white">
                                                         {channel.viewCount ? formatNumber(Number(channel.viewCount)) : '-'}
                                                     </div>
-                                                    <div className="text-[10px] text-slate-500">views</div>
+                                                    <div className="text-[10px] text-slate-500">{t('channels.stats_views')}</div>
                                                 </div>
                                             </div>
 
@@ -330,7 +330,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                                     onClick={(e) => { e.stopPropagation(); handleViewAnalytics(channel); }}
                                                     className="flex-1"
                                                 >
-                                                    Analytics
+                                                    {t('channels.analytics_button')}
                                                 </Button>
                                                 <Button
                                                     variant="secondary"

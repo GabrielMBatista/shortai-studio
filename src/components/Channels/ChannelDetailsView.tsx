@@ -1,6 +1,7 @@
 import React from 'react';
 import { Youtube, BarChart2, Calendar, ThumbsUp, MessageCircle, Tag, Eye } from 'lucide-react';
 import { Card } from '../ui';
+import { useTranslation } from 'react-i18next';
 
 interface VideoAnalytics {
     id: string;
@@ -24,6 +25,7 @@ interface ChannelDetailsViewProps {
 }
 
 export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDetailsViewProps) {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = React.useState<'overview' | 'videos'>('overview');
     const [expandedDescriptions, setExpandedDescriptions] = React.useState<Set<string>>(new Set());
 
@@ -44,7 +46,7 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                     </div>
                     <div>
                         <h2 className="text-3xl font-bold text-white">{channelName}</h2>
-                        <p className="text-slate-400 mt-1">Video Analytics & Insights</p>
+                        <p className="text-slate-400 mt-1">{t('channels.analytics_title')}</p>
                     </div>
                 </div>
 
@@ -57,7 +59,7 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                             : 'text-slate-400 hover:text-white hover:bg-slate-800'
                             }`}
                     >
-                        Overview
+                        {t('channels.tab_overview')}
                     </button>
                     <button
                         onClick={() => setActiveTab('videos')}
@@ -66,7 +68,7 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                             : 'text-slate-400 hover:text-white hover:bg-slate-800'
                             }`}
                     >
-                        Videos <span className="ml-1 opacity-70">({videos.length})</span>
+                        {t('channels.tab_videos')} <span className="ml-1 opacity-70">({videos.length})</span>
                     </button>
                 </div>
             </div>
@@ -92,26 +94,26 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                         <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4">
                             <Youtube className="w-8 h-8 text-slate-500" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white">No Videos Available</h3>
+                        <h3 className="text-lg font-semibold text-white">{t('channels.no_videos_title')}</h3>
                         <p className="text-slate-400 text-sm">
-                            Unable to load videos for this channel. This could be because:
+                            {t('channels.no_videos_desc')}
                         </p>
                         <ul className="text-left text-sm text-slate-400 space-y-2 max-w-xs mx-auto">
                             <li className="flex gap-2">
                                 <span className="text-slate-600">•</span>
-                                <span>The channel hasn't been synced yet</span>
+                                <span>{t('channels.no_videos_reason_1')}</span>
                             </li>
                             <li className="flex gap-2">
                                 <span className="text-slate-600">•</span>
-                                <span>The backend endpoint is not configured</span>
+                                <span>{t('channels.no_videos_reason_2')}</span>
                             </li>
                             <li className="flex gap-2">
                                 <span className="text-slate-600">•</span>
-                                <span>The channel has no published videos</span>
+                                <span>{t('channels.no_videos_reason_3')}</span>
                             </li>
                         </ul>
                         <div className="pt-4 text-xs text-slate-500">
-                            Check browser console (F12) for detailed error logs
+                            {t('channels.check_log')}
                         </div>
                     </div>
                 </Card>
@@ -122,19 +124,19 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <Card variant="glass" padding="md">
-                                    <div className="text-xs text-slate-500 mb-1">Total Views</div>
+                                    <div className="text-xs text-slate-500 mb-1">{t('channels.stat_total_views')}</div>
                                     <div className="text-2xl font-bold text-white">{totalViews.toLocaleString()}</div>
                                 </Card>
                                 <Card variant="glass" padding="md">
-                                    <div className="text-xs text-slate-500 mb-1">Avg Views</div>
+                                    <div className="text-xs text-slate-500 mb-1">{t('channels.stat_avg_views')}</div>
                                     <div className="text-2xl font-bold text-emerald-400">{avgViews.toLocaleString()}</div>
                                 </Card>
                                 <Card variant="glass" padding="md">
-                                    <div className="text-xs text-slate-500 mb-1">Total Likes</div>
+                                    <div className="text-xs text-slate-500 mb-1">{t('channels.stat_total_likes')}</div>
                                     <div className="text-2xl font-bold text-white">{totalLikes.toLocaleString()}</div>
                                 </Card>
                                 <Card variant="glass" padding="md">
-                                    <div className="text-xs text-slate-500 mb-1">Engagement</div>
+                                    <div className="text-xs text-slate-500 mb-1">{t('channels.stat_engagement')}</div>
                                     <div className="text-2xl font-bold text-indigo-400">{engagementRate}%</div>
                                 </Card>
                             </div>
@@ -143,7 +145,7 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                             {topVideo && (
                                 <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-6">
                                     <div className="text-sm font-semibold text-indigo-300 mb-4 flex items-center gap-2">
-                                        <span className="text-xl">🏆</span> Top Performing Video
+                                        <span className="text-xl">🏆</span> {t('channels.top_performing')}
                                     </div>
                                     <div className="flex gap-4">
                                         {topVideo.thumbnail && (
@@ -157,13 +159,13 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                                             <h3 className="text-white font-semibold mb-3 text-lg">{topVideo.title}</h3>
                                             <div className="flex items-center gap-6 text-sm text-slate-300">
                                                 <span className="flex items-center gap-1">
-                                                    <Eye className="w-4 h-4" /> {topVideo.stats.views.toLocaleString()} views
+                                                    <Eye className="w-4 h-4" /> {topVideo.stats.views.toLocaleString()} {t('channels.stats_views')}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <ThumbsUp className="w-4 h-4" /> {topVideo.stats.likes.toLocaleString()} likes
+                                                    <ThumbsUp className="w-4 h-4" /> {topVideo.stats.likes.toLocaleString()} {t('channels.stats_likes')}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <MessageCircle className="w-4 h-4" /> {topVideo.stats.comments.toLocaleString()} comments
+                                                    <MessageCircle className="w-4 h-4" /> {topVideo.stats.comments.toLocaleString()} {t('channels.stats_comments')}
                                                 </span>
                                             </div>
                                         </div>
@@ -215,7 +217,7 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                                                             }}
                                                             className="text-xs text-indigo-400 hover:text-indigo-300 mt-1 font-medium"
                                                         >
-                                                            {expandedDescriptions.has(video.id) ? '− Show less' : '+ Show more'}
+                                                            {expandedDescriptions.has(video.id) ? `− ${t('channels.show_less')}` : `+ ${t('channels.show_more')}`}
                                                         </button>
                                                     )}
                                                 </div>
@@ -267,7 +269,7 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                                             className="flex-shrink-0 self-start px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-2 shadow-lg hover:shadow-red-500/50 hover:scale-105"
                                         >
                                             <Youtube className="w-4 h-4" />
-                                            Watch
+                                            {t('channels.watch')}
                                         </a>
                                     </div>
                                 </Card>

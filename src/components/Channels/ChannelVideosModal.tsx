@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { Youtube, BarChart2, Calendar, ThumbsUp, MessageCircle, Tag, Eye, X } from 'lucide-react';
 
@@ -25,6 +26,7 @@ interface ChannelVideosModalProps {
 }
 
 export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoading }: ChannelVideosModalProps) {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = React.useState<'overview' | 'videos'>('overview');
     const [expandedDescriptions, setExpandedDescriptions] = React.useState<Set<string>>(new Set());
 
@@ -47,7 +49,7 @@ export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoa
                                 <BarChart2 className="w-6 h-6 text-indigo-400" />
                                 {channelName}
                             </h2>
-                            <p className="text-sm text-slate-400 mt-1">Video Analytics & Insights</p>
+                            <p className="text-sm text-slate-400 mt-1">{t('channels.analytics_title')}</p>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded-lg transition-colors">
                             <X className="w-5 h-5 text-slate-400" />
@@ -55,8 +57,8 @@ export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoa
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}>Overview</button>
-                        <button onClick={() => setActiveTab('videos')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'videos' ? 'bg-indigo-600 text-white' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}>Videos ({videos.length})</button>
+                        <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}>{t('channels.tab_overview')}</button>
+                        <button onClick={() => setActiveTab('videos')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'videos' ? 'bg-indigo-600 text-white' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}>{t('channels.tab_videos')} ({videos.length})</button>
                     </div>
                 </div>
 
@@ -78,7 +80,7 @@ export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoa
                     ) : videos.length === 0 ? (
                         <div className="text-center py-12">
                             <Youtube className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400">No videos found</p>
+                            <p className="text-slate-400">{t('channels.no_videos_found')}</p>
                         </div>
                     ) : (
                         <>
@@ -86,34 +88,34 @@ export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoa
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
-                                            <div className="text-xs text-slate-500 mb-1">Total Views</div>
+                                            <div className="text-xs text-slate-500 mb-1">{t('channels.stat_total_views')}</div>
                                             <div className="text-2xl font-bold text-white">{totalViews.toLocaleString()}</div>
                                         </div>
                                         <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
-                                            <div className="text-xs text-slate-500 mb-1">Avg Views</div>
+                                            <div className="text-xs text-slate-500 mb-1">{t('channels.stat_avg_views')}</div>
                                             <div className="text-2xl font-bold text-emerald-400">{avgViews.toLocaleString()}</div>
                                         </div>
                                         <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
-                                            <div className="text-xs text-slate-500 mb-1">Total Likes</div>
+                                            <div className="text-xs text-slate-500 mb-1">{t('channels.stat_total_likes')}</div>
                                             <div className="text-2xl font-bold text-white">{totalLikes.toLocaleString()}</div>
                                         </div>
                                         <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4">
-                                            <div className="text-xs text-slate-500 mb-1">Engagement</div>
+                                            <div className="text-xs text-slate-500 mb-1">{t('channels.stat_engagement')}</div>
                                             <div className="text-2xl font-bold text-indigo-400">{engagementRate}%</div>
                                         </div>
                                     </div>
 
                                     {topVideo && (
                                         <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-4">
-                                            <div className="text-xs font-semibold text-indigo-300 mb-2">🏆 Top Performing Video</div>
+                                            <div className="text-xs font-semibold text-indigo-300 mb-2">🏆 {t('channels.top_performing')}</div>
                                             <div className="flex gap-4">
                                                 {topVideo.thumbnail && <img src={topVideo.thumbnail} alt={topVideo.title} className="w-40 h-24 rounded-lg object-cover" />}
                                                 <div className="flex-1">
                                                     <h3 className="text-white font-semibold mb-2">{topVideo.title}</h3>
                                                     <div className="flex items-center gap-4 text-xs text-slate-300">
-                                                        <span>👁️ {topVideo.stats.views.toLocaleString()} views</span>
-                                                        <span>👍 {topVideo.stats.likes.toLocaleString()} likes</span>
-                                                        <span>💬 {topVideo.stats.comments.toLocaleString()} comments</span>
+                                                        <span>👁️ {topVideo.stats.views.toLocaleString()} {t('channels.stats_views')}</span>
+                                                        <span>👍 {topVideo.stats.likes.toLocaleString()} {t('channels.stats_likes')}</span>
+                                                        <span>💬 {topVideo.stats.comments.toLocaleString()} {t('channels.stats_comments')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -146,7 +148,7 @@ export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoa
                                                                     }}
                                                                     className="text-xs text-indigo-400 hover:text-indigo-300 mt-1"
                                                                 >
-                                                                    {expandedDescriptions.has(video.id) ? 'Show less' : 'Show more'}
+                                                                    {expandedDescriptions.has(video.id) ? t('channels.show_less') : t('channels.show_more')}
                                                                 </button>
                                                             )}
                                                         </div>
@@ -168,7 +170,7 @@ export function ChannelVideosModal({ isOpen, onClose, channelName, videos, isLoa
                                                 </div>
                                                 <a href={video.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg transition-colors flex items-center gap-1 h-fit">
                                                     <Youtube className="w-3 h-3" />
-                                                    Watch
+                                                    {t('channels.watch')}
                                                 </a>
                                             </div>
                                         </div>

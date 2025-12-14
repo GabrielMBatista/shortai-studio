@@ -119,7 +119,8 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
         return {
             ...p,
             topic: p.meta?.titulo_otimizado || p.topic || p.title || p.projectTitle || p.titulo || p.tema_dia || "Untitled Project",
-            scenes
+            scenes,
+            hook_falado: p.hook_falado || p.hook // preserve hook for generation
         };
     };
 

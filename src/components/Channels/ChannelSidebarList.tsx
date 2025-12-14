@@ -43,7 +43,7 @@ export default function ChannelSidebarList({
         <div className={`bg-slate-900 md:bg-slate-900/50 border-r border-slate-800 flex flex-col gap-2 h-screen transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'} ${className || ''}`}>
             {/* Header */}
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-4 mb-2`}>
-                {!isCollapsed && <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Channels</h3>}
+                {!isCollapsed && <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">{t('nav.channels')}</h3>}
                 <div className="flex gap-1">
                     <button
                         onClick={onToggleCollapse}
@@ -67,15 +67,15 @@ export default function ChannelSidebarList({
                         ? 'bg-indigo-500/20 text-indigo-400'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         } ${isCollapsed ? 'justify-center flex-col gap-1 py-3' : ''}`}
-                    title={isCollapsed ? 'All Channels' : undefined}
+                    title={isCollapsed ? t('channels.all_channels') : undefined}
                 >
                     <Youtube className="w-4 h-4 flex-shrink-0" />
                     {!isCollapsed ? (
                         <>
-                            <span className="truncate flex-1 text-left">All Channels</span>
+                            <span className="truncate flex-1 text-left">{t('channels.all_channels')}</span>
                             {channels.length > 0 && <span className="text-xs text-slate-500">({channels.length})</span>}
                         </>
-                    ) : <span className="text-[10px] font-bold">ALL</span>}
+                    ) : <span className="text-[10px] font-bold">{t('folders.all')}</span>}
                 </button>
 
                 {/* Channel List */}
@@ -157,7 +157,7 @@ export default function ChannelSidebarList({
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                         >
-                                                            <Eye className="w-3 h-3" /> View Analytics
+                                                            <Eye className="w-3 h-3" /> {t('channels.view_analytics')}
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
@@ -167,7 +167,7 @@ export default function ChannelSidebarList({
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white"
                                                         >
-                                                            <Edit2 className="w-3 h-3" /> Manage Channel
+                                                            <Edit2 className="w-3 h-3" /> {t('channels.manage_channel')}
                                                         </button>
                                                     </div>
                                                 )}

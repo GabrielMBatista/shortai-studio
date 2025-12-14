@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, Youtube, Sparkles, Users, Video, Eye, BarChart2, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Channel } from '../../types/personas';
 import { formatNumber } from '../../utils/format';
 
@@ -11,11 +12,12 @@ interface FavoriteChannelDashboardProps {
 }
 
 export function FavoriteChannelDashboard({ channel, onViewAnalytics, onSync, isSyncing }: FavoriteChannelDashboardProps) {
+    const { t } = useTranslation();
     return (
         <div className="bg-gradient-to-br from-yellow-500/10 via-slate-800/50 to-slate-800/50 border border-yellow-500/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
             <div className="flex items-center gap-2 mb-4">
                 <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                <h2 className="text-lg font-bold text-white">Favorite Channel</h2>
+                <h2 className="text-lg font-bold text-white">{t('channels.favorite_channel')}</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -53,7 +55,7 @@ export function FavoriteChannelDashboard({ channel, onViewAnalytics, onSync, isS
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
                             <Users className="w-3 h-3" />
-                            Subs
+                            {t('channels.stats_subs')}
                         </div>
                         <div className="text-xl font-bold text-yellow-400">
                             {channel.subscriberCount ? formatNumber(channel.subscriberCount) : '-'}
@@ -62,7 +64,7 @@ export function FavoriteChannelDashboard({ channel, onViewAnalytics, onSync, isS
                     <div className="text-center md:border-t border-slate-700/50 md:pt-3">
                         <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
                             <Video className="w-3 h-3" />
-                            Videos
+                            {t('channels.stats_videos')}
                         </div>
                         <div className="text-xl font-bold text-white">
                             {channel.videoCount ?? '-'}
@@ -71,7 +73,7 @@ export function FavoriteChannelDashboard({ channel, onViewAnalytics, onSync, isS
                     <div className="text-center md:border-t border-slate-700/50 md:pt-3">
                         <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">
                             <Eye className="w-3 h-3" />
-                            Views
+                            {t('channels.stats_views')}
                         </div>
                         <div className="text-xl font-bold text-white">
                             {channel.viewCount ? formatNumber(Number(channel.viewCount)) : '-'}
@@ -87,7 +89,7 @@ export function FavoriteChannelDashboard({ channel, onViewAnalytics, onSync, isS
                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
                 >
                     <BarChart2 className="w-4 h-4" />
-                    View Analytics
+                    {t('channels.view_analytics')}
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onSync(channel); }}
@@ -95,11 +97,11 @@ export function FavoriteChannelDashboard({ channel, onViewAnalytics, onSync, isS
                     disabled={isSyncing}
                 >
                     <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                    {isSyncing ? 'Syncing...' : 'Sync Now'}
+                    {isSyncing ? t('channels.syncing') : t('channels.sync_now')}
                 </button>
                 {channel.lastSyncedAt && (
                     <span className="text-xs text-slate-500 ml-auto">
-                        Last synced: {new Date(channel.lastSyncedAt).toLocaleString()}
+                        {t('channels.last_synced')} {new Date(channel.lastSyncedAt).toLocaleString()}
                     </span>
                 )}
             </div>
