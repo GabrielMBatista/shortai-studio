@@ -47,7 +47,7 @@ export const useProjectCreation = (
                     // Case: Flat structure { id_da_semana: "...", cronograma: {...} }
                     cronograma = parsed.cronograma;
                     if (typeof parsed.id_da_semana === 'string') {
-                        rootName = parsed.id_da_semana.replace(/_/g, ' ');
+                        rootName = parsed.id_da_semana; // Use exactly as generated (e.g. 15-21_Dez_25)
                     }
                 } else if (typeof parsed.id_da_semana === 'object' && parsed.id_da_semana?.cronograma) {
                     // Case: Nested structure { id_da_semana: { cronograma: {...} } }
@@ -60,20 +60,42 @@ export const useProjectCreation = (
 
                 if (cronograma) {
                     try {
-                        // Import dynamically to avoid circular dependencies if any, or just use imported
-                        const { createFolder } = await import('../../services/folders');
 
-                        // 1. Create Root Folder
-                        const rootFolder = await createFolder(rootName, undefined);
-                        const rootId = rootFolder.id || rootFolder._id;
+                        // Import dynamically to avoid circular dependencies if any, or just use imported
+                        const { createFolder, getFolders } = await import('../../services/folders');
+
+                        // Helper: Idempotent Create
+                        const safeCreateFolder = async (name: string, parentId?: string): Promise<string> => {
+                            try {
+                                const res = await createFolder(name, parentId);
+                                return res.id || res._id;
+                            } catch (e: any) {
+                                // 409 = Conflict (Already Exists)
+                                if (e.status === 409 || (e.message && e.message.includes('exists'))) {
+                                    console.log(`Folder "${name}" exists. Fetching ID...`);
+                                    const { folders } = await getFolders();
+                                    // Ensure we match correct parent (or root if undefined)
+                                    // Note: Backend might return parent_id as null
+                                    const targetParent = parentId || null;
+                                    const match = folders.find((f: any) => f.name === name && f.parent_id === targetParent);
+                                    if (match) return match.id;
+                                }
+                                throw e;
+                            }
+                        };
+
+                        // 1. Create Root Folder (Idempotent)
+                        const rootId = await safeCreateFolder(rootName, undefined);
 
                         // 2. Iterate Days
                         for (const [dayKey, dayContent] of Object.entries(cronograma)) {
                             // dayKey: "segunda_feira"
-                            const dayName = dayKey.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                            let dayName = dayKey.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
 
-                            const dayFolder = await createFolder(dayName, rootId);
-                            const dayId = dayFolder.id || dayFolder._id;
+                            // 🔒 Ensure uniqueness: Append rootName context
+                            const uniqueDayName = `${dayName} (${rootName})`;
+
+                            const dayId = await safeCreateFolder(uniqueDayName, rootId);
 
                             // 3. Iterate Videos
                             const contentObj = dayContent as any;
@@ -93,14 +115,30 @@ export const useProjectCreation = (
                                     durationSeconds: 5
                                 }));
 
-                                const title = vData.titulo || vData.title || `${dayName} - ${videoKey}`;
-                                const desc = vData.hook_falado ? `Hook: ${vData.hook_falado}` : "";
+                                const title = vData.titulo || vData.title || vData.meta?.titulo_otimizado || `${dayName} - ${videoKey}`;
+
+                                // Build generic description from available fields
+                                const descParts = [];
+                                if (vData.hook_falado || vData.hook_killer) descParts.push(`Hook: ${vData.hook_falado || vData.hook_killer}`);
+                                if (vData.description) descParts.push(vData.description);
+                                if (vData.meta?.citacao_chave) descParts.push(`"${vData.meta.citacao_chave}"`);
+                                if (vData.meta?.mensagem_nuclear) descParts.push(`Mensagem: ${vData.meta.mensagem_nuclear}`);
+
+                                // Hashtags
+                                let hashtags: string[] = [];
+                                if (Array.isArray(vData.hashtags)) hashtags = vData.hashtags;
+                                else if (typeof vData.hashtags === 'string') hashtags = vData.hashtags.split(' ').filter((t: string) => t.trim().length > 0);
+                                else if (vData.meta?.hashtags) hashtags = Array.isArray(vData.meta.hashtags) ? vData.meta.hashtags : [];
+
+                                if (hashtags.length > 0) descParts.push(hashtags.join(' '));
+
+                                const fullDesc = descParts.join('\n\n');
 
                                 const newProject: VideoProject = {
                                     id: crypto.randomUUID(),
                                     userId: user.id,
                                     createdAt: Date.now(),
-                                    topic: title, // Use title as topic to simulate intent
+                                    topic: JSON.stringify(vData, null, 2), // Save full JSON as topic/prompt for reference
                                     style,
                                     voiceName: voice,
                                     ttsProvider: provider,
@@ -109,7 +147,9 @@ export const useProjectCreation = (
                                     referenceCharacters: references,
                                     scenes: newScenes,
                                     generatedTitle: title,
-                                    generatedDescription: desc,
+                                    generatedDescription: fullDesc,
+                                    generatedShortsHashtags: hashtags,
+                                    scriptMetadata: vData, // Store full JSON in metadata as well
                                     durationConfig,
                                     includeMusic,
                                     bgMusicStatus: includeMusic ? 'pending' : undefined,
