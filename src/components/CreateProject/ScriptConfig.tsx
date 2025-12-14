@@ -95,7 +95,7 @@ Directly output the topic/concept. Do not add conversational filler like "Here i
                     <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-3 mb-4 animate-fade-in">
                         <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
                             <Bot className="w-3 h-3" />
-                            Ask {activePersona.name} for an idea
+                            {t('input.ask_persona_label', { name: activePersona.name })}
                         </div>
                         <div className="flex gap-2">
                             <input
@@ -103,7 +103,7 @@ Directly output the topic/concept. Do not add conversational filler like "Here i
                                 value={personaPrompt}
                                 onChange={(e) => setPersonaPrompt(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAskPersona()}
-                                placeholder={`"A story about..." or "Explain quantum physics..."`}
+                                placeholder={t('input.ask_persona_placeholder')}
                                 className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none placeholder:text-slate-600 transition-all"
                                 disabled={isGeneratingPrompt || isBusy}
                             />

@@ -150,7 +150,20 @@
         "model_turbo_desc": "Best value",
         "model_multilingual_desc": "Most used model",
         "model_flash_desc": "Worst value (Fast)",
-        "footer_desc": "Generates a detailed storyboard, script, and audio assets."
+        "footer_desc": "Generates a detailed storyboard, script, and audio assets.",
+        "edit_title": "Edit Your Story",
+        "edit_subtitle": "Adjust settings and regenerate your project",
+        "json_detected": "🚀 Detected {{count}} projects from JSON!",
+        "duration_adjusted": "Duration adjusted to ~{{seconds}}s from script",
+        "queued_success": "Successfully queued {{count}} projects!",
+        "ask_persona_label": "Ask {{name}} for an idea",
+        "ask_persona_placeholder": "\"A story about...\" or \"Explain quantum physics...\"",
+        "chat_with": "Chat with {{name}}",
+        "clear_history_confirm": "Clear chat history?",
+        "initial_message": "Start a conversation with {{name}}!",
+        "initial_tip": "Ask for script ideas, content planning, or just chat.",
+        "message_placeholder": "Message {{name}}...",
+        "error_message": "Sorry, I encountered an error. Please try again."
     },
     "script": {
         "metadata_title": "YouTube Shorts Metadata",

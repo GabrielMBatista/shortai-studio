@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Send, Bot, User as UserIcon, Loader2, Trash2 } from 'lucide-react';
 import { Persona } from '../../types/personas';
 import { personasApi } from '../../api/personas';
@@ -16,6 +17,7 @@ interface PersonaChatModalProps {
 }
 
 export default function PersonaChatModal({ isOpen, onClose, persona, channelId }: PersonaChatModalProps) {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -53,14 +55,14 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
             setMessages(prev => [...prev, { role: 'model', text: res.response }]);
         } catch (error) {
             console.error('Chat error:', error);
-            setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error. Please try again.' }]);
+            setMessages(prev => [...prev, { role: 'model', text: t('input.error_message') }]);
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleClear = () => {
-        if (window.confirm('Clear chat history?')) {
+        if (window.confirm(t('input.clear_history_confirm'))) {
             setMessages([]);
         }
     };
@@ -78,7 +80,7 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                Chat with {persona.name}
+                                {t('input.chat_with', { name: persona.name })}
                             </h2>
                             <p className="text-xs text-slate-400">
                                 {persona.category || 'AI Assistant'} • Temp: {persona.temperature}
@@ -107,8 +109,8 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                     {messages.length === 0 && (
                         <div className="text-center py-12 text-slate-500">
                             <Bot className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p>Start a conversation with {persona.name}!</p>
-                            <p className="text-xs opacity-70 mt-1">Ask for script ideas, content planning, or just chat.</p>
+                            <p>{t('input.initial_message', { name: persona.name })}</p>
+                            <p className="text-xs opacity-70 mt-1">{t('input.initial_tip')}</p>
                         </div>
                     )}
 
@@ -143,7 +145,7 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder={`Message ${persona.name}...`}
+                            placeholder={t('input.message_placeholder', { name: persona.name })}
                             className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-500"
                             disabled={isLoading}
                         />

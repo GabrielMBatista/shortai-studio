@@ -10,7 +10,7 @@
 - **Language**: TypeScript
 - **State Management**: React Query (Server state), Context API (UI state)
 - **Styling**: Vanilla CSS / CSS Modules (Custom Design System)
-- **Video Processing**: `@ffmpeg/ffmpeg` (Client-side previews/transcoding fallback)
+- **Video Processing**: **WebCodecs API** & **MediaRecorder** (Canvas-based composition)
 - **Icons**: Lucide React
 
 ### Design System
@@ -21,20 +21,28 @@ The Studio implements a custom design system focusing on:
 ### Folder Structure
 - **`src/services/`**: API clients (Auth, Projects, Gemini). acts as the anti-corruption layer between UI and Backend.
 - **`src/components/`**: Reusable UI atoms and molecules.
+- **`src/components/Video/`**: Video Player and Client-Side Exporter logic.
 - **`src/hooks/`**: Custom React hooks for logic reuse (e.g., `useVideoExport`).
 
 ## 3. Key Workflows
 
 ### Project Creation
 1.  User inputs a prompt/topic.
-2.  Studio calls `POST /api/jobs` (or relevant generation endpoint).
-3.  Studio polls for generation status.
-4.  Redirects to Editor upon completion.
+2.  Studio calls `POST /api/jobs` to generate Script, Images, and Audio via the Backend (Gemini/ElevenLabs).
+3.  Assets are returned to the Studio.
 
 ### Editor Loop
 1.  **Script Editing**: Users modify text; changes autosave via optimistic updates.
 2.  **Scene Management**: Drag-and-drop reordering of scenes.
 3.  **Media Selection**: Integration with asset libraries (Stock/AI generated) to replace scene backgrounds.
+
+### Client-Side Rendering (Export)
+1.  **Composition**: The Studio renders scenes onto an invisible HTML5 Canvas.
+2.  **Audio Mixing**: AudioBufferSourceNodes are scheduled and mixed via the Web Audio API.
+3.  **Encoding**:
+    -   **MP4**: Uses `VideoEncoder` (WebCodecs) for hardware-accelerated H.264 encoding.
+    -   **WebM**: Uses `MediaRecorder` as a fallback.
+4.  **Download**: The file is generated locally and downloaded instantly.
 
 ## 4. Deployment
 

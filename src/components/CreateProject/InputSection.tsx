@@ -213,7 +213,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
 
         if (foundProjects.length > 0) {
             setBulkProjects(foundProjects);
-            showToast(`🚀 Detected ${foundProjects.length} projects from JSON!`, 'success');
+            showToast(t('input.json_detected', { count: foundProjects.length }), 'success');
         } else {
             setBulkProjects([]);
         }
@@ -241,7 +241,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     setMaxDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMax) > 2 ? newMax : prev));
 
                     if (!bulkProjects.length) {
-                        showToast(`Duration adjusted to ~${Math.round(totalDuration)}s from script`, 'success');
+                        showToast(t('input.duration_adjusted', { seconds: Math.round(totalDuration) }), 'success');
                     }
                 }
                 if (count > 0) {
@@ -354,7 +354,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                     );
                     processed++;
                 }
-                showToast(`Successfully queued ${processed} projects!`, 'success');
+                showToast(t('input.queued_success', { count: processed }), 'success');
             } else {
                 await onGenerate(
                     topic,

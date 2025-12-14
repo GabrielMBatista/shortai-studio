@@ -151,7 +151,20 @@
         "model_turbo_desc": "Melhor custo-benefício",
         "model_multilingual_desc": "Modelo mais usado",
         "model_flash_desc": "Pior custo-benefício (Rápido)",
-        "footer_desc": "Gera um storyboard detalhado, roteiro e ativos de áudio."
+        "footer_desc": "Gera um storyboard detalhado, roteiro e ativos de áudio.",
+        "edit_title": "Editar Sua História",
+        "edit_subtitle": "Ajuste as configurações e gere novamente seu projeto",
+        "json_detected": "🚀 Detectado {{count}} projetos do JSON!",
+        "duration_adjusted": "Duração ajustada para ~{{seconds}}s do roteiro",
+        "queued_success": "Sucesso! {{count}} projetos na fila!",
+        "ask_persona_label": "Peça uma ideia para {{name}}",
+        "ask_persona_placeholder": "\"Uma história sobre...\" ou \"Explique física quântica...\"",
+        "chat_with": "Conversar com {{name}}",
+        "clear_history_confirm": "Limpar histórico do chat?",
+        "initial_message": "Comece uma conversa com {{name}}!",
+        "initial_tip": "Peça ideias de roteiro, planejamento de conteúdo ou apenas converse.",
+        "message_placeholder": "Mensagem para {{name}}...",
+        "error_message": "Desculpe, encontrei um erro. Tente novamente."
     },
     "script": {
         "metadata_title": "Metadados YouTube Shorts",
