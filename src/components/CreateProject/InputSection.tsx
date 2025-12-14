@@ -433,6 +433,7 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
                         isBusy={isBusy}
                         bulkProjectsCount={bulkProjects.length}
                         activePersona={activePersona}
+                        selectedChannelId={selectedChannelId}
                     />
 
                     <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-2xl p-6 shadow-xl">

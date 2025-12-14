@@ -65,12 +65,12 @@ export const personasApi = {
         }
     },
 
-    async chat(id: string, message: string, history: any[] = []): Promise<{ response: string }> {
+    async chat(id: string, message: string, history: any[] = [], channelId?: string): Promise<{ response: string }> {
         const res = await fetch(`${API_URL}/personas/${id}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ message, history })
+            body: JSON.stringify({ message, history, channelId })
         });
         if (!res.ok) {
             const error = await res.json().catch(() => ({ error: 'Failed to chat with persona' }));

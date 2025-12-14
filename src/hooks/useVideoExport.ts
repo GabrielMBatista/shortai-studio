@@ -128,7 +128,10 @@ export const useVideoExport = ({ scenes, bgMusicUrl, title, endingVideoFile, sho
             // 4. Mix Audio
             setDownloadProgress("Mixing audio...");
             const totalScenesDuration = assets.reduce((acc, s) => acc + s.renderDuration, 0);
-            const totalDuration = totalScenesDuration + endingVideoDuration;
+
+            // Add 1s silence at end if no ending video is provided (User Request)
+            const EXTRA_SILENCE = endingVideoDuration === 0 ? 1.0 : 0;
+            const totalDuration = totalScenesDuration + endingVideoDuration + EXTRA_SILENCE;
 
             const renderedAudioBuffer = await mixAudio(assets, bgMusicBuffer, endingAudioBuffer, totalScenesDuration, totalDuration);
 

@@ -29,6 +29,7 @@ interface ScriptConfigProps {
     isBusy: boolean;
     bulkProjectsCount: number;
     activePersona?: Persona | null;
+    selectedChannelId?: string | null;
 }
 
 export const ScriptConfig: React.FC<ScriptConfigProps> = ({
@@ -39,7 +40,8 @@ export const ScriptConfig: React.FC<ScriptConfigProps> = ({
     targetScenes, setTargetScenes,
     isBusy,
     bulkProjectsCount,
-    activePersona
+    activePersona,
+    selectedChannelId
 }) => {
     const { t } = useTranslation();
     const [personaPrompt, setPersonaPrompt] = useState('');
@@ -59,7 +61,7 @@ Directly output the topic/concept. Do not add conversational filler like "Here i
             `.trim();
 
             const history = [{ role: 'user' as const, parts: [{ text: systemContext }] }];
-            const response = await personasApi.chat(activePersona.id, `Generate a video concept for: ${personaPrompt}`, history);
+            const response = await personasApi.chat(activePersona.id, `Generate a video concept for: ${personaPrompt}`, history, selectedChannelId || undefined);
 
             if (response && response.response) {
                 setTopic(response.response);

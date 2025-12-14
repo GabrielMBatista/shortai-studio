@@ -636,7 +636,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           <Download className="w-5 h-5" />
         </button>
 
-        <button
+        {/* <button
           id="btn-video-schedule"
           onClick={() => {
             if (isMock) return;
@@ -647,7 +647,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           title={t('video_player.schedule_tooltip', 'Schedule Upload')}
         >
           <UploadCloud className="w-5 h-5" />
-        </button>
+        </button> */}
 
         <div className="w-px h-6 bg-white/10 mx-1"></div>
         <button id="btn-toggle-subs" onClick={() => setShowSubtitles(!showSubtitles)} className={`p-3 rounded-full transition-colors ${showSubtitles ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}>{showSubtitles ? <Captions className="w-5 h-5" /> : <CaptionsOff className="w-5 h-5" />}</button>

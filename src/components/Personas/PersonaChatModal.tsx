@@ -12,9 +12,10 @@ interface PersonaChatModalProps {
     isOpen: boolean;
     onClose: () => void;
     persona: Persona | null;
+    channelId?: string;
 }
 
-export default function PersonaChatModal({ isOpen, onClose, persona }: PersonaChatModalProps) {
+export default function PersonaChatModal({ isOpen, onClose, persona, channelId }: PersonaChatModalProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +48,7 @@ export default function PersonaChatModal({ isOpen, onClose, persona }: PersonaCh
                 parts: [{ text: m.text }]
             }));
 
-            const res = await personasApi.chat(persona.id, userMsg, history);
+            const res = await personasApi.chat(persona.id, userMsg, history, channelId);
 
             setMessages(prev => [...prev, { role: 'model', text: res.response }]);
         } catch (error) {
