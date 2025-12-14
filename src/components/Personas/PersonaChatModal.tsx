@@ -126,9 +126,16 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                     ))}
 
                     {isLoading && (
-                        <div className="flex justify-start">
-                            <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-none px-4 py-3">
-                                <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                        <div className="flex justify-start w-full animate-fade-in">
+                            <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-3 shadow-lg">
+                                <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                                {messages.filter(m => m.role === 'user').pop()?.text.toLowerCase().match(/cronograma|semana|planejamento/i) ? (
+                                    <span className="text-sm text-slate-300">
+                                        {t('input.generating_weekly', 'Generating weekly schedule (Deep Think)... This may take ~60s.')}
+                                    </span>
+                                ) : (
+                                    <span className="text-sm text-slate-400">Thinking...</span>
+                                )}
                             </div>
                         </div>
                     )}
