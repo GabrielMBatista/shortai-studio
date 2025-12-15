@@ -244,7 +244,16 @@ const OriginalConceptCard: React.FC<{ topic: string; style: string; onRegenerate
                         </button>
                     </div>
                     <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-300 text-sm whitespace-pre-wrap font-mono leading-relaxed max-h-60 overflow-y-auto scrollbar-hide shadow-inner flex-1">
-                        {topic}
+                        {(() => {
+                            // Try to parse and pretty-print JSON
+                            try {
+                                const parsed = JSON.parse(topic);
+                                return JSON.stringify(parsed, null, 2);
+                            } catch {
+                                // Not JSON, show as-is
+                                return topic;
+                            }
+                        })()}
                     </div>
                 </div>
             </div>

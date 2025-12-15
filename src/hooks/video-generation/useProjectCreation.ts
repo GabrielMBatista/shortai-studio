@@ -175,31 +175,70 @@ export const useProjectCreation = (
                                 const vData = videoData as any;
                                 if (!vData.scenes) continue;
 
-                                // Helper to generate project
-                                const newScenes = vData.scenes.map((s: any, idx: number) => ({
-                                    ...s,
-                                    visualDescription: s.visual || s.visualDescription || "Scene",
-                                    narration: s.narration || "",
-                                    sceneNumber: s.scene || s.sceneNumber || (idx + 1),
-                                    durationSeconds: 5
-                                }));
+                                // Process scenes with correct duration
+                                const newScenes = vData.scenes.map((s: any, idx: number) => {
+                                    // Use duration from JSON if available, otherwise calculate from narration
+                                    let duration = s.duration || s.durationSeconds || 5;
+
+                                    // If duration is still default and we have narration, calculate based on word count
+                                    if (duration === 5 && s.narration) {
+                                        const wordCount = s.narration.split(/\s+/).length;
+                                        duration = Math.ceil(wordCount / 3.5); // 3.5 words per second as per persona
+                                        duration = Math.min(duration, 8); // Max 8s per scene for Veo
+                                    }
+
+                                    return {
+                                        ...s,
+                                        visualDescription: s.visual || s.visualDescription || "Scene",
+                                        narration: s.narration || "",
+                                        sceneNumber: s.scene || s.sceneNumber || (idx + 1),
+                                        durationSeconds: duration
+                                    };
+                                });
 
                                 const title = vData.titulo || vData.title || vData.meta?.titulo_otimizado || `${dayName} - ${videoKey}`;
 
-                                // Build generic description from available fields
+                                // Build SEO-optimized description
                                 const descParts = [];
-                                if (vData.hook_falado || vData.hook_killer) descParts.push(`Hook: ${vData.hook_falado || vData.hook_killer}`);
-                                if (vData.description) descParts.push(vData.description);
-                                if (vData.meta?.citacao_chave) descParts.push(`"${vData.meta.citacao_chave}"`);
-                                if (vData.meta?.mensagem_nuclear) descParts.push(`Mensagem: ${vData.meta.mensagem_nuclear}`);
 
-                                // Hashtags
+                                // 1. Hook/Intro (primeiro parágrafo - crítico para CTR)
+                                if (vData.hook_falado || vData.hook_killer) {
+                                    descParts.push(vData.hook_falado || vData.hook_killer);
+                                }
+
+                                // 2. Citação Bíblica (autoridade + keywords)
+                                if (vData.meta?.citacao_chave) {
+                                    descParts.push(`📖 ${vData.meta.citacao_chave}`);
+                                }
+
+                                // 3. Mensagem Principal/Descrição
+                                if (vData.meta?.mensagem_nuclear) {
+                                    descParts.push(vData.meta.mensagem_nuclear);
+                                } else if (vData.description) {
+                                    descParts.push(vData.description);
+                                }
+
+                                // 4. CTA (Call-to-Action)
+                                descParts.push("💬 Comente 'Amém' e compartilhe com quem precisa ouvir isso!");
+
+                                // 5. Hashtags (SEO keywords)
                                 let hashtags: string[] = [];
-                                if (Array.isArray(vData.hashtags)) hashtags = vData.hashtags;
-                                else if (typeof vData.hashtags === 'string') hashtags = vData.hashtags.split(' ').filter((t: string) => t.trim().length > 0);
-                                else if (vData.meta?.hashtags) hashtags = Array.isArray(vData.meta.hashtags) ? vData.meta.hashtags : [];
+                                if (Array.isArray(vData.hashtags)) {
+                                    hashtags = vData.hashtags;
+                                } else if (typeof vData.hashtags === 'string') {
+                                    hashtags = vData.hashtags.split(' ').filter((t: string) => t.trim().length > 0);
+                                } else if (vData.meta?.hashtags) {
+                                    hashtags = Array.isArray(vData.meta.hashtags) ? vData.meta.hashtags : [];
+                                }
 
-                                if (hashtags.length > 0) descParts.push(hashtags.join(' '));
+                                // Adicionar hashtags base se não tiver
+                                if (hashtags.length === 0) {
+                                    hashtags = ['#jesus', '#fé', '#deusébom'];
+                                }
+
+                                // 6. Hashtags devem ter # prefixo
+                                const formattedTags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`);
+                                descParts.push(formattedTags.join(' '));
 
                                 const fullDesc = descParts.join('\n\n');
 
