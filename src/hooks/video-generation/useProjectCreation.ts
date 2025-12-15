@@ -3,6 +3,19 @@ import { AppStep, User, VideoProject, ReferenceCharacter, TTSProvider } from '..
 import { generateScript, generateMusicPrompt } from '../../services/geminiService';
 import { saveProject } from '../../services/storageService';
 
+// UUID generator compatible with all browsers
+const generateUUID = (): string => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    // Fallback for browsers without crypto.randomUUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
 export const useProjectCreation = (
     user: User | null,
     setProject: React.Dispatch<React.SetStateAction<VideoProject | null>>,
@@ -66,17 +79,28 @@ export const useProjectCreation = (
 
                         // Helper: Idempotent Create
                         const safeCreateFolder = async (name: string, parentId?: string): Promise<string> => {
+                            // Check if folder exists FIRST
+                            try {
+                                const { folders } = await getFolders(false);
+                                const targetParent = parentId || null;
+                                const existing = folders.find((f: any) => f.name === name && f.parent_id === targetParent);
+                                if (existing) {
+                                    console.log(`✓ Folder "${name}" already exists, reusing.`);
+                                    return existing.id;
+                                }
+                            } catch (fetchErr) {
+                                console.warn('Could not fetch folders, will try to create:', fetchErr);
+                            }
+
+                            // Create only if doesn't exist
                             try {
                                 const res = await createFolder(name, parentId);
+                                console.log(`✓ Created folder "${name}"`);
                                 return res.id || res._id;
                             } catch (e: any) {
-                                // 409 = Conflict (Already Exists)
+                                // 409 = Conflict (race condition - someone created it)
                                 if (e.status === 409 || (e.message && e.message.includes('exists'))) {
-                                    console.log(`Folder "${name}" exists. Fetching ID...`);
-
-                                    const { folders } = await getFolders(true); // Force refresh
-                                    // Ensure we match correct parent (or root if undefined)
-                                    // Note: Backend might return parent_id as null
+                                    const { folders } = await getFolders(true);
                                     const targetParent = parentId || null;
                                     const match = folders.find((f: any) => f.name === name && f.parent_id === targetParent);
                                     if (match) return match.id;
@@ -91,12 +115,9 @@ export const useProjectCreation = (
                         // 2. Iterate Days
                         for (const [dayKey, dayContent] of Object.entries(cronograma)) {
                             // dayKey: "segunda_feira"
-                            let dayName = dayKey.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+                            let dayName = dayKey.replace(/_/g, '_').charAt(0).toUpperCase() + dayKey.replace(/_/g, '_').slice(1);
 
-                            // 🔒 Ensure uniqueness: Append rootName context
-                            const uniqueDayName = `${dayName} (${rootName})`;
-
-                            const dayId = await safeCreateFolder(uniqueDayName, rootId);
+                            const dayId = await safeCreateFolder(dayName, rootId);
 
                             // 3. Iterate Videos
                             const contentObj = dayContent as any;
@@ -136,7 +157,7 @@ export const useProjectCreation = (
                                 const fullDesc = descParts.join('\n\n');
 
                                 const newProject: VideoProject = {
-                                    id: crypto.randomUUID(),
+                                    id: generateUUID(),
                                     userId: user.id,
                                     createdAt: Date.now(),
                                     topic: JSON.stringify(vData, null, 2), // Save full JSON as topic/prompt for reference
@@ -270,7 +291,7 @@ export const useProjectCreation = (
             }
 
             const newProject: VideoProject = {
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 userId: user.id,
                 createdAt: Date.now(),
                 topic: finalTopic,
