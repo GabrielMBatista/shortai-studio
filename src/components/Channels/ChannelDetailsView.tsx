@@ -2,6 +2,7 @@ import React from 'react';
 import { Youtube, BarChart2, Calendar, ThumbsUp, MessageCircle, Tag, Eye } from 'lucide-react';
 import { Card } from '../ui';
 import { useTranslation } from 'react-i18next';
+import { YouTubeAnalyticsDashboard } from '../YouTubeAnalytics';
 
 interface VideoAnalytics {
     id: string;
@@ -19,14 +20,15 @@ interface VideoAnalytics {
 }
 
 interface ChannelDetailsViewProps {
+    channelId: string;
     channelName: string;
     videos: VideoAnalytics[];
     isLoading: boolean;
 }
 
-export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDetailsViewProps) {
+export function ChannelDetailsView({ channelId, channelName, videos, isLoading }: ChannelDetailsViewProps) {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = React.useState<'overview' | 'videos'>('overview');
+    const [activeTab, setActiveTab] = React.useState<'overview' | 'videos' | 'analytics'>('overview');
     const [expandedDescriptions, setExpandedDescriptions] = React.useState<Set<string>>(new Set());
 
     // Stats
@@ -69,6 +71,15 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                             }`}
                     >
                         {t('channels.tab_videos')} <span className="ml-1 opacity-70">({videos.length})</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('analytics')}
+                        className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-all ${activeTab === 'analytics'
+                            ? 'text-white bg-indigo-600 shadow-lg'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            }`}
+                    >
+                        📊 Analytics
                     </button>
                 </div>
             </div>
@@ -275,6 +286,13 @@ export function ChannelDetailsView({ channelName, videos, isLoading }: ChannelDe
                                 </Card>
                             ))}
                         </div>
+                    )}
+
+                    {activeTab === 'analytics' && (
+                        <YouTubeAnalyticsDashboard
+                            channelId={channelId}
+                            channelName={channelName}
+                        />
                     )}
                 </>
             )}

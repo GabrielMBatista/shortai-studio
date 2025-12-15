@@ -208,6 +208,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
                                 {t('channels.back_to_list')}
                             </Button>
                             <ChannelDetailsView
+                                channelId={selectedChannel.id}
                                 channelName={selectedChannel.name}
                                 videos={channelVideos}
                                 isLoading={isLoadingVideos}
