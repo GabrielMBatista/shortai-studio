@@ -50,7 +50,7 @@ export const drawFrame = (
     }
 
     // Scenes Phase
-    let currentSceneIdx = 0;
+    let currentSceneIdx = -1; // Start with invalid index
     let accumTime = 0;
     let timeInScene = 0;
 
@@ -63,9 +63,10 @@ export const drawFrame = (
         accumTime += assets[i].renderDuration;
     }
 
-    if (currentSceneIdx >= assets.length) {
+    // Fallback: if time is beyond all scenes, use the LAST scene (not first!)
+    if (currentSceneIdx === -1 || currentSceneIdx >= assets.length) {
         currentSceneIdx = assets.length - 1;
-        timeInScene = assets[currentSceneIdx].renderDuration;
+        timeInScene = assets[currentSceneIdx].renderDuration; // End of last scene
     }
 
     const asset = assets[currentSceneIdx];

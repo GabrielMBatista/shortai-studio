@@ -27,8 +27,11 @@ const seekVideoElementsToTime = async (
 
     // Scenes Phase Seek
     let accumTime = 0;
+    let foundScene = false;
+
     for (let i = 0; i < assets.length; i++) {
         if (time < accumTime + assets[i].renderDuration) {
+            foundScene = true;
             const timeInScene = time - accumTime;
             const asset = assets[i];
 
@@ -49,6 +52,15 @@ const seekVideoElementsToTime = async (
             break;
         }
         accumTime += assets[i].renderDuration;
+    }
+
+    // If time is beyond all scenes, pause all scene videos
+    if (!foundScene) {
+        assets.forEach(asset => {
+            if (asset.video && !asset.video.paused) {
+                asset.video.pause();
+            }
+        });
     }
 };
 
