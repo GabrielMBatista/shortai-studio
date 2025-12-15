@@ -196,51 +196,74 @@ export const useProjectCreation = (
                                     };
                                 });
 
-                                const title = vData.titulo || vData.title || vData.meta?.titulo_otimizado || `${dayName} - ${videoKey}`;
+                                // 1. TÍTULO E CONTEÚDO: Extrair do roteiro da persona
+                                const baseTitle = vData.titulo || vData.title || `${dayName} - ${videoKey}`;
+                                const hook = vData.hook_falado || "";
+                                const narrations = newScenes.map(s => s.narration).join(' ');
+                                const videoContent = `${hook}\n\n${narrations}`;
 
-                                // Build SEO-optimized description
-                                const descParts = [];
+                                // 2. METADADOS OTIMIZADOS: Sistema gera com análise de canal
+                                let title = baseTitle;
+                                let fullDesc = "";
+                                let finalHashtags: string[] = [];
 
-                                // 1. Hook/Intro (primeiro parágrafo - crítico para CTR)
-                                if (vData.hook_falado || vData.hook_killer) {
-                                    descParts.push(vData.hook_falado || vData.hook_killer);
+                                try {
+                                    console.log(`📊 Generating optimized metadata for "${baseTitle}" with channel analysis...`);
+
+                                    const metadataResponse = await fetch('/api/ai/metadata', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            videoTitle: baseTitle,
+                                            videoContent: videoContent,
+                                            channelId: channelId || undefined,
+                                            language: language || 'pt-BR'
+                                        })
+                                    });
+
+                                    if (metadataResponse.ok) {
+                                        const metadata = await metadataResponse.json();
+                                        title = metadata.optimizedTitle || baseTitle;
+                                        fullDesc = metadata.optimizedDescription || "";
+                                        finalHashtags = metadata.shortsHashtags || [];
+
+                                        console.log(`✅ Optimized metadata generated for "${title}"`);
+                                        console.log(`   Hashtags: ${finalHashtags.join(', ')}`);
+                                    } else {
+                                        throw new Error(`Metadata API returned ${metadataResponse.status}`);
+                                    }
+                                } catch (error) {
+                                    console.warn('⚠️ Metadata optimization failed, using fallback:', error);
+
+                                    // Fallback: Basic metadata generation
+                                    title = baseTitle;
+                                    const descParts = [];
+                                    if (hook) descParts.push(hook);
+                                    const essenceScenes = newScenes.slice(0, Math.min(3, newScenes.length));
+                                    const essence = essenceScenes.map(s => s.narration).filter(n => n).join(' ');
+                                    if (essence && essence !== hook) {
+                                        descParts.push(essence.substring(0, 200) + (essence.length > 200 ? '...' : ''));
+                                    }
+                                    descParts.push("💬 Comente 'Amém' e compartilhe com quem precisa ouvir isso!");
+                                    fullDesc = descParts.join('\n\n');
+
+                                    const hashtags: string[] = [];
+                                    const stopwords = ['o', 'a', 'de', 'da', 'do', 'os', 'as', 'em', 'e', 'para', 'com', 'que', 'é', 'se', 'não'];
+                                    const titleWords = baseTitle.toLowerCase().replace(/[^\w\sáéíóúâêôãõç]/g, '').split(/\s+/).filter(w => w.length > 3 && !stopwords.includes(w)).slice(0, 5);
+                                    hashtags.push('#shorts', '#viral', '#fe', '#jesus', '#deus');
+                                    titleWords.forEach(word => {
+                                        const tag = `#${word.replace(/\s+/g, '')}`;
+                                        if (!hashtags.includes(tag)) hashtags.push(tag);
+                                    });
+                                    const content = baseTitle.toLowerCase() + ' ' + essence.toLowerCase();
+                                    if (content.includes('bíbli') || content.includes('verso') || content.includes('salmo')) hashtags.push('#biblia');
+                                    if (content.includes('oração') || content.includes('ora')) hashtags.push('#oracao');
+                                    if (content.includes('amor')) hashtags.push('#amor');
+                                    if (content.includes('paz')) hashtags.push('#paz');
+                                    if (content.includes('esperança') || content.includes('espera')) hashtags.push('#esperanca');
+                                    finalHashtags = [...new Set(hashtags)].slice(0, 12);
                                 }
 
-                                // 2. Citação Bíblica (autoridade + keywords)
-                                if (vData.meta?.citacao_chave) {
-                                    descParts.push(`📖 ${vData.meta.citacao_chave}`);
-                                }
-
-                                // 3. Mensagem Principal/Descrição
-                                if (vData.meta?.mensagem_nuclear) {
-                                    descParts.push(vData.meta.mensagem_nuclear);
-                                } else if (vData.description) {
-                                    descParts.push(vData.description);
-                                }
-
-                                // 4. CTA (Call-to-Action)
-                                descParts.push("💬 Comente 'Amém' e compartilhe com quem precisa ouvir isso!");
-
-                                // 5. Hashtags (SEO keywords)
-                                let hashtags: string[] = [];
-                                if (Array.isArray(vData.hashtags)) {
-                                    hashtags = vData.hashtags;
-                                } else if (typeof vData.hashtags === 'string') {
-                                    hashtags = vData.hashtags.split(' ').filter((t: string) => t.trim().length > 0);
-                                } else if (vData.meta?.hashtags) {
-                                    hashtags = Array.isArray(vData.meta.hashtags) ? vData.meta.hashtags : [];
-                                }
-
-                                // Adicionar hashtags base se não tiver
-                                if (hashtags.length === 0) {
-                                    hashtags = ['#jesus', '#fé', '#deusébom'];
-                                }
-
-                                // 6. Hashtags devem ter # prefixo
-                                const formattedTags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`);
-                                descParts.push(formattedTags.join(' '));
-
-                                const fullDesc = descParts.join('\n\n');
 
                                 const newProject: VideoProject = {
                                     id: generateUUID(),
@@ -256,7 +279,7 @@ export const useProjectCreation = (
                                     scenes: newScenes,
                                     generatedTitle: title,
                                     generatedDescription: fullDesc,
-                                    generatedShortsHashtags: hashtags,
+                                    generatedShortsHashtags: finalHashtags,
                                     scriptMetadata: vData, // Store full JSON in metadata as well
                                     durationConfig,
                                     includeMusic,
