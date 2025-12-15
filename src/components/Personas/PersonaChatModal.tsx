@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Send, Bot, User as UserIcon, Loader2, Trash2 } from 'lucide-react';
+import { X, Send, Bot, User as UserIcon, Loader2, Trash2, MessageSquare, Plus, ChevronLeft } from 'lucide-react';
 import { Persona } from '../../types/personas';
 import { personasApi } from '../../api/personas';
+import { personaChatsApi } from '../../api/persona-chats';
+import { PersonaChat } from '../../types/persona-chat';
 
 interface Message {
     role: 'user' | 'model';
@@ -21,19 +23,74 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [chats, setChats] = useState<PersonaChat[]>([]);
+    const [activeChat, setActiveChat] = useState<PersonaChat | null>(null);
+    const [showChatList, setShowChatList] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Initial greeting when opened
+    // Carregar chats da persona
     useEffect(() => {
-        if (isOpen && persona && messages.length === 0) {
-            setMessages([]);
+        if (isOpen && persona) {
+            loadChats();
         }
     }, [isOpen, persona]);
+
+    // Carregar mensagens do chat ativo
+    useEffect(() => {
+        if (activeChat) {
+            loadChatMessages(activeChat.id);
+        } else {
+            setMessages([]);
+        }
+    }, [activeChat]);
 
     // Auto-scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    const loadChats = async () => {
+        if (!persona) return;
+        try {
+            const chatList = await personaChatsApi.getPersonaChats(persona.id);
+            setChats(chatList);
+            // Se não há chat ativo e tem chats, selecionar o primeiro
+            if (!activeChat && chatList.length > 0) {
+                setActiveChat(chatList[0]);
+            }
+        } catch (error) {
+            console.error('Failed to load chats:', error);
+        }
+    };
+
+    const loadChatMessages = async (chatId: string) => {
+        try {
+            const chat = await personaChatsApi.getChat(chatId);
+            const msgs = chat.messages?.map(m => ({
+                role: m.role,
+                text: m.content
+            })) || [];
+            setMessages(msgs);
+        } catch (error) {
+            console.error('Failed to load chat messages:', error);
+        }
+    };
+
+    const createNewChat = async () => {
+        if (!persona) return;
+        try {
+            const newChat = await personaChatsApi.createChat(persona.id, {
+                channelId,
+                title: 'New Chat'
+            });
+            setChats(prev => [newChat, ...prev.slice(0, 4)]); // Máximo 5 chats
+            setActiveChat(newChat);
+            setMessages([]);
+            setShowChatList(false);
+        } catch (error) {
+            console.error('Failed to create chat:', error);
+        }
+    };
 
     const handleSend = async () => {
         if (!input.trim() || !persona) return;
@@ -44,12 +101,21 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
         setIsLoading(true);
 
         try {
+            // Se não tem chat ativo, criar um novo
+            let chatToUse = activeChat;
+            if (!chatToUse) {
+                const title = userMsg.substring(0, 50).split(/[.\n\r]/)[0] || 'New Chat';
+                chatToUse = await personaChatsApi.createChat(persona.id, { channelId, title });
+                setActiveChat(chatToUse);
+                setChats(prev => [chatToUse!, ...prev.slice(0, 4)]);
+            }
+
             const history = messages.map(m => ({
                 role: m.role,
                 parts: [{ text: m.text }]
             }));
 
-            const res = await personasApi.chat(persona.id, userMsg, history, channelId);
+            const res = await personasApi.chat(persona.id, userMsg, history, channelId, chatToUse.id);
 
             // Check if response is a Job Signal
             let jobSignal = null;
@@ -123,27 +189,63 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
             <div className="bg-[#0f172a] border border-slate-700 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/50">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
-                            <Bot className="w-6 h-6 text-indigo-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                {t('input.chat_with', { name: persona.name })}
-                            </h2>
-                            <p className="text-xs text-slate-400 capitalize">
-                                {persona.category || t('personas.default_category')} • {t('personas.temp')}: {persona.temperature}
-                            </p>
-                        </div>
+                    <div className="flex items-center gap-3 flex-1">
+                        {showChatList ? (
+                            <>
+                                <button
+                                    onClick={() => setShowChatList(false)}
+                                    className="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <div>
+                                    <h2 className="text-lg font-bold text-white">Chat History</h2>
+                                    <p className="text-xs text-slate-400">{chats.length} / 5 chats</p>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => setShowChatList(true)}
+                                    className="p-2 text-slate-400 hover:text-indigo-400 transition-colors rounded-lg hover:bg-slate-800"
+                                    title="View chat history"
+                                >
+                                    <MessageSquare className="w-5 h-5" />
+                                </button>
+                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                    <Bot className="w-6 h-6 text-indigo-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-lg font-bold text-white truncate flex items-center gap-2">
+                                        {activeChat ? activeChat.title : t('input.chat_with', { name: persona.name })}
+                                    </h2>
+                                    <p className="text-xs text-slate-400 capitalize">
+                                        {persona.category || t('personas.default_category')} • {t('personas.temp')}: {persona.temperature}
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleClear}
-                            title={t('personas.clear_chat_title')}
-                            className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-800"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
+                        {!showChatList && (
+                            <>
+                                <button
+                                    onClick={createNewChat}
+                                    title="New Chat"
+                                    className="p-2 text-slate-400 hover:text-green-400 transition-colors rounded-lg hover:bg-slate-800"
+                                    disabled={chats.length >= 5}
+                                >
+                                    <Plus className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={handleClear}
+                                    title={t('personas.clear_chat_title')}
+                                    className="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-800"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </>
+                        )}
                         <button
                             onClick={onClose}
                             className="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800"
@@ -153,67 +255,133 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                     </div>
                 </div>
 
-                {/* Messages */}
+                {/* Messages / Chat List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/30 scrollbar-thin scrollbar-thumb-slate-700">
-                    {messages.length === 0 && (
-                        <div className="text-center py-12 text-slate-500">
-                            <Bot className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p>{t('input.initial_message', { name: persona.name })}</p>
-                            <p className="text-xs opacity-70 mt-1">{t('input.initial_tip')}</p>
+                    {showChatList ? (
+                        // Lista de Chats
+                        <div className="space-y-2">
+                            {chats.length === 0 ? (
+                                <div className="text-center py-12 text-slate-500">
+                                    <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                    <p>No chat history yet</p>
+                                    <p className="text-xs opacity-70 mt-1">Start a new conversation to begin</p>
+                                </div>
+                            ) : (
+                                chats.map((chat) => (
+                                    <button
+                                        key={chat.id}
+                                        onClick={() => {
+                                            setActiveChat(chat);
+                                            setShowChatList(false);
+                                        }}
+                                        className={`w-full text-left p-3 rounded-lg border transition-all ${activeChat?.id === chat.id
+                                            ? 'bg-indigo-500/20 border-indigo-500/30 text-white'
+                                            : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
+                                            }`}
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-medium truncate">{chat.title}</h3>
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                    {new Date(chat.lastMessageAt).toLocaleString('pt-BR', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    if (confirm('Delete this chat?')) {
+                                                        try {
+                                                            await personaChatsApi.deleteChat(chat.id);
+                                                            setChats(prev => prev.filter(c => c.id !== chat.id));
+                                                            if (activeChat?.id === chat.id) {
+                                                                setActiveChat(null);
+                                                            }
+                                                        } catch (error) {
+                                                            console.error('Failed to delete chat:', error);
+                                                        }
+                                                    }
+                                                }}
+                                                className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
                         </div>
-                    )}
+                    ) : (
+                        // Mensagens do Chat
+                        <>
+                            {messages.length === 0 && (
+                                <div className="text-center py-12 text-slate-500"
+                                >
+                                    <Bot className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                    <p>{t('input.initial_message', { name: persona.name })}</p>
+                                    <p className="text-xs opacity-70 mt-1">{t('input.initial_tip')}</p>
+                                </div>
+                            )}
 
-                    {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
-                                ? 'bg-indigo-600 text-white rounded-br-none'
-                                : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
-                                }`}>
-                                <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</div>
-                            </div>
-                        </div>
-                    ))}
+                            {messages.map((msg, i) => (
+                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
+                                        ? 'bg-indigo-600 text-white rounded-br-none'
+                                        : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
+                                        }`}>
+                                        <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.text}</div>
+                                    </div>
+                                </div>
+                            ))}
 
-                    {isLoading && (
-                        <div className="flex justify-start w-full animate-fade-in">
-                            <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-3 shadow-lg">
-                                <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
-                                {messages.filter(m => m.role === 'user').pop()?.text.toLowerCase().match(/cronograma|semana|planejamento/i) ? (
-                                    <span className="text-sm text-slate-300">
-                                        {t('input.generating_weekly', 'Generating weekly schedule (Deep Think)... This may take ~60s.')}
-                                    </span>
-                                ) : (
-                                    <span className="text-sm text-slate-400">Thinking...</span>
-                                )}
-                            </div>
-                        </div>
+                            {isLoading && (
+                                <div className="flex justify-start w-full animate-fade-in">
+                                    <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-3 shadow-lg">
+                                        <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                                        {messages.filter(m => m.role === 'user').pop()?.text.toLowerCase().match(/cronograma|semana|planejamento/i) ? (
+                                            <span className="text-sm text-slate-300">
+                                                {t('input.generating_weekly', 'Generating weekly schedule (Deep Think)... This may take ~60s.')}
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm text-slate-400">Thinking...</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                        </>
                     )}
-                    <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input */}
-                <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-                    <form
-                        className="flex gap-2"
-                        onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                    >
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder={t('input.message_placeholder', { name: persona.name })}
-                            className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-500"
-                            disabled={isLoading}
-                        />
-                        <button
-                            type="submit"
-                            disabled={!input.trim() || isLoading}
-                            className="p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-xl transition-colors shadow-lg shadow-indigo-600/20"
+                {!showChatList && (
+                    <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+                        <form
+                            className="flex gap-2"
+                            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                         >
-                            <Send className="w-5 h-5" />
-                        </button>
-                    </form>
-                </div>
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder={t('input.message_placeholder', { name: persona.name })}
+                                className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-500"
+                                disabled={isLoading}
+                            />
+                            <button
+                                type="submit"
+                                disabled={!input.trim() || isLoading}
+                                className="p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-xl transition-colors shadow-lg shadow-indigo-600/20"
+                            >
+                                <Send className="w-5 h-5" />
+                            </button>
+                        </form>
+                    </div>
+                )}
             </div>
         </div>
     );

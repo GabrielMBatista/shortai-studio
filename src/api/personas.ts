@@ -70,6 +70,7 @@ export const personasApi = {
         message: string,
         history: any[] = [],
         channelId?: string,
+        chatId?: string,
         language?: string,
         voice?: string,
         onProgress?: (progress: number, status: string) => void
@@ -78,7 +79,7 @@ export const personasApi = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ message, history, channelId, language, voice })
+            body: JSON.stringify({ message, history, channelId, chatId, language, voice })
         });
 
         if (!res.ok) {
