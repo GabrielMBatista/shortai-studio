@@ -81,11 +81,7 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
 
         try {
             const apiUrl = import.meta.env.VITE_API_URL || '/api';
-
-            // Use accountId in the URL path if available (original working format)
-            const url = channel.googleAccountId
-                ? `${apiUrl}/channels/${channel.id}/videos?accountId=${channel.googleAccountId}`
-                : `${apiUrl}/channels/${channel.id}/videos`;
+            const url = `${apiUrl}/channels/${channel.id}/videos?limit=100`;
 
             console.log('[ChannelsList] Loading videos from:', url);
 
@@ -94,7 +90,9 @@ export default function ChannelsList({ onConnect, onImport }: ChannelsListProps 
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                const errorText = await response.text();
+                console.error(`[ChannelsList] HTTP ${response.status}:`, errorText);
+                throw new Error(`HTTP ${response.status}`);
             }
 
             const data = await response.json();
