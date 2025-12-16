@@ -294,66 +294,9 @@ export const useProjectCreation = (
                                     }
                                 }
 
-                                // 🔥 BACKGROUND ASYNC: Gera metadados otimizados SEM BLOQUEAR
-                                (async () => {
-                                    console.log(`🚀 [ASYNC STARTED] Background task initiated for "${baseTitle}"`);
-                                    try {
-                                        console.log(`📊 [Background] Generating optimized metadata for "${baseTitle}"...`);
-
-                                        const metadata = await apiFetch('/ai/metadata', {
-                                            method: 'POST',
-                                            body: JSON.stringify({
-                                                videoTitle: baseTitle,
-                                                videoContent: videoContent,
-                                                channelId: channelId || undefined,
-                                                language: language || 'pt-BR'
-                                            })
-                                        });
-
-                                        const optimizedTitle = metadata.optimizedTitle || fallbackTitle;
-                                        const optimizedDesc = metadata.optimizedDescription || fallbackDesc;
-                                        const optimizedHashtags = metadata.shortsHashtags || finalFallbackHashtags;
-
-                                        console.log(`✅ [Background] Optimized metadata ready for "${baseTitle}"`);
-                                        console.log(`   Title: ${optimizedTitle}`);
-                                        console.log(`   Hashtags: ${optimizedHashtags.join(', ')}`);
-
-                                        // 🎯 ATUALIZAR PROJETO COM METADADOS OTIMIZADOS
-                                        const { patchProjectMetadata } = await import('../../services/projects');
-                                        await patchProjectMetadata(saved.id, {
-                                            generated_title: optimizedTitle,
-                                            generated_description: optimizedDesc,
-                                            generated_shorts_hashtags: optimizedHashtags
-                                        });
-
-                                        console.log(`🎉 [Background] Project "${optimizedTitle}" updated with optimized metadata!`);
-
-                                        // 🔄 Invalida cache para UI refletir mudanças
-                                        queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
-                                    } catch (error: any) {
-                                        console.error(`❌ [Background] Metadata optimization FAILED for "${baseTitle}"`);
-                                        console.error(`Error type: ${error?.constructor?.name}`);
-                                        console.error(`Error message: ${error?.message}`);
-                                        console.error(`Error stack:`, error?.stack);
-                                        console.warn(`⚠️ [Background] Applying fallback metadata...`);
-
-                                        // FALLBACK: Atualiza com metadados básicos pelo menos
-                                        try {
-                                            const { patchProjectMetadata } = await import('../../services/projects');
-                                            await patchProjectMetadata(saved.id, {
-                                                generated_title: fallbackTitle,
-                                                generated_description: fallbackDesc,
-                                                generated_shorts_hashtags: finalFallbackHashtags
-                                            });
-                                            console.log(`✅ [Background] Fallback metadata applied for "${fallbackTitle}"`);
-
-                                            // 🔄 Invalida cache para UI refletir mudanças
-                                            queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
-                                        } catch (fallbackErr) {
-                                            console.error(`❌ [Background] Failed to apply fallback metadata:`, fallbackErr);
-                                        }
-                                    }
-                                })(); // 🚀 NÃO ESPERA! Roda em paralelo
+                                // 🔥 BACKGROUND ASYNC: MOVED TO BACKEND
+                                // O servidor agora gerencia a geração de metadados automaticamente após a criação.
+                                queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
                             }
                         }
 
