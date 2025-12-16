@@ -230,23 +230,43 @@ export const useProjectCreation = (
                                         console.log(`✅ Optimized metadata generated for "${title}"`);
                                         console.log(`   Hashtags: ${finalHashtags.join(', ')}`);
                                     } else {
+                                        const errorText = await metadataResponse.text();
+                                        console.error(`❌ Metadata API returned ${metadataResponse.status}:`, errorText);
                                         throw new Error(`Metadata API returned ${metadataResponse.status}`);
                                     }
                                 } catch (error) {
                                     console.warn('⚠️ Metadata optimization failed, using fallback:', error);
 
-                                    // Fallback: Basic metadata generation
+                                    // Fallback: Basic metadata generation (SEMPRE GERA ALGO VÁLIDO)
                                     title = baseTitle;
                                     const descParts = [];
-                                    if (hook) descParts.push(hook);
-                                    const essenceScenes = newScenes.slice(0, Math.min(3, newScenes.length));
-                                    const essence = essenceScenes.map(s => s.narration).filter(n => n).join(' ');
-                                    if (essence && essence !== hook) {
-                                        descParts.push(essence.substring(0, 200) + (essence.length > 200 ? '...' : ''));
+
+                                    // Adiciona hook se existir
+                                    if (hook && hook.trim()) {
+                                        descParts.push(hook.trim());
                                     }
+
+                                    // Adiciona resumo das cenas
+                                    if (newScenes && newScenes.length > 0) {
+                                        const essenceScenes = newScenes.slice(0, Math.min(3, newScenes.length));
+                                        const essence = essenceScenes.map(s => s.narration).filter(n => n && n.trim()).join(' ').trim();
+
+                                        if (essence && essence !== hook) {
+                                            const truncated = essence.length > 200 ? essence.substring(0, 200) + '...' : essence;
+                                            descParts.push(truncated);
+                                        }
+                                    }
+
+                                    // Se ainda não temos descrição, usa o baseTitle
+                                    if (descParts.length === 0) {
+                                        descParts.push(baseTitle);
+                                    }
+
+                                    // CTA padrão
                                     descParts.push("💬 Comente 'Amém' e compartilhe com quem precisa ouvir isso!");
                                     fullDesc = descParts.join('\n\n');
 
+                                    // Gera hashtags básicas
                                     const hashtags: string[] = [];
                                     const stopwords = ['o', 'a', 'de', 'da', 'do', 'os', 'as', 'em', 'e', 'para', 'com', 'que', 'é', 'se', 'não'];
                                     const titleWords = baseTitle.toLowerCase().replace(/[^\w\sáéíóúâêôãõç]/g, '').split(/\s+/).filter(w => w.length > 3 && !stopwords.includes(w)).slice(0, 5);
@@ -255,13 +275,19 @@ export const useProjectCreation = (
                                         const tag = `#${word.replace(/\s+/g, '')}`;
                                         if (!hashtags.includes(tag)) hashtags.push(tag);
                                     });
-                                    const content = baseTitle.toLowerCase() + ' ' + essence.toLowerCase();
+                                    const content = (baseTitle + ' ' + narrations).toLowerCase();
                                     if (content.includes('bíbli') || content.includes('verso') || content.includes('salmo')) hashtags.push('#biblia');
                                     if (content.includes('oração') || content.includes('ora')) hashtags.push('#oracao');
                                     if (content.includes('amor')) hashtags.push('#amor');
                                     if (content.includes('paz')) hashtags.push('#paz');
                                     if (content.includes('esperança') || content.includes('espera')) hashtags.push('#esperanca');
                                     finalHashtags = [...new Set(hashtags)].slice(0, 12);
+
+                                    console.log(`✅ Fallback metadata generated:`, {
+                                        title,
+                                        descLength: fullDesc.length,
+                                        hashtagsCount: finalHashtags.length
+                                    });
                                 }
 
 

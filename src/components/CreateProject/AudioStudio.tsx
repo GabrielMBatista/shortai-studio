@@ -115,11 +115,8 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
             if (!filteredVoices.find(v => v.name === voice)) {
                 setVoice(filteredVoices[0].name);
             }
-        } else {
-            if (!isLoadingVoices && dynamicVoices.length > 0) {
-                setVoice('');
-            }
         }
+        // Se não há vozes disponíveis, não definimos vazio - deixamos o backend decidir o default
     }, [language, ttsProvider, filteredVoices, isLoadingVoices, dynamicVoices.length, voice, setVoice]);
 
     return (
