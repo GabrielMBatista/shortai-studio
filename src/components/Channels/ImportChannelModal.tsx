@@ -107,7 +107,7 @@ export default function ImportChannelModal({ isOpen, onClose, onImportSuccess }:
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    accountId: selectedAccountId,
+                    googleAccountId: selectedAccountId, // ✅ Backend espera googleAccountId
                     youtubeChannelId: channel.youtubeChannelId
                 }),
                 credentials: 'include'
