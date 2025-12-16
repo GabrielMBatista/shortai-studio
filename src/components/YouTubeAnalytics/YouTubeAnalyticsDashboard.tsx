@@ -14,7 +14,7 @@ export const YouTubeAnalyticsDashboard: React.FC<YouTubeAnalyticsDashboardProps>
   channelName,
 }) => {
   const [activeTab, setActiveTab] = useState<'import' | 'top' | 'bottom' | 'personas'>(
-    'import'
+    'top'
   );
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -24,10 +24,10 @@ export const YouTubeAnalyticsDashboard: React.FC<YouTubeAnalyticsDashboardProps>
   };
 
   const tabs = [
-    { id: 'import' as const, label: 'Import Data', icon: Upload },
     { id: 'top' as const, label: 'Top Videos', icon: TrendingUp },
     { id: 'bottom' as const, label: 'Bottom Videos', icon: TrendingDown },
     { id: 'personas' as const, label: 'Personas', icon: Users },
+    { id: 'import' as const, label: 'Import Data', icon: Upload },
   ];
 
   return (
