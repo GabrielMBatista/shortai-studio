@@ -31,7 +31,10 @@ export const SafeImage: React.FC<SafeImageProps> = ({
                     observer.disconnect();
                 }
             },
-            { threshold: 0.1 }
+            {
+                rootMargin: '50px', // Only load when close to viewport
+                threshold: 0.01
+            }
         );
 
         if (imgRef.current) {
@@ -54,16 +57,22 @@ export const SafeImage: React.FC<SafeImageProps> = ({
         setHasError(false);
         setIsLoading(true);
 
-        // Queue the load via Global Resource Queue
+        // Queue the load via Global Resource Queue with DEBOUNCE
+        // This prevents rapid scrolling from queuing hundreds of images
         let cancelQueue: (() => void) | undefined;
+        let debounceTimer: NodeJS.Timeout | undefined;
 
         const loadTask = () => {
             setImgSrc(src);
         };
 
-        cancelQueue = resourceQueue.enqueue(loadTask);
+        // Wait 100ms before queueing. If user scrolls past quickly, we cancel before queueing.
+        debounceTimer = setTimeout(() => {
+            cancelQueue = resourceQueue.enqueue(loadTask);
+        }, 100);
 
         return () => {
+            clearTimeout(debounceTimer);
             if (cancelQueue) cancelQueue();
         };
 

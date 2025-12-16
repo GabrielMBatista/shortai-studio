@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getProxyUrl } from '../../utils/urlUtils';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { resourceQueue } from '../../utils/resourceQueue';
 
 interface SafeVideoProps extends React.VideoHTMLAttributes<HTMLVideoElement> {
     src?: string | null;
@@ -36,7 +37,7 @@ export const SafeVideo: React.FC<SafeVideoProps> = ({
                     observer.disconnect();
                 }
             },
-            { threshold: 0.1 } // Load when 10% visible
+            { rootMargin: '50px', threshold: 0.01 } // Load when close to visible
         );
 
         if (containerRef.current) {
@@ -47,23 +48,50 @@ export const SafeVideo: React.FC<SafeVideoProps> = ({
     }, [lazyLoad]);
 
     useEffect(() => {
-        if (isVisible && src) {
-            setVideoSrc(src);
-            setHasError(false);
-            setIsLoading(true);
-        } else if (!isVisible) {
+        if (!isVisible) {
             setVideoSrc(undefined);
             setIsLoading(false);
+            return;
         }
+
+        if (!src) return;
+
+        setHasError(false);
+        setIsLoading(true);
+
+        // Queue the load via Global Resource Queue with DEBOUNCE
+        let cancelQueue: (() => void) | undefined;
+        let debounceTimer: NodeJS.Timeout | undefined;
+
+        const loadTask = () => {
+            setVideoSrc(src);
+        };
+
+        // Wait 100ms before queueing
+        debounceTimer = setTimeout(() => {
+            cancelQueue = resourceQueue.enqueue(loadTask);
+        }, 100);
+
+        return () => {
+            clearTimeout(debounceTimer);
+            if (cancelQueue) cancelQueue();
+            // If we unmount/hide, we don't necessarily release() here because release() happens on load/error events.
+            // But if the source changes before loading finished, we rely on the next render (and new enqueue) 
+            // OR if it's removed, React unmounts the video element cancelling the network request (usually).
+        };
     }, [isVisible, src]);
 
     const handleError = () => {
-        if (hasError) return; // Already tried fallback
+        if (hasError) {
+            resourceQueue.release();
+            return;
+        } // Already tried fallback
 
         // If we are already using proxy, we failed.
         if (videoSrc && videoSrc.includes('/assets?url=')) {
             console.error(`[SafeVideo] Proxy failed for: ${src}`);
             setIsLoading(false); // Stop loading spinner on failure
+            resourceQueue.release();
             return;
         }
 
@@ -74,15 +102,27 @@ export const SafeVideo: React.FC<SafeVideoProps> = ({
             setVideoSrc(proxyUrl);
             setHasError(true);
             setIsLoading(true);
+            // DO NOT RELEASE here, we are retrying
         } else {
             console.error(`[SafeVideo] Failed to load: ${src}`);
             setIsLoading(false);
+            resourceQueue.release();
         }
     };
 
-    const handleLoadedData = () => setIsLoading(false);
+    // Release queue when we have enough data to play, or at least metadata
+    const handleLoadedData = () => {
+        setIsLoading(false);
+        resourceQueue.release();
+    };
+
     const handleWaiting = () => setIsLoading(true);
-    const handlePlaying = () => setIsLoading(false);
+
+    // Fallback release if loadeddata doesn't fire but it starts playing (cached)
+    const handlePlaying = () => {
+        setIsLoading(false);
+        resourceQueue.release();
+    };
 
     return (
         <div ref={containerRef} className={`relative overflow-hidden bg-slate-900 ${className}`}>
@@ -119,6 +159,7 @@ export const SafeVideo: React.FC<SafeVideoProps> = ({
                     onPlaying={handlePlaying}
                     onCanPlay={handleLoadedData}
                     autoPlay={autoPlay}
+                    preload="metadata" // Validate: lighter load
                     playsInline
                     loop
                     muted
