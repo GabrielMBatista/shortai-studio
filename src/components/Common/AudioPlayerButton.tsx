@@ -12,104 +12,84 @@ const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status,
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    useEffect(() => {
+    const toggleAudio = async (e: React.MouseEvent) => {
+        e.stopPropagation();
         if (!audioUrl) return;
 
-        try {
-            let resolvedUrl = audioUrl;
-            let blobUrl: string | null = null;
+        // Initialize Audio on first click (Lazy Load)
+        if (!audioRef.current) {
+            try {
+                let resolvedUrl = audioUrl;
 
-            // Convert data URI to Blob URL for better browser compatibility
-            if (audioUrl.startsWith('data:audio/')) {
-                const [header, base64Data] = audioUrl.split(',');
-                if (base64Data) {
-                    const mimeMatch = header.match(/data:(.*?);/);
-                    const mimeType = mimeMatch ? mimeMatch[1] : 'audio/wav';
-
-                    try {
-                        const binaryString = atob(base64Data);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
+                // Convert data URI to Blob URL for compatibility
+                if (audioUrl.startsWith('data:audio/')) {
+                    const [header, base64Data] = audioUrl.split(',');
+                    if (base64Data) {
+                        const mimeMatch = header.match(/data:(.*?);/);
+                        const mimeType = mimeMatch ? mimeMatch[1] : 'audio/wav';
+                        try {
+                            const binaryString = atob(base64Data);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            const blob = new Blob([bytes], { type: mimeType });
+                            resolvedUrl = URL.createObjectURL(blob);
+                        } catch (err) {
+                            console.error("Failed to convert data URI to Blob:", err);
+                            return;
                         }
-                        const blob = new Blob([bytes], { type: mimeType });
-                        blobUrl = URL.createObjectURL(blob);
-                        resolvedUrl = blobUrl;
-                    } catch (err) {
-                        console.error("Failed to convert data URI to Blob:", err);
-                        return;
                     }
                 }
+
+                const audio = new Audio(resolvedUrl);
+                audio.onended = () => setIsPlaying(false);
+                audio.onpause = () => setIsPlaying(false);
+                audio.onerror = (e) => {
+                    console.error("Audio playback error:", audio.error);
+                    setIsPlaying(false);
+                };
+
+                audioRef.current = audio;
+            } catch (e) {
+                console.error("Audio initialization error:", e);
+                return;
             }
-
-            const audio = new Audio(resolvedUrl);
-            audioRef.current = audio;
-
-            audio.onended = () => setIsPlaying(false);
-            audio.onpause = () => setIsPlaying(false);
-            audio.onerror = (e) => {
-                // Ignore errors if we are cleaning up (audioRef might be null or different)
-                if (!audioRef.current) return;
-
-                // If error is null/undefined but event fired, it might be a false positive during loading/interruption
-                if (!audio.error && audio.networkState === 2) return;
-
-                console.error("Audio playback error:", {
-                    event: e,
-                    error: audio.error,
-                    errorCode: audio.error?.code,
-                    errorMessage: audio.error?.message,
-                    networkState: audio.networkState,
-                    readyState: audio.readyState,
-                    src: audio.src?.substring(0, 100)
-                });
-                setIsPlaying(false);
-            };
-        } catch (e) {
-            console.error("Audio initialization error:", e);
         }
 
-        // Cleanup function
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        if (isPlaying) {
+            audio.pause();
+            audio.currentTime = 0;
+            setIsPlaying(false);
+        } else {
+            // Using resourceQueue valid here? 
+            // Since it's user initiated (1 click = 1 stream), flooding is unlikely unless user clicks 10 buttons 1s.
+            // But we can wrap play in a try-catch
+            try {
+                await audio.play();
+                setIsPlaying(true);
+            } catch (e) {
+                console.warn("Playback failed/prevented", e);
+                setIsPlaying(false);
+            }
+        }
+    };
+
+    // Cleanup on unmount
+    useEffect(() => {
         return () => {
             if (audioRef.current) {
-                // Prevent error triggers during cleanup
-                audioRef.current.onerror = null;
-                audioRef.current.onended = null;
-                audioRef.current.onpause = null;
-
                 audioRef.current.pause();
-                const srcToCleanup = audioRef.current.src;
+                const src = audioRef.current.src;
                 audioRef.current.src = '';
-                try {
-                    audioRef.current.load();
-                } catch (e) {
-                    // Ignore load errors during cleanup
-                }
-
-                if (srcToCleanup && srcToCleanup.startsWith('blob:')) {
-                    URL.revokeObjectURL(srcToCleanup);
-                }
+                if (src.startsWith('blob:')) URL.revokeObjectURL(src);
                 audioRef.current = null;
             }
         };
-    }, [audioUrl]);
-
-    const toggleAudio = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!audioRef.current || !audioUrl) return;
-
-        if (isPlaying) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            setIsPlaying(false);
-        } else {
-            audioRef.current.play().catch(e => {
-                console.warn("Playback prevented", e);
-                setIsPlaying(false);
-            });
-            setIsPlaying(true);
-        }
-    };
+    }, []);
 
     // Show loader for any processing state
     const isLoading = ['pending', 'queued', 'processing', 'loading'].includes(status);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getProxyUrl } from '../../utils/urlUtils';
 import { Loader2 } from 'lucide-react';
+import { resourceQueue } from '../../utils/resourceQueue';
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     src?: string | null;
@@ -49,29 +50,53 @@ export const SafeImage: React.FC<SafeImageProps> = ({
             return;
         }
 
-        setImgSrc(src);
+        // Reset state for new src
         setHasError(false);
         setIsLoading(true);
-    }, [src, fallbackSrc, isVisible]);
+
+        // Queue the load via Global Resource Queue
+        let cancelQueue: (() => void) | undefined;
+
+        const loadTask = () => {
+            setImgSrc(src);
+        };
+
+        cancelQueue = resourceQueue.enqueue(loadTask);
+
+        return () => {
+            if (cancelQueue) cancelQueue();
+        };
+
+    }, [src, isVisible]); // Removed fallbackSrc from dependency to avoid re-queueing on prop change if src is same
 
     const handleError = () => {
-        if (hasError) return; // Already tried fallback
+        if (hasError) {
+            // Already retried via proxy, now failing for good.
+            setImgSrc(fallbackSrc);
+            setIsLoading(false);
+            resourceQueue.release();
+            return;
+        }
 
         if (proxyFallback && src && !src.startsWith('data:') && !src.startsWith('blob:') && !src.includes('/assets?url=')) {
             // Try via proxy
             const proxyUrl = getProxyUrl(src);
             console.log(`[SafeImage] Retry via proxy: ${proxyUrl}`);
             setImgSrc(proxyUrl);
-            setHasError(true); // Mark as "in fallback mode" so we don't loop if proxy fails too
+            setHasError(true);
+            // Note: We DO NOT release() here, because we are starting a secondary request 
+            // that we still want to count against our concurrency limit.
         } else {
             // Proxy failed or not enabled, show fallback
             setImgSrc(fallbackSrc);
             setIsLoading(false);
+            resourceQueue.release();
         }
     };
 
     const handleLoad = () => {
         setIsLoading(false);
+        resourceQueue.release();
     };
 
     return (
