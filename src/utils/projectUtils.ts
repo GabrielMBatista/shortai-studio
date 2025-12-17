@@ -130,7 +130,7 @@ const findValueDeep = (obj: any, keys: string[], depth: number = 0): string | st
 
 /**
  * Extracts a human-readable description from a string that might be a recursive JSON.
- * Falls back to synthesizing from hook/scenes if no explicit description exists.
+ * Falls back to aggressively harvesting text from hook/scenes/content/text fields.
  */
 export const extractProjectDescription = (rawDesc: string | null | undefined, fallback: string = ''): string => {
     if (!rawDesc) return fallback;
@@ -140,31 +140,50 @@ export const extractProjectDescription = (rawDesc: string | null | undefined, fa
         try {
             const json = JSON.parse(trimmed);
 
-            // 1. Explicit Description
-            const found = findValueDeep(json, ['description', 'generatedDescription', 'desc', 'generated_description', 'resumo']);
-            if (found && typeof found === 'string') return found;
+            // 1. Explicit Description Key
+            const found = findValueDeep(json, ['description', 'generatedDescription', 'desc', 'generated_description', 'resumo', 'summary', 'overview', 'caption']);
+            if (found && typeof found === 'string' && found.length > 5) return found;
 
-            // 2. Synthetic Description (Hook + First Scene)
-            // Use a shallow search for hook/scenes to avoid widespread crawling
-            const hook = findValueDeep(json, ['hook_falado', 'hook']) as string;
+            // 2. Aggressive Synthesis
+            const fragments: string[] = [];
 
-            // Try to find scenes array
-            let scenes: any[] | null = null;
-            if (Array.isArray(json.scenes)) scenes = json.scenes;
-            else if (json.cronograma) {
-                // Too complex to guess which video, skip synthesis for full schedule unless specific
-            } else {
-                const scenesFound = findValueDeep(json, ['scenes']);
-                if (Array.isArray(scenesFound)) scenes = scenesFound;
-            }
+            const harvestText = (obj: any, depth: number) => {
+                if (!obj || depth > 5) return;
 
-            if (hook || (scenes && scenes.length > 0)) {
-                let synthetic = hook || '';
-                if (scenes && scenes.length > 0) {
-                    const firstNarration = scenes[0].narration || scenes[0].text || scenes[0].visualDescription || '';
-                    if (firstNarration) synthetic = synthetic ? `${synthetic} ${firstNarration}` : firstNarration;
+                if (Array.isArray(obj)) {
+                    obj.forEach(item => harvestText(item, depth + 1));
+                    return;
                 }
-                if (synthetic.length > 5) return synthetic.substring(0, 300); // Limit length
+
+                if (typeof obj === 'object') {
+                    // Check for high-value text keys
+                    const keys = ['hook', 'hook_falado', 'narration', 'text', 'visualDescription', 'content', 'script'];
+                    for (const k of keys) {
+                        if (obj[k] && typeof obj[k] === 'string' && obj[k].length > 10) {
+                            fragments.push(obj[k]);
+                        }
+                    }
+
+                    if (Array.isArray(obj.scenes)) {
+                        obj.scenes.forEach((s: any) => harvestText(s, depth + 1));
+                    }
+
+                    // Recurse children
+                    for (const k in obj) {
+                        // Avoid redefining scenes recursion or going into irrelevant metadata
+                        if (typeof obj[k] === 'object' && k !== 'scenes' && k !== 'meta_global') {
+                            harvestText(obj[k], depth + 1);
+                        }
+                    }
+                }
+            };
+
+            harvestText(json, 0);
+
+            if (fragments.length > 0) {
+                const unique = Array.from(new Set(fragments));
+                const joined = unique.join(' ').trim();
+                return joined.length > 300 ? joined.substring(0, 300) + '...' : joined;
             }
 
         } catch (e) {
