@@ -101,7 +101,28 @@ const App: React.FC = () => {
 
     // Helpers
     const getDisplayTitle = (p: VideoProject) => {
-        return extractProjectTitle(p.generatedTitle || p.topic, t('app.untitled_project'));
+        // 1. Try to get title from generatedTitle (might be JSON or String)
+        const genTitle = extractProjectTitle(p.generatedTitle, 'FALLBACK_SENTINEL');
+
+        // 2. If generatedTitle yielded a valid custom title, use it.
+        // We check against our Sentinel and common defaults
+        if (genTitle !== 'FALLBACK_SENTINEL' &&
+            genTitle !== 'Untitled Project' &&
+            genTitle !== 'Projeto Sem Título' &&
+            genTitle !== t('app.untitled_project')) {
+            return genTitle;
+        }
+
+        // 3. If generatedTitle was "Untitled" or failed, try extracting from Topic (often contains the Prompt JSON)
+        const topicTitle = extractProjectTitle(p.topic, 'FALLBACK_SENTINEL');
+        if (topicTitle !== 'FALLBACK_SENTINEL' &&
+            topicTitle !== 'Untitled Project' &&
+            topicTitle !== 'Projeto Sem Título') {
+            return topicTitle;
+        }
+
+        // 4. Final fallback
+        return t('app.untitled_project');
     };
 
     const handleSetStep = (newStep: AppStep) => {

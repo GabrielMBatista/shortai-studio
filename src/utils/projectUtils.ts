@@ -3,69 +3,91 @@
  */
 
 /**
+ * Validates if a string is a "real" title and not a placeholder/fallback.
+ */
+const isValidTitle = (title: string | null | undefined): boolean => {
+    if (!title || typeof title !== 'string') return false;
+    const lower = title.toLowerCase().trim();
+    return lower.length > 0 &&
+        !lower.includes('untitled project') &&
+        !lower.includes('projeto sem título') &&
+        !lower.includes('sem título') &&
+        !lower.startsWith('⏳');
+};
+
+/**
+ * Recursively searches for a title-like key in an object.
+ */
+const findTitleDeep = (obj: any, depth: number = 0): string | null => {
+    if (!obj || typeof obj !== 'object' || depth > 3) return null;
+
+    // 1. Check Priority Keys at this level
+    const priorityKeys = [
+        'titulo', 'tittle', 'title', // Portuguese, Typo, English
+        'projectTitle', 'videoTitle', 'scriptTitle',
+        'id_da_semana', // Schedule ID
+        'tema_dia'
+    ];
+
+    for (const key of priorityKeys) {
+        if (obj[key] && typeof obj[key] === 'string' && isValidTitle(obj[key])) {
+            return obj[key];
+        }
+    }
+
+    // 2. Fallback Keys (lower priority)
+    const fallbackKeys = ['name', 'topic', 'subject'];
+    for (const key of fallbackKeys) {
+        if (obj[key] && typeof obj[key] === 'string' && isValidTitle(obj[key])) {
+            return obj[key];
+        }
+    }
+
+    // 3. Recurse into children (DFS)
+    for (const key in obj) {
+        if (typeof obj[key] === 'object') {
+            const found = findTitleDeep(obj[key], depth + 1);
+            if (found) return found;
+        }
+    }
+
+    return null;
+};
+
+/**
  * Extracts a human-readable title from a string that might be a recursive JSON or a plain string.
- * Handles cases where the title is embedded in a JSON structure under keys like 'titulo', 'projectTitle', etc.
+ * Handles cases where the title is embedded in a JSON structure.
  * 
  * @param rawTitle The raw title string or JSON string from generatedTitle or topic
- * @param fallback The fallback string to return if no title can be extracted (default: 'Untitled Project')
+ * @param fallback The fallback string to return if no title can be extracted
  * @returns The extracted title or the fallback
  */
 export const extractProjectTitle = (rawTitle: string | null | undefined, fallback: string = 'Untitled Project'): string => {
     if (!rawTitle) return fallback;
 
-    // If it's not a string, try to convert or return fallback. 
-    // In TS rawTitle is string|null|undefined but runtime might differ.
-    if (typeof rawTitle !== 'string') return String(rawTitle);
+    // If it's a simple string that looks like a valid title, return it.
+    // BUT if it looks like JSON/Array, we MUST parse it.
+    const trimmed = typeof rawTitle === 'string' ? rawTitle.trim() : String(rawTitle);
 
-    const trimmed = rawTitle.trim();
     if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
         try {
             const json = JSON.parse(trimmed);
+            const found = findTitleDeep(json);
+            if (found) return found;
 
-            // Priority list of keys to look for
-            // 'titulo' is high priority based on user feedback
-            const possibleKeys = [
-                'titulo',
-                'projectTitle',
-                'videoTitle',
-                'title',
-                'scriptTitle',
-                'name',
-                'topic',
-                'id_da_semana', // Use week ID as title if it's a schedule object
-                'tema_dia'      // Daily theme as fallback
-            ];
-
-            for (const key of possibleKeys) {
-                if (json[key] && typeof json[key] === 'string' && json[key].trim().length > 0) {
-                    return json[key];
-                }
-            }
-
-            // If strictly a wrapper like { "title": "..." } but the key was missed above, 
-            // we've covered most.
-
-            // If the JSON is deeper, we might want to return the rawTitle so the user checks it 
-            // OR return fallback. Returning rawTitle (the JSON) is what the user dislikes.
-            // But if we return "Untitled Project" for a valid JSON that we just couldn't parse, 
-            // that's also annoying.
-            // However, the User specifically asked to extract the title.
-            // If we can't find one, maybe we return the fallback.
-
-            // Let's try to be smart: if it interprets as an object but has no title keys, 
-            // check if it has 'cronograma'.
-            if (json.cronograma) {
-                return json.id_da_semana || fallback;
-            }
-
-            // If we really can't find a title, return fallback to avoid showing raw JSON
-            return fallback;
+            // If parsed but no title found, check if it's a schedule with 'cronograma'
+            // and we missed id_da_semana for some reason (handled in findTitleDeep, but double check)
+            if (json.cronograma && json.id_da_semana) return json.id_da_semana;
         } catch (e) {
-            // If JSON parse fails, it might be a title that just starts with { (unlikely but possible)
-            // or malformed JSON. Return original text to be safe.
-            return rawTitle;
+            // Parse error, fall through
         }
     }
 
-    return rawTitle;
+    // If we are here, it's either not JSON, or JSON parse failed, or no title found in JSON.
+    // If the raw strings IS "Untitled Project" (or similar), return fallback.
+    if (!isValidTitle(trimmed)) {
+        return fallback;
+    }
+
+    return trimmed;
 };

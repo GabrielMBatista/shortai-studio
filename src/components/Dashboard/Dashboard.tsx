@@ -317,7 +317,11 @@ const Dashboard: React.FC<DashboardProps> = ({
         const project = projects.find(p => p.id === projectId);
         if (!project) return;
 
-        const title = extractProjectTitle(project.generatedTitle || project.topic, t('app.untitled_project'));
+        let title = extractProjectTitle(project.generatedTitle, 'FALLBACK');
+        if (title === 'FALLBACK' || title === 'Untitled Project' || title === 'Projeto Sem Título' || title === t('app.untitled_project')) {
+            title = extractProjectTitle(project.topic, t('app.untitled_project'));
+        }
+
         setPermanentDeleteModal({ isOpen: true, projectId, projectTitle: title });
         setContextMenu(null);
     };
