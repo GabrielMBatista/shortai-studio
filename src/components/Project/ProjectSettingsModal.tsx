@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Save, User as UserIcon, Search, CheckCircle2, Loader2, Edit2 } from 'lucide-react';
 import { SavedCharacter, User } from '../../types';
 import { useCharacterLibrary } from '../../hooks/useCharacterLibrary';
+import { extractProjectDescription } from '../../utils/projectUtils';
 
 interface ProjectSettingsModalProps {
     isOpen: boolean;
@@ -25,7 +26,7 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
 }) => {
     const { t } = useTranslation();
     const [title, setTitle] = useState(currentTitle || '');
-    const [description, setDescription] = useState(currentDescription || '');
+    const [description, setDescription] = useState(extractProjectDescription(currentDescription) || '');
     const [selectedCharIds, setSelectedCharIds] = useState<string[]>(initialCharacterIds || []);
     const [isSaving, setIsSaving] = useState(false);
     const [search, setSearch] = useState('');
@@ -36,7 +37,7 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setTitle(currentTitle || '');
-            setDescription(currentDescription || '');
+            setDescription(extractProjectDescription(currentDescription) || '');
             setSelectedCharIds(initialCharacterIds || []);
         }
     }, [isOpen, currentTitle, currentDescription, initialCharacterIds]);

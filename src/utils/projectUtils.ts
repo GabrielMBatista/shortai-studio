@@ -69,6 +69,7 @@ export const extractProjectTitle = (rawTitle: string | null | undefined, fallbac
     // BUT if it looks like JSON/Array, we MUST parse it.
     const trimmed = typeof rawTitle === 'string' ? rawTitle.trim() : String(rawTitle);
 
+    // JSON Detection
     if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
         try {
             const json = JSON.parse(trimmed);
@@ -76,18 +77,99 @@ export const extractProjectTitle = (rawTitle: string | null | undefined, fallbac
             if (found) return found;
 
             // If parsed but no title found, check if it's a schedule with 'cronograma'
-            // and we missed id_da_semana for some reason (handled in findTitleDeep, but double check)
             if (json.cronograma && json.id_da_semana) return json.id_da_semana;
         } catch (e) {
-            // Parse error, fall through
+            // Parse error
         }
+
+        // CRITICAL: If it looks like JSON but we failed to parse or extract, 
+        // NEVER return the raw JSON string. Return fallback.
+        return fallback;
     }
 
-    // If we are here, it's either not JSON, or JSON parse failed, or no title found in JSON.
-    // If the raw strings IS "Untitled Project" (or similar), return fallback.
+    // If we are here, it's not JSON. Check if it's a valid title string.
     if (!isValidTitle(trimmed)) {
         return fallback;
     }
 
     return trimmed;
+};
+
+/**
+ * Generic deep finder for multiple keys
+ */
+const findValueDeep = (obj: any, keys: string[], depth: number = 0): string | string[] | null => {
+    if (!obj || typeof obj !== 'object' || depth > 3) return null;
+
+    for (const key of keys) {
+        if (obj[key]) {
+            // Strong match
+            return obj[key];
+        }
+    }
+
+    // Recurse
+    for (const key in obj) {
+        if (typeof obj[key] === 'object') {
+            const found = findValueDeep(obj[key], keys, depth + 1);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+/**
+ * Extracts a human-readable description from a string that might be a recursive JSON.
+ */
+export const extractProjectDescription = (rawDesc: string | null | undefined, fallback: string = ''): string => {
+    if (!rawDesc) return fallback;
+    const trimmed = typeof rawDesc === 'string' ? rawDesc.trim() : String(rawDesc);
+
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+            const json = JSON.parse(trimmed);
+            const found = findValueDeep(json, ['description', 'generatedDescription', 'desc', 'generated_description', 'resumo']);
+            if (found && typeof found === 'string') return found;
+        } catch (e) {
+            // Ignore
+        }
+        return fallback; // Don't return raw JSON
+    }
+
+    return trimmed;
+};
+
+/**
+ * Extracts hashtags array from a string/JSON.
+ */
+export const extractProjectHashtags = (rawTags: string | string[] | null | undefined): string[] => {
+    if (!rawTags) return [];
+
+    // If it's already an array, use it
+    if (Array.isArray(rawTags)) return rawTags;
+
+    const trimmed = String(rawTags).trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+            const json = JSON.parse(trimmed);
+            // If it's a direct array
+            if (Array.isArray(json)) return json;
+
+            // Search for keys
+            const found = findValueDeep(json, ['hashtags', 'generated_shorts_hashtags', 'tags', 'keywords', 'generated_tiktok_hashtags']);
+            if (Array.isArray(found)) return found;
+            if (typeof found === 'string') return found.split(',').map(s => s.trim());
+        } catch (e) {
+            // Ignore
+        }
+        return []; // Return empty if failed parse
+    }
+
+    // Split string by commas or spaces if it looks like a list
+    if (trimmed.includes(',')) return trimmed.split(',').map(s => s.trim());
+
+    // As a last result, if it's just a string, return it as one tag (unless it looks like JSON garbage)
+    if (trimmed.length < 50) return [trimmed];
+
+    return [];
 };
