@@ -4,6 +4,7 @@ import { Folder, Plus, MoreVertical, Edit2, Trash2, FolderOpen, Loader2, HelpCir
 import { Folder as FolderType } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { CSS } from '@dnd-kit/utilities';
+import ConfirmModal from '../Common/ConfirmModal';
 
 interface FolderListProps {
     folders: FolderType[];
@@ -46,6 +47,8 @@ const FolderList: React.FC<FolderListProps> = ({
     const [editName, setEditName] = useState('');
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+    const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const toggleFolder = (folderId: string) => {
         setExpandedFolders(prev => {
@@ -107,14 +110,22 @@ const FolderList: React.FC<FolderListProps> = ({
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm(t('folders.delete_confirm'))) return;
+    const handleDelete = (id: string) => {
+        setFolderToDelete(id);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!folderToDelete) return;
+        setIsDeleting(true);
         try {
-            await onDeleteFolder(id);
-            if (selectedFolderId === id) onSelectFolder(null);
+            await onDeleteFolder(folderToDelete);
+            if (selectedFolderId === folderToDelete) onSelectFolder(null);
             setMenuOpenId(null);
         } catch (e) {
             console.error(e);
+        } finally {
+            setIsDeleting(false);
+            setFolderToDelete(null);
         }
     };
 
@@ -313,6 +324,16 @@ const FolderList: React.FC<FolderListProps> = ({
                     ))}
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={!!folderToDelete}
+                title={t('folders.delete')}
+                message={t('folders.delete_confirm')}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setFolderToDelete(null)}
+                isDestructive
+                confirmText={isDeleting ? t('common.deleting') : t('common.delete')}
+            />
         </div >
     );
 };

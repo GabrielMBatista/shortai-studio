@@ -5,6 +5,7 @@ import { Persona } from '../../types/personas';
 import { personasApi } from '../../api/personas';
 import { personaChatsApi } from '../../api/persona-chats';
 import { PersonaChat } from '../../types/persona-chat';
+import ConfirmModal from '../Common/ConfirmModal';
 
 interface Message {
     role: 'user' | 'model';
@@ -26,6 +27,10 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
     const [chats, setChats] = useState<PersonaChat[]>([]);
     const [activeChat, setActiveChat] = useState<PersonaChat | null>(null);
     const [showChatList, setShowChatList] = useState(false);
+    const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
+    const [chatToDelete, setChatToDelete] = useState<PersonaChat | null>(null);
+    const [isDeletingChat, setIsDeletingChat] = useState(false);
+    const [isClearingHistory, setIsClearingHistory] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Carregar chats da persona
@@ -177,8 +182,28 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
     };
 
     const handleClear = () => {
-        if (window.confirm(t('input.clear_history_confirm'))) {
-            setMessages([]);
+        setIsConfirmClearOpen(true);
+    };
+
+    const confirmClear = () => {
+        setMessages([]);
+        setIsConfirmClearOpen(false);
+    };
+
+    const confirmDeleteChat = async () => {
+        if (!chatToDelete) return;
+        setIsDeletingChat(true);
+        try {
+            await personaChatsApi.deleteChat(chatToDelete.id);
+            setChats(prev => prev.filter(c => c.id !== chatToDelete.id));
+            if (activeChat?.id === chatToDelete.id) {
+                setActiveChat(null);
+            }
+        } catch (error) {
+            console.error('Failed to delete chat:', error);
+        } finally {
+            setIsDeletingChat(false);
+            setChatToDelete(null);
         }
     };
 
@@ -292,19 +317,9 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                                                 </p>
                                             </div>
                                             <button
-                                                onClick={async (e) => {
+                                                onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (confirm('Delete this chat?')) {
-                                                        try {
-                                                            await personaChatsApi.deleteChat(chat.id);
-                                                            setChats(prev => prev.filter(c => c.id !== chat.id));
-                                                            if (activeChat?.id === chat.id) {
-                                                                setActiveChat(null);
-                                                            }
-                                                        } catch (error) {
-                                                            console.error('Failed to delete chat:', error);
-                                                        }
-                                                    }
+                                                    setChatToDelete(chat);
                                                 }}
                                                 className="p-1 text-slate-500 hover:text-red-400 transition-colors"
                                             >
@@ -383,6 +398,26 @@ export default function PersonaChatModal({ isOpen, onClose, persona, channelId }
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={isConfirmClearOpen}
+                title={t('personas.clear_chat_title')}
+                message={t('input.clear_history_confirm')}
+                onConfirm={confirmClear}
+                onCancel={() => setIsConfirmClearOpen(false)}
+                isDestructive
+                confirmText={t('common.clear')}
+            />
+
+            <ConfirmModal
+                isOpen={!!chatToDelete}
+                title="Delete Chat"
+                message={`Are you sure you want to delete "${chatToDelete?.title}"? This action cannot be undone.`}
+                onConfirm={confirmDeleteChat}
+                onCancel={() => setChatToDelete(null)}
+                isDestructive
+                confirmText={isDeletingChat ? 'Deleting...' : 'Delete Chat'}
+            />
         </div>
     );
 }

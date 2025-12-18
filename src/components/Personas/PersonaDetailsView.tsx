@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Bot, Loader2, Trash2, Sparkles, Crown, Star, Gauge, Thermometer, MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Persona } from '../../types/personas';
 import { personasApi } from '../../api/personas';
 import { Card, Button, Badge } from '../ui';
+import ConfirmModal from '../Common/ConfirmModal';
 
 interface Message {
     role: 'user' | 'model';
@@ -15,9 +17,11 @@ interface PersonaDetailsViewProps {
 }
 
 export function PersonaDetailsView({ persona, onCreateProject }: PersonaDetailsViewProps) {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll
@@ -55,9 +59,12 @@ export function PersonaDetailsView({ persona, onCreateProject }: PersonaDetailsV
     };
 
     const handleClear = () => {
-        if (window.confirm('Clear chat history?')) {
-            setMessages([]);
-        }
+        setIsConfirmClearOpen(true);
+    };
+
+    const confirmClear = () => {
+        setMessages([]);
+        setIsConfirmClearOpen(false);
     };
 
     const getInitials = (name: string) => {
@@ -236,6 +243,16 @@ export function PersonaDetailsView({ persona, onCreateProject }: PersonaDetailsV
                     </form>
                 </div>
             </Card>
+
+            <ConfirmModal
+                isOpen={isConfirmClearOpen}
+                title={t('personas.clear_chat_title')}
+                message={t('input.clear_history_confirm')}
+                onConfirm={confirmClear}
+                onCancel={() => setIsConfirmClearOpen(false)}
+                isDestructive
+                confirmText={t('common.clear')}
+            />
         </div>
     );
 }

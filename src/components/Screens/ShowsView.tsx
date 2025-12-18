@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Film, Users, Trash2, Edit, Clapperboard, Calendar } from 'lucide-react';
 import { Show, getShows, deleteShow } from '../../services/shows';
 import CreateShowModal from '../Shows/CreateShowModal';
+import ConfirmModal from '../Common/ConfirmModal';
 import Loader from '../Common/Loader';
 
 interface ShowsViewProps {
@@ -15,6 +16,7 @@ const ShowsView: React.FC<ShowsViewProps> = ({ onOpenShow, showToast }) => {
     const [shows, setShows] = useState<Show[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const fetchShows = async () => {
         setIsLoading(true);
@@ -33,16 +35,22 @@ const ShowsView: React.FC<ShowsViewProps> = ({ onOpenShow, showToast }) => {
         fetchShows();
     }, []);
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm('Tem certeza? Isso apagará a série e desconectará os episódios.')) return;
+        setConfirmDeleteId(id);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmDeleteId) return;
 
         try {
-            await deleteShow(id);
-            setShows(prev => prev.filter(s => s.id !== id));
+            await deleteShow(confirmDeleteId);
+            setShows(prev => prev.filter(s => s.id !== confirmDeleteId));
             showToast('Série removida', 'success');
         } catch (e) {
             showToast('Erro ao remover', 'error');
+        } finally {
+            setConfirmDeleteId(null);
         }
     };
 
@@ -92,7 +100,7 @@ const ShowsView: React.FC<ShowsViewProps> = ({ onOpenShow, showToast }) => {
                             >
                                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
-                                        onClick={(e) => handleDelete(show.id, e)}
+                                        onClick={(e) => handleDeleteClick(show.id, e)}
                                         className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
                                         title="Excluir"
                                     >
@@ -139,6 +147,16 @@ const ShowsView: React.FC<ShowsViewProps> = ({ onOpenShow, showToast }) => {
                 onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={fetchShows}
                 showToast={showToast}
+            />
+
+            <ConfirmModal
+                isOpen={!!confirmDeleteId}
+                title="Excluir Série"
+                message="Tem certeza? Isso apagará a série e desconectará os episódios."
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setConfirmDeleteId(null)}
+                isDestructive
+                confirmText="Excluir"
             />
         </div>
     );

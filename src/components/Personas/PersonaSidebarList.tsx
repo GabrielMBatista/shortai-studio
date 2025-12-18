@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Plus, MoreVertical, Edit2, Trash2, ChevronLeft, ChevronRight, PanelLeft, Star, Crown, Filter } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Persona } from '../../types/personas';
+import ConfirmModal from '../Common/ConfirmModal';
 
 interface PersonaSidebarListProps {
     personas: Persona[];
@@ -31,6 +32,7 @@ export default function PersonaSidebarList({
     const { t } = useTranslation();
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [personaToDelete, setPersonaToDelete] = useState<Persona | null>(null);
 
     const getInitials = (name: string) => {
         return name
@@ -213,9 +215,7 @@ export default function PersonaSidebarList({
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setMenuOpenId(null);
-                                                                if (confirm(`${t('input.delete_char_confirm')} "${persona.name}"?`)) {
-                                                                    onDeletePersona(persona.id);
-                                                                }
+                                                                setPersonaToDelete(persona);
                                                             }}
                                                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                                         >
@@ -232,6 +232,20 @@ export default function PersonaSidebarList({
                     )}
                 </div>
             </div>
+            <ConfirmModal
+                isOpen={!!personaToDelete}
+                title={t('common.delete')}
+                message={`${t('input.delete_char_confirm')} "${personaToDelete?.name}"?`}
+                onConfirm={() => {
+                    if (personaToDelete) {
+                        onDeletePersona(personaToDelete.id);
+                        setPersonaToDelete(null);
+                    }
+                }}
+                onCancel={() => setPersonaToDelete(null)}
+                isDestructive
+                confirmText={t('common.delete')}
+            />
         </div>
     );
 }

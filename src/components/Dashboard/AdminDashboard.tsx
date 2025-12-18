@@ -4,6 +4,7 @@ import { User, Role, SubscriptionPlan, Plan } from '../../types';
 import Loader from '../Common/Loader';
 import { Shield, Users, Film, Layers, Ban, TrendingUp, Loader2, Search, Filter, ArrowUp, ArrowDown, CheckCircle2, Save, X, Edit2, CreditCard, Plus, Trash2 } from 'lucide-react';
 import LogConsole from './LogConsole';
+import ConfirmModal from '../Common/ConfirmModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface AnalyticsData {
@@ -37,6 +38,7 @@ const AdminDashboard: React.FC<{ currentUser: User, showToast?: (msg: string, ty
     const [editingUser, setEditingUser] = useState<string | null>(null);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
     const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+    const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
     // Edit Form State
     const [editForm, setEditForm] = useState<{ role: Role, plan: SubscriptionPlan, isBlocked: boolean }>({
@@ -194,10 +196,14 @@ const AdminDashboard: React.FC<{ currentUser: User, showToast?: (msg: string, ty
         }
     };
 
-    const handleDeletePlan = async (id: string) => {
-        if (!confirm(t('admin.delete_plan_confirm'))) return;
+    const handleDeletePlan = (id: string) => {
+        setPlanToDelete(id);
+    };
+
+    const handleConfirmDeletePlan = async () => {
+        if (!planToDelete) return;
         try {
-            const res = await fetch(`/api/admin/plans/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/admin/plans/${planToDelete}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchData();
             } else {
@@ -205,6 +211,8 @@ const AdminDashboard: React.FC<{ currentUser: User, showToast?: (msg: string, ty
             }
         } catch (e) {
             console.error("Failed to delete plan", e);
+        } finally {
+            setPlanToDelete(null);
         }
     };
 
@@ -737,6 +745,16 @@ const AdminDashboard: React.FC<{ currentUser: User, showToast?: (msg: string, ty
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={!!planToDelete}
+                title={t('admin.delete_plan')}
+                message={t('admin.delete_plan_confirm')}
+                onConfirm={handleConfirmDeletePlan}
+                onCancel={() => setPlanToDelete(null)}
+                isDestructive
+                confirmText={t('common.delete')}
+            />
         </div>
     );
 };
