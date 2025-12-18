@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { AppStep, User, VideoProject, TTSProvider } from '../../types';
 import { workflowClient } from '../../services/workflowClient';
-import { saveProject, patchScene } from '../../services/storageService';
+import { saveProject, patchScene } from '../../services/.';
 import { generateScript } from '../../services/geminiService';
 
 export const useGenerationCommands = (

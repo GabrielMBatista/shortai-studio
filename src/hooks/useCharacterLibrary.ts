@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SavedCharacter, User } from '../types';
-import { getUserCharacters, saveCharacter, deleteCharacter } from '../services/storageService';
+import { getUserCharacters, saveCharacter, deleteCharacter } from '../services/.';
 import { optimizeReferenceImage } from '../services/geminiService';
 
 export const useCharacterLibrary = (user: User | null) => {

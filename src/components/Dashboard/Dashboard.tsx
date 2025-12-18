@@ -9,7 +9,7 @@ import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSe
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import ProjectCard from '../Project/ProjectCard';
 import ProjectCardSkeleton from '../Project/ProjectCardSkeleton';
-import { exportProjectContext, patchProjectMetadata, getFolders, createFolder, updateFolder, deleteFolder } from '../../services/storageService';
+import { exportProjectContext, patchProjectMetadata, getFolders, createFolder, updateFolder, deleteFolder } from '../../services/.';
 import Pagination from '../Common/Pagination';
 import { extractProjectTitle } from '../../utils/projectUtils';
 

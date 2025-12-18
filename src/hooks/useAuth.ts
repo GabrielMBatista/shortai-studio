@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '../types';
-import { loginUser, logoutUser, restoreSession } from '../services/storageService';
+import { loginUser, logoutUser, restoreSession } from '../services/.';
 
 export const useAuth = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);

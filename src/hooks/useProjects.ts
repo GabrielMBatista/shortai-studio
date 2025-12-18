@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUserProjects, deleteProject } from '../services/storageService';
+import { getUserProjects, deleteProject } from '../services/.';
 import { useState } from 'react';
 
 export const useProjects = (userId?: string, folderId?: string | null, isArchived?: boolean) => {

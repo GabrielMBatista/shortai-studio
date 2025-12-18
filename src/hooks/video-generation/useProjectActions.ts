@@ -1,5 +1,5 @@
 import { Scene, VideoProject, User, TTSProvider } from '../../types';
-import { saveProject, deleteScene, patchScene } from '../../services/storageService';
+import { saveProject, deleteScene, patchScene } from '../../services/.';
 import { workflowClient } from '../../services/workflowClient';
 
 export const useProjectActions = (

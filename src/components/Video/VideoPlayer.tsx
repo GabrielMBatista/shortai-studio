@@ -84,6 +84,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
     loadMedia();
   }, [activeScene]);
 
+  // Preload next scene media to prevent stuttering
+  useEffect(() => {
+    const nextIndex = currentSceneIndex + 1;
+    if (nextIndex < validScenes.length) {
+      const nextScene = validScenes[nextIndex];
+      if (nextScene.id) {
+        // Just trigger the fetch and let it populate the cache in the service
+        getSceneMedia(nextScene.id).catch(err =>
+          console.warn(`[VideoPlayer] Failed to preload scene ${nextIndex}:`, err)
+        );
+      }
+    }
+  }, [currentSceneIndex, validScenes]);
+
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicRef = useRef<HTMLAudioElement | null>(null);

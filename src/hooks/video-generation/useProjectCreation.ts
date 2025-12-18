@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { AppStep, User, VideoProject, ReferenceCharacter, TTSProvider } from '../../types';
 import { generateScript, generateMusicPrompt } from '../../services/geminiService';
-import { saveProject } from '../../services/storageService';
+import { saveProject } from '../../services/.';
 import { apiFetch } from '../../services/api';
 
 // UUID generator compatible with all browsers
