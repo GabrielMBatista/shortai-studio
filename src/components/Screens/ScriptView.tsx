@@ -277,7 +277,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [selectedLanguage, setSelectedLanguage] = useState(projectLanguage);
     const [selectedVideoModel, setSelectedVideoModel] = useState(projectVideoModel || 'veo-2.0-generate-001');
     const [selectedAudioModel, setSelectedAudioModel] = useState(projectAudioModel || 'eleven_turbo_v2_5');
-    const [selectedAssetReuseStrategy, setSelectedAssetReuseStrategy] = useState<'auto_reuse' | 'no_reuse'>(projectAssetReuseStrategy || 'auto_reuse');
+    const [selectedAssetReuseStrategy, setSelectedAssetReuseStrategy] = useState<'auto_reuse' | 'no_reuse'>(projectAssetReuseStrategy || 'no_reuse');
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     const [previewState, setPreviewState] = useState<{ status: 'idle' | 'loading' | 'playing' }>({ status: 'idle' });
@@ -641,29 +641,7 @@ const ScriptView: React.FC<ScriptViewProps> = ({
 
                         {/* Row 2: Actions & Video Model */}
                         <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end">
-                            {/* Asset Reuse Strategy Toggle */}
-                            <div className="flex items-center bg-slate-950/50 border border-slate-800 rounded-lg p-1 gap-1">
-                                <button
-                                    onClick={() => {
-                                        setSelectedAssetReuseStrategy('auto_reuse');
-                                        onUpdateProjectSettings({ assetReuseStrategy: 'auto_reuse' });
-                                    }}
-                                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 ${selectedAssetReuseStrategy === 'auto_reuse' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-                                    title="Auto-Reuse Assets from Catalog"
-                                >
-                                    <Recycle className="w-3 h-3" /> {t('script.auto_reuse', 'AUTO REUSE')}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setSelectedAssetReuseStrategy('no_reuse');
-                                        onUpdateProjectSettings({ assetReuseStrategy: 'no_reuse' });
-                                    }}
-                                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5 ${selectedAssetReuseStrategy === 'no_reuse' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-                                    title="Always Generate New Assets"
-                                >
-                                    <Zap className="w-3 h-3" /> {t('script.always_new', 'ALWAYS NEW')}
-                                </button>
-                            </div>
+                            {/* Asset Reuse Strategy Toggle Removed (Manual reuse only) */}
 
                             {/* Video Model Selector */}
                             <div className="flex items-center bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2 gap-2 relative group">

@@ -34,7 +34,7 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
     const { t } = useTranslation();
     const [title, setTitle] = useState(currentTitle || '');
     const [description, setDescription] = useState(extractProjectDescription(currentDescription) || '');
-    const [selectedAssetReuseStrategy, setSelectedAssetReuseStrategy] = useState<'auto_reuse' | 'no_reuse'>(currentAssetReuseStrategy || 'auto_reuse');
+    const [selectedAssetReuseStrategy, setSelectedAssetReuseStrategy] = useState<'auto_reuse' | 'no_reuse'>(currentAssetReuseStrategy || 'no_reuse');
     const [selectedCharIds, setSelectedCharIds] = useState<string[]>(initialCharacterIds || []);
     const [isSaving, setIsSaving] = useState(false);
     const [search, setSearch] = useState('');
@@ -46,7 +46,7 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
         if (isOpen) {
             setTitle(currentTitle || '');
             setDescription(extractProjectDescription(currentDescription) || '');
-            setSelectedAssetReuseStrategy(currentAssetReuseStrategy || 'auto_reuse');
+            setSelectedAssetReuseStrategy(currentAssetReuseStrategy || 'no_reuse');
             setSelectedCharIds(initialCharacterIds || []);
         }
     }, [isOpen, currentTitle, currentDescription, currentAssetReuseStrategy, initialCharacterIds]);
@@ -124,59 +124,6 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Asset Reuse Strategy */}
-                    <div className="space-y-3 pt-4 border-t border-slate-800">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase">{t('script.asset_reuse_strategy', 'Asset Reuse Strategy')}</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedAssetReuseStrategy('auto_reuse')}
-                                className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${selectedAssetReuseStrategy === 'auto_reuse'
-                                    ? 'border-indigo-500 bg-indigo-500/10'
-                                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
-                                    }`}
-                            >
-                                <div className="shrink-0 mt-0.5">
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedAssetReuseStrategy === 'auto_reuse' ? 'border-indigo-500' : 'border-slate-600'}`}>
-                                        {selectedAssetReuseStrategy === 'auto_reuse' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Recycle className="w-3.5 h-3.5 text-indigo-400" />
-                                        <span className="text-sm font-semibold text-white">{t('script.auto_reuse', 'Auto Reuse')}</span>
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 leading-relaxed">
-                                        Reutiliza automaticamente assets similares do catálogo global para economizar créditos.
-                                    </p>
-                                </div>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setSelectedAssetReuseStrategy('no_reuse')}
-                                className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${selectedAssetReuseStrategy === 'no_reuse'
-                                    ? 'border-indigo-500 bg-indigo-500/10'
-                                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
-                                    }`}
-                            >
-                                <div className="shrink-0 mt-0.5">
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedAssetReuseStrategy === 'no_reuse' ? 'border-indigo-500' : 'border-slate-600'}`}>
-                                        {selectedAssetReuseStrategy === 'no_reuse' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Zap className="w-3.5 h-3.5 text-indigo-400" />
-                                        <span className="text-sm font-semibold text-white">{t('script.always_new', 'Always New')}</span>
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 leading-relaxed">
-                                        Sempre gera novas imagens e áudios do zero, ignorando o catálogo.
-                                    </p>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
 
                     {/* Character Roster */}
                     <div className="space-y-3 pt-4 border-t border-slate-800">
