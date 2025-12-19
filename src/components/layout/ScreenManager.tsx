@@ -83,6 +83,7 @@ interface ScreenManagerProps {
         generatedTitle?: string;
         generatedDescription?: string;
         characterIds?: string[];
+        assetReuseStrategy?: 'auto_reuse' | 'no_reuse';
     }) => Promise<void>;
     regenerateMusic: () => Promise<void>;
     regenerateScript: () => Promise<void>;
@@ -225,6 +226,7 @@ const ScreenManager: React.FC<ScreenManagerProps> = ({
                         projectProvider={project.ttsProvider}
                         projectLanguage={project.language}
                         projectAudioModel={project.audioModel}
+                        projectAssetReuseStrategy={project.assetReuseStrategy}
                         scenes={Array.isArray(project.scenes) ? project.scenes : []}
                         generatedTitle={project.generatedTitle}
                         generatedDescription={project.generatedDescription}

@@ -216,7 +216,10 @@
         "no_characters_found": "Nenhum personagem encontrado",
         "clear_all": "Limpar tudo",
         "default_character": "Padrão",
-        "selected_count": "{{count}} selecionados"
+        "selected_count": "{{count}} selecionados",
+        "auto_reuse": "REUTILIZAÇÃO AUTO",
+        "always_new": "SEMPRE NOVO",
+        "asset_reuse_strategy": "Estratégia de Reuso de Assets"
     },
     "scene": {
         "regenerate_title": "Recriar {{type}}?",

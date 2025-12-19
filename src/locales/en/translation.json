@@ -215,7 +215,10 @@
         "no_characters_found": "No characters found",
         "clear_all": "Clear all",
         "default_character": "Default",
-        "selected_count": "{{count}} selected"
+        "selected_count": "{{count}} selected",
+        "auto_reuse": "AUTO REUSE",
+        "always_new": "ALWAYS NEW",
+        "asset_reuse_strategy": "Asset Reuse Strategy"
     },
     "scene": {
         "regenerate_title": "Regenerate {{type}}?",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Save, User as UserIcon, Search, CheckCircle2, Loader2, Edit2 } from 'lucide-react';
+import { X, Save, User as UserIcon, Search, CheckCircle2, Loader2, Edit2, Recycle, Zap } from 'lucide-react';
 import { SavedCharacter, User } from '../../types';
 import { useCharacterLibrary } from '../../hooks/useCharacterLibrary';
 import { extractProjectDescription } from '../../utils/projectUtils';
@@ -10,9 +10,15 @@ interface ProjectSettingsModalProps {
     onClose: () => void;
     currentTitle?: string;
     currentDescription?: string;
+    currentAssetReuseStrategy?: 'auto_reuse' | 'no_reuse';
     currentUser: User | null;
     initialCharacterIds: string[];
-    onSave: (data: { generatedTitle?: string; generatedDescription?: string; characterIds?: string[] }) => Promise<void>;
+    onSave: (data: {
+        generatedTitle?: string;
+        generatedDescription?: string;
+        characterIds?: string[];
+        assetReuseStrategy?: 'auto_reuse' | 'no_reuse';
+    }) => Promise<void>;
 }
 
 const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
@@ -20,6 +26,7 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
     onClose,
     currentTitle,
     currentDescription,
+    currentAssetReuseStrategy,
     currentUser,
     initialCharacterIds,
     onSave
@@ -27,6 +34,7 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
     const { t } = useTranslation();
     const [title, setTitle] = useState(currentTitle || '');
     const [description, setDescription] = useState(extractProjectDescription(currentDescription) || '');
+    const [selectedAssetReuseStrategy, setSelectedAssetReuseStrategy] = useState<'auto_reuse' | 'no_reuse'>(currentAssetReuseStrategy || 'auto_reuse');
     const [selectedCharIds, setSelectedCharIds] = useState<string[]>(initialCharacterIds || []);
     const [isSaving, setIsSaving] = useState(false);
     const [search, setSearch] = useState('');
@@ -38,9 +46,10 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
         if (isOpen) {
             setTitle(currentTitle || '');
             setDescription(extractProjectDescription(currentDescription) || '');
+            setSelectedAssetReuseStrategy(currentAssetReuseStrategy || 'auto_reuse');
             setSelectedCharIds(initialCharacterIds || []);
         }
-    }, [isOpen, currentTitle, currentDescription, initialCharacterIds]);
+    }, [isOpen, currentTitle, currentDescription, currentAssetReuseStrategy, initialCharacterIds]);
 
     if (!isOpen) return null;
 
@@ -50,7 +59,8 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
             await onSave({
                 generatedTitle: title,
                 generatedDescription: description,
-                characterIds: selectedCharIds
+                characterIds: selectedCharIds,
+                assetReuseStrategy: selectedAssetReuseStrategy
             });
             onClose();
         } catch (e) {
@@ -111,6 +121,60 @@ const ProjectSettingsModal: React.FC<ProjectSettingsModalProps> = ({
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none min-h-[100px] resize-none"
                                 placeholder={t('script.enter_description', 'Enter project description...')}
                             />
+                        </div>
+                    </div>
+
+                    {/* Asset Reuse Strategy */}
+                    <div className="space-y-3 pt-4 border-t border-slate-800">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase">{t('script.asset_reuse_strategy', 'Asset Reuse Strategy')}</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedAssetReuseStrategy('auto_reuse')}
+                                className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${selectedAssetReuseStrategy === 'auto_reuse'
+                                    ? 'border-indigo-500 bg-indigo-500/10'
+                                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                                    }`}
+                            >
+                                <div className="shrink-0 mt-0.5">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedAssetReuseStrategy === 'auto_reuse' ? 'border-indigo-500' : 'border-slate-600'}`}>
+                                        {selectedAssetReuseStrategy === 'auto_reuse' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Recycle className="w-3.5 h-3.5 text-indigo-400" />
+                                        <span className="text-sm font-semibold text-white">{t('script.auto_reuse', 'Auto Reuse')}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                        Reutiliza automaticamente assets similares do catálogo global para economizar créditos.
+                                    </p>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedAssetReuseStrategy('no_reuse')}
+                                className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${selectedAssetReuseStrategy === 'no_reuse'
+                                    ? 'border-indigo-500 bg-indigo-500/10'
+                                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                                    }`}
+                            >
+                                <div className="shrink-0 mt-0.5">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedAssetReuseStrategy === 'no_reuse' ? 'border-indigo-500' : 'border-slate-600'}`}>
+                                        {selectedAssetReuseStrategy === 'no_reuse' && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Zap className="w-3.5 h-3.5 text-indigo-400" />
+                                        <span className="text-sm font-semibold text-white">{t('script.always_new', 'Always New')}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                        Sempre gera novas imagens e áudios do zero, ignorando o catálogo.
+                                    </p>
+                                </div>
+                            </button>
                         </div>
                     </div>
 

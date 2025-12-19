@@ -214,6 +214,7 @@ Directly output the topic/concept. Do not add conversational filler like "Here i
                         <span className="text-[10px] text-slate-500">{t('input.leave_empty_auto')}</span>
                     </div>
                 </div>
+
             </CardContent>
         </Card>
     );

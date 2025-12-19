@@ -160,6 +160,7 @@ export const useProjectActions = (
         generatedTitle?: string;
         generatedDescription?: string;
         characterIds?: string[];
+        assetReuseStrategy?: 'auto_reuse' | 'no_reuse';
     }) => {
         if (!project) return;
         const updated = { ...project, ...settings };

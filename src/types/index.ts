@@ -201,6 +201,7 @@ export interface VideoProject {
   folderId?: string | null;
   channelId?: string | null;
   personaId?: string | null;
+  assetReuseStrategy?: 'auto_reuse' | 'no_reuse';
   isArchived?: boolean;
   tags?: string[];
 }
