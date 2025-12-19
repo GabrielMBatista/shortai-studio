@@ -35,7 +35,7 @@ if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     
     # 5. Restartar container com SSL
     echo "🚀 Reiniciando container com HTTPS..."
-    docker-compose up -d --build
+    docker-compose -f docker-compose.prod.yml up -d --build
     
     echo ""
     echo "✅ HTTPS configurado! Acesse: https://$DOMAIN"
