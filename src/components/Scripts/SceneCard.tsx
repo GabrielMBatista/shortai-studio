@@ -13,6 +13,7 @@ import { SceneCharacterPicker } from './SceneCharacterPicker';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { AssetLibraryModal } from '../Common/AssetLibraryModal';
 import { Library } from 'lucide-react';
+import { apiFetch } from '../../services/api';
 
 interface SceneCardProps {
     scene: Scene;
@@ -251,13 +252,12 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
 
     const handleSelectLibraryAsset = async (asset: any) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/scenes/${scene.id}/reuse`, {
+            const data = await apiFetch(`/scenes/${scene.id}/reuse`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ assetUrl: asset.url, assetId: asset.id })
             });
-            const data = await response.json();
-            if (data.success) {
+
+            if (data && (data.success || data.id)) {
                 // Atualiza o estado local para refletir a mudança imediatamente
                 onUpdateScene(sceneIndex, {
                     videoUrl: scene.mediaType === 'video' ? asset.url : scene.videoUrl,

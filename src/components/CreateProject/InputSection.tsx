@@ -10,6 +10,7 @@ import { usePersonas } from '../../hooks/usePersonas';
 import Loader from '../Common/Loader';
 import { ToastType } from '../Common/Toast';
 import { Button } from '../ui/Button';
+import { apiFetch } from '../../services/api';
 
 
 
@@ -71,6 +72,8 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     const [maxDuration, setMaxDuration] = useState<number | ''>(70);
     const [targetScenes, setTargetScenes] = useState<string>("");
     const [bulkProjects, setBulkProjects] = useState<any[]>([]);
+    const lastProcessedTopic = React.useRef<string>('');
+    const debounceTimer = React.useRef<NodeJS.Timeout | null>(null);
 
     // Style & Characters
     const [style, setStyle] = useState(VIDEO_STYLES[0]);
@@ -186,142 +189,135 @@ const InputSection: React.FC<InputSectionProps> = ({ user, onGenerate, isLoading
     // --- State for JSON Validation ---
     const [jsonParseError, setJsonParseError] = useState<string | null>(null);
 
+    // --- JSON & Duration Logic (Debounced) ---
     useEffect(() => {
         const trimmed = topic.trim();
-        setJsonParseError(null); // Reset error
+        if (trimmed === lastProcessedTopic.current) return;
 
-        if (!trimmed) {
+        // Reset state for short topics
+        if (!trimmed || trimmed.length < 10) {
+            setJsonParseError(null);
             if (bulkProjects.length > 0) setBulkProjects([]);
+            lastProcessedTopic.current = trimmed;
             return;
         }
 
-        const tryParse = (str: string) => {
-            try { return JSON5.parse(str); } catch (e: any) { return e.message; }
-        };
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-        let json = null;
-        let foundProjects: any[] = [];
-        let error = null;
+        debounceTimer.current = setTimeout(async () => {
+            lastProcessedTopic.current = trimmed;
+            setJsonParseError(null);
 
-        const firstBrace = trimmed.indexOf('{');
-        const lastBrace = trimmed.lastIndexOf('}');
-        const firstBracket = trimmed.indexOf('[');
-        const lastBracket = trimmed.lastIndexOf(']');
+            const tryParse = (str: string) => {
+                try { return JSON5.parse(str); } catch (e: any) { return e.message; }
+            };
 
-        // Naive check: does it look like JSON?
-        const looksLikeJson = (firstBrace === 0) || (firstBracket === 0);
+            let json = null;
+            let foundProjects: any[] = [];
+            let error = null;
 
-        if (firstBrace !== -1 && lastBrace > firstBrace) {
-            const result = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
-            if (typeof result === 'object' && result !== null) {
-                json = result;
-            } else if (looksLikeJson && typeof result === 'string') {
-                error = result;
+            const firstBrace = trimmed.indexOf('{');
+            const lastBrace = trimmed.lastIndexOf('}');
+            const firstBracket = trimmed.indexOf('[');
+            const lastBracket = trimmed.lastIndexOf(']');
+
+            // Naive check: does it look like JSON?
+            const looksLikeJson = (firstBrace === 0) || (firstBracket === 0);
+
+            // Optimization: if it doesn't look like JSON and it's just a few words, don't even try deep parsing
+            if (!looksLikeJson && trimmed.split(' ').length < 10 && !trimmed.includes('{')) {
+                return;
             }
-        } else if (looksLikeJson && (lastBrace === -1 || lastBrace < firstBrace)) {
-            error = "Incomplete JSON: Missing closing brace '}'";
-        }
 
-        if ((!json || (!json.scenes && !Array.isArray(json) && !json.cronograma)) && firstBracket !== -1 && lastBracket > firstBracket) {
-            const substring = trimmed.substring(firstBracket, lastBracket + 1);
-            const arrayJson = tryParse(substring);
-            if (Array.isArray(arrayJson)) {
-                json = arrayJson;
-                error = null; // Clear error if array parse succeeded
-            } else if (looksLikeJson && typeof arrayJson === 'string') {
-                // Only set error if object parse also failed
-                if (!error) error = arrayJson;
+            if (firstBrace !== -1 && lastBrace > firstBrace) {
+                const result = tryParse(trimmed.substring(firstBrace, lastBrace + 1));
+                if (typeof result === 'object' && result !== null) {
+                    json = result;
+                } else if (looksLikeJson && typeof result === 'string') {
+                    error = result;
+                }
+            } else if (looksLikeJson && (lastBrace === -1 || lastBrace < firstBrace)) {
+                error = "Incomplete JSON: Missing closing brace '}'";
             }
-        }
 
-        if (json) {
-            // Try backend normalization first to catch ALL persona formats
-            (async () => {
+            if ((!json || (!json.scenes && !Array.isArray(json) && !json.cronograma)) && firstBracket !== -1 && lastBracket > firstBracket) {
+                const substring = trimmed.substring(firstBracket, lastBracket + 1);
+                const arrayJson = tryParse(substring);
+                if (Array.isArray(arrayJson)) {
+                    json = arrayJson;
+                    error = null;
+                } else if (looksLikeJson && typeof arrayJson === 'string') {
+                    if (!error) error = arrayJson;
+                }
+            }
+
+            if (json) {
                 try {
-                    const normalizeResponse = await fetch('/api/scripts/normalize', {
+                    // Use apiFetch for consistency and to avoid double /api
+                    const data = await apiFetch('/scripts/normalize', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
                         body: JSON.stringify({
                             scriptJson: json,
                             fallbackTopic: 'Untitled'
                         })
                     });
 
-                    if (normalizeResponse.ok) {
-                        const { success, normalized } = await normalizeResponse.json();
-                        if (success && normalized && normalized.scenes && normalized.scenes.length > 0) {
-                            // Backend successfully normalized - this is a valid pre-generated script
-                            console.log(`✅ Backend detected valid script: ${normalized.scenes.length} scenes`);
-                            setBulkProjects([normalized]);
-                            showToast(t('input.json_detected', { count: 1 }), 'success');
-                            return;
-                        }
+                    if (data && data.success && data.normalized && data.normalized.scenes && data.normalized.scenes.length > 0) {
+                        console.log(`✅ Backend detected valid script: ${data.normalized.scenes.length} scenes`);
+                        setBulkProjects([data.normalized]);
+                        showToast(t('input.json_detected', { count: 1 }), 'success');
+
+                        // Auto-duration logic
+                        handleAutoDuration(data.normalized);
+                        return;
                     }
                 } catch (normErr) {
                     console.warn('Backend normalization failed, using local extraction:', normErr);
                 }
 
-                // Fallback to local extraction
                 foundProjects = extractProjects(json);
                 if (foundProjects.length > 0) {
                     setBulkProjects(foundProjects);
                     showToast(t('input.json_detected', { count: foundProjects.length }), 'success');
+                    handleAutoDuration(foundProjects[0]);
                 }
-            })();
-        } else if (looksLikeJson && !error) {
-            // If it looks like JSON but we couldn't parse logic
-            // error = "Invalid JSON format";
-            // Note: tryParse returns message on catch now.
-            const attempt = tryParse(trimmed);
-            if (typeof attempt === 'string') error = attempt;
-        }
+            } else if (looksLikeJson && error) {
+                setJsonParseError(error);
+                setBulkProjects([]);
+            }
+        }, 800);
 
-        if (error) {
-            setJsonParseError(error);
-            setBulkProjects([]);
-            return;
-        }
+        return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
+    }, [topic]);
 
-        if (foundProjects.length > 0) {
-            setBulkProjects(foundProjects);
-            showToast(t('input.json_detected', { count: foundProjects.length }), 'success');
-        } else {
-            setBulkProjects([]);
-        }
-
-        // Auto-duration logic
-        const projectData = foundProjects.length === 1 ? foundProjects[0] : (json && (json.scenes || json.script) ? normalizeProject(json) : null);
-        if (projectData) {
-            const scenes = projectData.scenes;
-            if (Array.isArray(scenes) && scenes.length > 0) {
-                const count = scenes.length;
-                const totalDuration = scenes.reduce((acc: number, s: any) => {
-                    const d = s.duration || s.durationSeconds || s.duration_seconds || s.estimated_duration;
-                    if (!d && s.narration) {
-                        const words = s.narration.split(/\s+/).length;
-                        return acc + Math.max(3, words / 2.5);
-                    }
-                    const val = typeof d === 'string' ? parseFloat(d) : Number(d);
-                    return acc + (isNaN(val) ? 5 : val);
-                }, 0);
-
-                if (totalDuration > 0) {
-                    const newMin = Math.round(Math.max(5, totalDuration - 5));
-                    const newMax = Math.round(totalDuration + 5);
-                    setMinDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMin) > 2 ? newMin : prev));
-                    setMaxDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMax) > 2 ? newMax : prev));
-
-                    if (!bulkProjects.length) {
-                        showToast(t('input.duration_adjusted', { seconds: Math.round(totalDuration) }), 'success');
-                    }
+    const handleAutoDuration = (projectData: any) => {
+        if (!projectData) return;
+        const scenes = projectData.scenes;
+        if (Array.isArray(scenes) && scenes.length > 0) {
+            const count = scenes.length;
+            const totalDuration = scenes.reduce((acc: number, s: any) => {
+                const d = s.duration || s.durationSeconds || s.duration_seconds || s.estimated_duration;
+                if (!d && s.narration) {
+                    const words = s.narration.split(/\s+/).length;
+                    return acc + Math.max(3, words / 2.5);
                 }
-                if (count > 0) {
-                    setTargetScenes(count.toString());
-                }
+                const val = typeof d === 'string' ? parseFloat(d) : Number(d);
+                return acc + (isNaN(val) ? 5 : val);
+            }, 0);
+
+            if (totalDuration > 0) {
+                const newMin = Math.round(Math.max(5, totalDuration - 5));
+                const newMax = Math.round(totalDuration + 5);
+                setMinDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMin) > 2 ? newMin : prev));
+                setMaxDuration((prev) => (Math.abs((typeof prev === 'number' ? prev : 0) - newMax) > 2 ? newMax : prev));
+
+                showToast(t('input.duration_adjusted', { seconds: Math.round(totalDuration) }), 'success');
+            }
+            if (count > 0) {
+                setTargetScenes(count.toString());
             }
         }
-    }, [topic]);
+    };
 
     // --- Handlers ---
     const handleSubmit = async (e: React.FormEvent) => {

@@ -1,14 +1,6 @@
-
 import { Scene, ReferenceCharacter } from "../types";
 import { getCurrentUser } from "./.";
-
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api';
-
-const getHeaders = () => {
-  return {
-    'Content-Type': 'application/json'
-  };
-};
+import { apiFetch } from "./api";
 
 export const generateScript = async (
   topic: string,
@@ -29,9 +21,8 @@ export const generateScript = async (
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_BASE_URL}/ai/generate-script`, {
+  const data = await apiFetch('/ai/generate-script', {
     method: 'POST',
-    headers: getHeaders(),
     body: JSON.stringify({
       userId: user.id,
       topic,
@@ -43,13 +34,6 @@ export const generateScript = async (
       channelId: options?.channelId
     })
   });
-
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Script generation failed");
-  }
-
-  const data = await response.json();
 
   // Backend now guarantees standardized camelCase format
   return {
@@ -68,9 +52,8 @@ export const generateMusicPrompt = async (topic: string, style: string): Promise
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_BASE_URL}/ai/generate-music-prompt`, {
+  const data = await apiFetch('/ai/generate-music-prompt', {
     method: 'POST',
-    headers: getHeaders(),
     body: JSON.stringify({
       userId: user.id,
       topic,
@@ -79,12 +62,6 @@ export const generateMusicPrompt = async (topic: string, style: string): Promise
     })
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Music prompt generation failed");
-  }
-
-  const data = await response.json();
   return data.prompt;
 };
 
@@ -92,9 +69,8 @@ export const analyzeCharacterFeatures = async (base64Image: string): Promise<str
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_BASE_URL}/ai/analyze-character`, {
+  const data = await apiFetch('/ai/analyze-character', {
     method: 'POST',
-    headers: getHeaders(),
     body: JSON.stringify({
       userId: user.id,
       image: base64Image,
@@ -102,12 +78,6 @@ export const analyzeCharacterFeatures = async (base64Image: string): Promise<str
     })
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Character analysis failed");
-  }
-
-  const data = await response.json();
   return data.result;
 };
 
@@ -115,9 +85,8 @@ export const optimizeReferenceImage = async (base64ImageUrl: string): Promise<st
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_BASE_URL}/ai/optimize-image`, {
+  const data = await apiFetch('/ai/optimize-image', {
     method: 'POST',
-    headers: getHeaders(),
     body: JSON.stringify({
       userId: user.id,
       image: base64ImageUrl,
@@ -125,12 +94,6 @@ export const optimizeReferenceImage = async (base64ImageUrl: string): Promise<st
     })
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Image optimization failed");
-  }
-
-  const data = await response.json();
   return data.result;
 };
 
@@ -138,9 +101,8 @@ export const generatePreviewAudio = async (text: string, voice: string, provider
   const user = getCurrentUser();
   if (!user) throw new Error("User not authenticated");
 
-  const response = await fetch(`${API_BASE_URL}/ai/generate-audio`, {
+  const data = await apiFetch('/ai/generate-audio', {
     method: 'POST',
-    headers: getHeaders(),
     body: JSON.stringify({
       userId: user.id,
       text,
@@ -150,12 +112,6 @@ export const generatePreviewAudio = async (text: string, voice: string, provider
     })
   });
 
-  if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error || "Audio generation failed");
-  }
-
-  const data = await response.json();
   return data.audioUrl;
 };
 
@@ -163,19 +119,16 @@ export const getVoices = async (): Promise<any[]> => {
   const user = getCurrentUser();
   if (!user) return [];
 
-  const response = await fetch(`${API_BASE_URL}/ai/voices`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({
-      apiKeys: user.apiKeys
-    })
-  });
-
-  if (!response.ok) {
+  try {
+    const data = await apiFetch('/ai/voices', {
+      method: 'POST',
+      body: JSON.stringify({
+        apiKeys: user.apiKeys
+      })
+    });
+    return data.voices || [];
+  } catch (e) {
     console.warn("Failed to fetch voices");
     return [];
   }
-
-  const data = await response.json();
-  return data.voices;
 };

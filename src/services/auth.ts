@@ -149,26 +149,27 @@ export const loginUser = async (email: string, name: string, avatar: string, id?
 };
 
 export const logoutUser = async () => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+    // Rely on the standard API_BASE_URL we use elsewhere
+    const { API_BASE_URL } = await import('./api');
 
     // 1. Clear local state immediately
     localStorage.removeItem(SESSION_ID_KEY);
     currentUserCache = null;
 
-    // 2. Get CSRF Token
+    // 2. Get CSRF Token using apiFetch
     let csrfToken = '';
     try {
-        const csrfRes = await fetch(`${apiUrl}/auth/csrf`, { credentials: 'include' });
-        const csrfData = await csrfRes.json();
+        const csrfData = await apiFetch('/auth/csrf');
         csrfToken = csrfData.csrfToken;
     } catch (e) {
         console.warn("Failed to fetch CSRF for logout", e);
     }
 
     // 3. Create and submit a form programmatically
+    // We use the full API_BASE_URL which is correctly configured
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = `${apiUrl}/auth/signout`;
+    form.action = `${API_BASE_URL}/auth/signout`;
 
     const csrfInput = document.createElement('input');
     csrfInput.type = 'hidden';

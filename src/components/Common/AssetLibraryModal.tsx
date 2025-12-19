@@ -3,6 +3,7 @@ import { SafeImage } from './SafeImage';
 import { SafeVideo } from './SafeVideo';
 import Loader from './Loader';
 import { useTranslation } from 'react-i18next';
+import { apiFetch } from '../../services/api';
 
 interface AssetMatch {
     id: string;
@@ -43,8 +44,7 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
     const fetchAssets = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/assets/search?description=${encodeURIComponent(sceneDescription)}&type=${assetType}`);
-            const data = await response.json();
+            const data = await apiFetch(`/assets/search?description=${encodeURIComponent(sceneDescription)}&type=${assetType}`);
             if (data.matches) {
                 setAssets(data.matches);
             }
