@@ -14,6 +14,7 @@ import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { AssetLibraryModal } from '../Common/AssetLibraryModal';
 import { Library } from 'lucide-react';
 import { apiFetch } from '../../services/api';
+import { useAssetUpload } from '../../hooks/useAssetUpload';
 
 interface SceneCardProps {
     scene: Scene;
@@ -44,6 +45,10 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
     const [isEditingPrompt, setIsEditingPrompt] = useState(false);
     const [promptText, setPromptText] = useState(scene.visualDescription);
     const [isAssetLibraryOpen, setIsAssetLibraryOpen] = useState(false);
+
+    // Drag and drop states
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const { uploadAsset, isUploading, uploadProgress, error: uploadError } = useAssetUpload();
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -252,6 +257,83 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
         onUpdateScene(sceneIndex, { characters: [] });
     };
 
+    // Drag and drop handlers
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDraggingOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only set to false if leaving the entire drop zone
+        if (e.currentTarget === e.target) {
+            setIsDraggingOver(false);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDrop = async (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDraggingOver(false);
+
+        if (!scene.id) {
+            console.error('Scene ID not available');
+            return;
+        }
+
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length === 0) return;
+
+        const file = files[0]; // Only handle first file
+
+        // Validate file type
+        const isImage = file.type.startsWith('image/');
+        const isVideo = file.type.startsWith('video/');
+
+        if (!isImage && !isVideo) {
+            alert(t('scene.invalid_file_type', 'Apenas imagens e vídeos são permitidos'));
+            return;
+        }
+
+        try {
+            const result = await uploadAsset({
+                sceneId: scene.id,
+                file,
+                assetType: isVideo ? 'video' : 'image'
+            });
+
+            if (result && result.success) {
+                // Update local state immediately
+                const updates: Partial<Scene> = {};
+
+                if (isVideo) {
+                    updates.videoUrl = result.url;
+                    updates.videoStatus = 'completed';
+                    updates.mediaType = 'video';
+                    setMediaData(prev => ({ ...prev, videoUrl: result.url }));
+                    setShowVideo(true);
+                } else {
+                    updates.imageUrl = result.url;
+                    updates.imageStatus = 'completed';
+                    updates.mediaType = 'image';
+                    setMediaData(prev => ({ ...prev, imageUrl: result.url }));
+                    setShowVideo(false);
+                }
+
+                onUpdateScene(sceneIndex, updates);
+            }
+        } catch (error) {
+            console.error('Upload failed:', error);
+        }
+    };
+
     const handleSelectLibraryAsset = async (asset: any) => {
         try {
             const data = await apiFetch(`/scenes/${scene.id}/reuse`, {
@@ -314,7 +396,42 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                 onCancel={() => setModalConfig({ isOpen: false, type: null })}
             />
             <div ref={targetRef} className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden flex flex-col hover:border-slate-600 transition-colors h-full shadow-lg">
-                <div className="aspect-[9/16] bg-slate-900 relative group border-b border-slate-700/50">
+                <div
+                    className={`aspect-[9/16] bg-slate-900 relative group border-b border-slate-700/50 ${isDraggingOver ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900' : ''
+                        }`}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                >
+                    {/* Drag overlay */}
+                    {isDraggingOver && (
+                        <div className="absolute inset-0 bg-indigo-600/20 backdrop-blur-sm z-50 flex items-center justify-center border-2 border-dashed border-indigo-400">
+                            <div className="bg-slate-900/90 px-6 py-4 rounded-lg border border-indigo-500 shadow-xl">
+                                <p className="text-indigo-300 font-medium text-sm flex items-center gap-2">
+                                    <ImageIcon className="w-5 h-5" />
+                                    {t('scene.drop_file', 'Solte a imagem ou vídeo aqui')}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Upload progress overlay */}
+                    {isUploading && (
+                        <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-40 flex flex-col items-center justify-center">
+                            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-3" />
+                            <p className="text-indigo-300 font-medium text-sm mb-2">
+                                {t('scene.uploading', 'Fazendo upload...')}
+                            </p>
+                            <div className="w-48 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-indigo-500 transition-all duration-300"
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {showVideo && hasVideo ? (
                         <SafeVideo
                             src={mediaData.videoUrl || scene.videoUrl || ''}

@@ -33,8 +33,10 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
 }) => {
     const { t } = useTranslation();
     const [assets, setAssets] = useState<AssetMatch[]>([]);
+    const [filteredAssets, setFilteredAssets] = useState<AssetMatch[]>([]);
     const [loading, setLoading] = useState(false);
     const [applying, setApplying] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         if (isOpen && sceneDescription) {
@@ -47,7 +49,22 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
     // Reset visible count when assets reload
     useEffect(() => {
         setVisibleCount(12);
-    }, [assets]);
+    }, [filteredAssets]);
+
+    // Filter assets based on search query
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setFilteredAssets(assets);
+        } else {
+            const query = searchQuery.toLowerCase();
+            const filtered = assets.filter(asset =>
+                asset.description.toLowerCase().includes(query) ||
+                asset.tags.some(tag => tag.toLowerCase().includes(query)) ||
+                (asset.category && asset.category.toLowerCase().includes(query))
+            );
+            setFilteredAssets(filtered);
+        }
+    }, [searchQuery, assets]);
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
@@ -127,6 +144,35 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                     </button>
                 </div>
 
+                {/* Search Bar */}
+                <div className="px-6 pb-4 border-b border-zinc-800">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={t('asset_library.search_placeholder', 'Pesquisar por descrição, tags ou categoria...')}
+                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 pl-10 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+                            🔍
+                        </span>
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+                    {searchQuery && (
+                        <p className="text-xs text-zinc-500 mt-2">
+                            {filteredAssets.length} {t('asset_library.results', 'resultado(s)')}
+                        </p>
+                    )}
+                </div>
+
                 {/* Content */}
                 <div
                     className="flex-1 overflow-y-auto p-6"
@@ -137,9 +183,9 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                             <div className="animate-spin text-4xl text-indigo-500">⏳</div>
                             <p>{t('asset_library.matching', 'Buscando melhores combinações...')}</p>
                         </div>
-                    ) : assets.length > 0 ? (
+                    ) : filteredAssets.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {assets.slice(0, visibleCount).map((asset) => (
+                            {filteredAssets.slice(0, visibleCount).map((asset) => (
                                 <div
                                     key={asset.id}
                                     className="group relative bg-zinc-800/30 border border-zinc-700/50 rounded-xl overflow-hidden hover:border-indigo-500/50 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
@@ -147,9 +193,19 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                                     {/* Asset Preview */}
                                     <div className="aspect-video bg-black relative overflow-hidden">
                                         {asset.type === 'VIDEO' ? (
-                                            <SafeVideo src={asset.url} />
+                                            <SafeVideo
+                                                src={asset.url}
+                                                className="w-full h-full object-cover"
+                                                autoPlay
+                                                loop
+                                                muted
+                                                playsInline
+                                            />
                                         ) : asset.type === 'IMAGE' ? (
-                                            <SafeImage src={asset.url} />
+                                            <SafeImage
+                                                src={asset.url}
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-zinc-800">
                                                 <span className="text-4xl">🎵</span>
