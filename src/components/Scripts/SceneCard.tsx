@@ -328,9 +328,15 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                 }
 
                 onUpdateScene(sceneIndex, updates);
+            } else {
+                // Upload failed - show error to user
+                const errorMsg = uploadError || t('scene.upload_failed', 'Falha no upload. Tente novamente.');
+                alert(errorMsg);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Upload failed:', error);
+            const errorMsg = error.message || t('scene.upload_error', 'Erro ao fazer upload do arquivo');
+            alert(errorMsg);
         }
     };
 
