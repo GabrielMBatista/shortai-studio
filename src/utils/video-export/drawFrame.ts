@@ -31,12 +31,18 @@ export const drawFrame = (
         const vw = endingVideoElement.videoWidth;
         const vh = endingVideoElement.videoHeight;
         if (vw > 0 && vh > 0) {
+            // object-cover: scale to fill, crop the excess
             const scale = Math.max(w / vw, h / vh);
-            const sw = vw * scale;
-            const sh = vh * scale;
-            const ox = (w - sw) / 2;
-            const oy = (h - sh) / 2;
-            ctx.drawImage(endingVideoElement, ox, oy, sw, sh);
+            const cropW = w / scale;
+            const cropH = h / scale;
+            const cropX = (vw - cropW) / 2;
+            const cropY = (vh - cropH) / 2;
+
+            ctx.drawImage(
+                endingVideoElement,
+                cropX, cropY, cropW, cropH,
+                0, 0, w, h
+            );
         } else {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, w, h);
@@ -100,33 +106,66 @@ export const drawFrame = (
         const vw = asset.video.videoWidth;
         const vh = asset.video.videoHeight;
         if (vw > 0 && vh > 0) {
+            // object-cover: scale to fill, crop the excess
             const scale = Math.max(w / vw, h / vh);
             const sw = vw * scale;
             const sh = vh * scale;
-            const ox = (w - sw) / 2;
-            const oy = (h - sh) / 2;
-            ctx.drawImage(asset.video, ox, oy, sw, sh);
+
+            // Calculate crop: how much to cut from source
+            const cropW = w / scale;  // Portion of source width to use
+            const cropH = h / scale;  // Portion of source height to use
+            const cropX = (vw - cropW) / 2;  // Center X
+            const cropY = (vh - cropH) / 2;  // Center Y
+
+            // Draw cropped portion scaled to fill canvas
+            ctx.drawImage(
+                asset.video,
+                cropX, cropY, cropW, cropH,  // Source rectangle (crop from center)
+                0, 0, w, h                    // Destination (fill canvas)
+            );
         }
     } else if (isVideoFrozen && asset.lastFrameImg) {
         // Video ended but narration continues: freeze last frame with pan/zoom
         const frozenTime = timeInScene - asset.videoDuration;
         const frozenDuration = asset.renderDuration - asset.videoDuration;
         const frozenProgress = frozenTime / frozenDuration;
-        const scale = 1.0 + (0.15 * frozenProgress);
+        const zoomScale = 1.0 + (0.15 * frozenProgress);
 
-        const sw = w * scale;
-        const sh = h * scale;
-        const ox = (w - sw) / 2;
-        const oy = (h - sh) / 2;
-        ctx.drawImage(asset.lastFrameImg, ox, oy, sw, sh);
+        const iw = asset.lastFrameImg.width;
+        const ih = asset.lastFrameImg.height;
+
+        // object-cover with zoom
+        const scale = Math.max(w / iw, h / ih) * zoomScale;
+        const cropW = w / scale;
+        const cropH = h / scale;
+        const cropX = (iw - cropW) / 2;
+        const cropY = (ih - cropH) / 2;
+
+        ctx.drawImage(
+            asset.lastFrameImg,
+            cropX, cropY, cropW, cropH,
+            0, 0, w, h
+        );
     } else if (asset.img) {
         // Static image with pan/zoom
-        const scale = 1.0 + (0.15 * (timeInScene / asset.renderDuration));
-        const sw = w * scale;
-        const sh = h * scale;
-        const ox = (w - sw) / 2;
-        const oy = (h - sh) / 2;
-        ctx.drawImage(asset.img, ox, oy, sw, sh);
+        const zoomProgress = timeInScene / asset.renderDuration;
+        const zoomScale = 1.0 + (0.15 * zoomProgress);
+
+        const iw = asset.img.width;
+        const ih = asset.img.height;
+
+        // object-cover with zoom
+        const scale = Math.max(w / iw, h / ih) * zoomScale;
+        const cropW = w / scale;
+        const cropH = h / scale;
+        const cropX = (iw - cropW) / 2;
+        const cropY = (ih - cropH) / 2;
+
+        ctx.drawImage(
+            asset.img,
+            cropX, cropY, cropW, cropH,
+            0, 0, w, h
+        );
     }
 
     const gradient = ctx.createLinearGradient(0, h * 0.4, 0, h);

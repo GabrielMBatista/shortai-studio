@@ -408,7 +408,12 @@ const ScriptView: React.FC<ScriptViewProps> = ({
         }
     };
 
-    const isSettingsChanged = selectedVoice !== projectVoice || selectedProvider !== projectProvider || selectedLanguage !== projectLanguage || (selectedProvider === 'elevenlabs' && selectedAudioModel !== (projectAudioModel || 'eleven_flash_v2_5'));
+    const isSettingsChanged =
+        selectedVoice !== projectVoice ||
+        selectedProvider !== projectProvider ||
+        selectedLanguage !== projectLanguage ||
+        selectedVideoModel !== (projectVideoModel || 'veo-2.0-generate-001') ||
+        (selectedProvider === 'elevenlabs' && selectedAudioModel !== (projectAudioModel || 'eleven_flash_v2_5'));
 
     return (
         <div className="w-full px-6 py-8 relative">
@@ -539,7 +544,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 <button
                                     onClick={() => {
                                         setSelectedProvider('gemini');
-                                        onUpdateProjectSettings({ ttsProvider: 'gemini' });
                                     }}
                                     className={`p-2 rounded-md transition-all ${selectedProvider === 'gemini' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
                                     title="Gemini"
@@ -549,7 +553,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 <button
                                     onClick={() => {
                                         setSelectedProvider('elevenlabs');
-                                        onUpdateProjectSettings({ ttsProvider: 'elevenlabs' });
                                     }}
                                     className={`p-2 rounded-md transition-all ${selectedProvider === 'elevenlabs' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
                                     title="ElevenLabs"
@@ -559,7 +562,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                 <button
                                     onClick={() => {
                                         setSelectedProvider('groq');
-                                        onUpdateProjectSettings({ ttsProvider: 'groq' });
                                     }}
                                     className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${selectedProvider === 'groq' ? 'bg-slate-700 text-white' : 'text-slate-600 hover:text-slate-400'}`}
                                     title="Groq (Fast)"
@@ -577,7 +579,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             const newVal = e.target.value;
                                             setSelectedLanguage(newVal);
                                             localStorage.setItem('shortsai_pref_language', newVal);
-                                            onUpdateProjectSettings({ language: newVal });
                                         }}
                                         disabled={isGeneratingImages}
                                         className="bg-transparent text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none w-24"
@@ -596,7 +597,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                                 const newVal = e.target.value;
                                                 setSelectedVoice(newVal);
                                                 localStorage.setItem('shortsai_pref_voice', newVal);
-                                                onUpdateProjectSettings({ voiceName: newVal });
                                             }}
                                             disabled={isGeneratingImages || filteredVoices.length === 0}
                                             className="w-full bg-transparent text-slate-200 text-sm font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none"
@@ -617,7 +617,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                             onChange={(e) => {
                                                 const newVal = e.target.value;
                                                 setSelectedAudioModel(newVal);
-                                                onUpdateProjectSettings({ audioModel: newVal });
                                             }}
                                             className="bg-transparent text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none max-w-[100px]"
                                             title="ElevenLabs Model"
@@ -652,7 +651,6 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                                         const newVal = e.target.value;
                                         setSelectedVideoModel(newVal);
                                         localStorage.setItem('shortsai_pref_video_model', newVal);
-                                        onUpdateProjectSettings({ videoModel: newVal });
                                     }}
                                     disabled={isGeneratingImages}
                                     className="bg-transparent text-slate-300 text-xs font-medium outline-none cursor-pointer hover:text-white transition-colors appearance-none pr-4"
@@ -665,7 +663,18 @@ const ScriptView: React.FC<ScriptViewProps> = ({
                             </div>
 
                             <button
-                                onClick={() => onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage, selectedAudioModel)}
+                                onClick={async () => {
+                                    // Primeiro atualiza as configurações do projeto
+                                    await onUpdateProjectSettings({
+                                        ttsProvider: selectedProvider,
+                                        voiceName: selectedVoice,
+                                        language: selectedLanguage,
+                                        audioModel: selectedAudioModel,
+                                        videoModel: selectedVideoModel
+                                    });
+                                    // Depois regenera os áudios com as novas configurações
+                                    onRegenerateAudio(selectedVoice, selectedProvider, selectedLanguage, selectedAudioModel);
+                                }}
                                 disabled={isGeneratingImages || !isSettingsChanged}
                                 className={`px-4 py-2 rounded-lg border text-xs font-semibold transition-all flex items-center gap-2 ${isSettingsChanged ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20' : 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed'}`}
                             >

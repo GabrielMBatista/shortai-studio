@@ -354,35 +354,60 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ scenes, onClose, bgMusicUrl, 
           const shouldUseVideo = (activeScene.mediaType === 'video') ||
             (!activeScene.mediaType && activeScene.videoUrl && activeScene.videoStatus === 'completed');
           const videoSrc = activeMedia.videoUrl || activeScene.videoUrl || '';
+          const imageSrc = activeMedia.imageUrl || activeScene.imageUrl || '';
 
+          if (shouldUseVideo && videoSrc) {
+            // Render BOTH video and image as native elements for proper layering
+            return (
+              <>
+                {/* Image Layer (underneath) - fades in when video ends */}
+                <img
+                  src={imageSrc}
+                  alt={`Scene ${currentSceneIndex + 1} background`}
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${videoEnded
+                      ? 'opacity-100 scale-110 duration-[20s]' // Fade in + zoom when video ends
+                      : 'opacity-0 scale-100' // Hidden while video plays
+                    }`}
+                />
 
-
-          return shouldUseVideo ? (
-            <SafeVideo
-              key={`video-${currentSceneIndex}-${videoSrc}`}
-              ref={videoRef}
-              src={videoSrc}
-              poster={activeMedia.imageUrl || activeScene.imageUrl || undefined}
-              className={`w-full h-full object-cover ${videoEnded ? 'transition-transform duration-[20s] ease-linear scale-110' : 'scale-100'}`}
-              muted={true}
-              playsInline
-              preload="auto"
-              lazyLoad={false}
-              onEnded={() => setVideoEnded(true)}
-              onError={(e) => {
-                // Only log real errors, not aborts/empties
-                if (e.currentTarget.error) {
-                  console.error('[VideoPlayer] Video error:', e.currentTarget.error);
-                }
-              }}
-            />
-          ) : (
-            <SafeImage
-              src={activeMedia.imageUrl || activeScene.imageUrl || ''}
-              alt={`Scene ${currentSceneIndex + 1}`}
-              className={`w-full h-full object-cover transition-transform duration-[20s] ease-linear ${isPlaying ? 'scale-110' : 'scale-100'}`}
-            />
-          );
+                {/* Video Layer (on top) - fades out when video ends */}
+                <video
+                  key={`video-${currentSceneIndex}-${videoSrc}`}
+                  ref={videoRef}
+                  src={videoSrc}
+                  poster={imageSrc}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${videoEnded ? 'opacity-0' : 'opacity-100' // Fade out when video ends
+                    }`}
+                  muted
+                  playsInline
+                  preload="auto"
+                  onTimeUpdate={(e) => {
+                    // Start fade transition 0.8s before video ends for smooth crossfade
+                    const video = e.currentTarget;
+                    if (video.duration > 0 && (video.duration - video.currentTime) <= 0.8 && !videoEnded) {
+                      setVideoEnded(true);
+                    }
+                  }}
+                  onEnded={() => setVideoEnded(true)}
+                  onError={(e) => {
+                    // Only log real errors, not aborts/empties
+                    if (e.currentTarget.error) {
+                      console.error('[VideoPlayer] Video error:', e.currentTarget.error);
+                    }
+                  }}
+                />
+              </>
+            );
+          } else {
+            // Image-only scene
+            return (
+              <SafeImage
+                src={imageSrc}
+                alt={`Scene ${currentSceneIndex + 1}`}
+                className={`w-full h-full object-cover transition-transform duration-[20s] ease-linear ${isPlaying ? 'scale-110' : 'scale-100'}`}
+              />
+            );
+          }
         })()}
 
         {/* Audio Elements */}
