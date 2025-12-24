@@ -37,6 +37,7 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
     const [filteredAssets, setFilteredAssets] = useState<AssetMatch[]>([]);
     const [loading, setLoading] = useState(false);
     const [applying, setApplying] = useState<string | null>(null);
+    const [totalStats, setTotalStats] = useState({ images: 0, videos: 0 });
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -77,33 +78,74 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
     const fetchAssets = async () => {
         setLoading(true);
         try {
-            const typesToFetch = assetType === 'AUDIO' ? ['AUDIO'] : ['VIDEO', 'IMAGE'];
+            // Buscar estatísticas totais
+            const statsResponse = await apiFetch('/assets/catalog/stats');
+            if (statsResponse?.data) {
+                setTotalStats({
+                    images: statsResponse.data.totalImages || 0,
+                    videos: statsResponse.data.totalVideos || 0
+                });
+            }
 
-            const promises = typesToFetch.map(type =>
-                apiFetch(`/assets/search?description=${encodeURIComponent(sceneDescription)}&type=${type}&minSimilarity=0.0`)
+            // Buscar TODOS os assets do catálogo
+            const catalogResponse = await apiFetch('/assets/catalog?limit=1000');
+
+            if (!catalogResponse?.data?.assets) {
+                console.warn('[AssetLibrary] No assets returned from catalog');
+                setAssets([]);
+                return;
+            }
+
+            // Filtrar apenas VIDEO e IMAGE (ignorar AUDIO sempre)
+            let allAssets = catalogResponse.data.assets.filter((asset: any) =>
+                asset.asset_type === 'VIDEO' || asset.asset_type === 'IMAGE'
             );
 
-            const results = await Promise.all(promises);
+            // Calcular similaridade com a descrição (se houver)
+            const allMatches: AssetMatch[] = allAssets.map((asset: any) => {
+                const similarity = sceneDescription
+                    ? calculateSimilarity(sceneDescription, asset.description || '')
+                    : 50; // Score neutro se não houver descrição
 
-            let allMatches: AssetMatch[] = [];
-            results.forEach((data, index) => {
-                if (data.matches) {
-                    // Ensure type is set if backend misses it
-                    const type = typesToFetch[index];
-                    const matchesWithType = data.matches.map((m: any) => ({ ...m, type: m.type || type }));
-                    allMatches = [...allMatches, ...matchesWithType];
-                }
+                return {
+                    id: asset.id,
+                    url: asset.url,
+                    type: asset.asset_type,
+                    similarity,
+                    description: asset.description || '',
+                    tags: asset.tags || [],
+                    category: asset.category,
+                    duration: asset.duration_seconds,
+                    isRecentlyUsed: asset.last_used_in_channel ? true : false
+                };
             });
 
-            // Sort by similarity descending
+            // Ordenar por similaridade (maior primeiro)
             allMatches.sort((a, b) => b.similarity - a.similarity);
 
+
+            console.log('[AssetLibrary] Fetched from catalog:', allAssets.length, 'assets');
+            console.log('[AssetLibrary] After similarity calc:', allMatches.length, 'matches');
+            console.log('[AssetLibrary] Stats:', statsResponse?.data);
             setAssets(allMatches);
         } catch (error) {
             console.error('Failed to fetch assets:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Função simples de similaridade baseada em palavras-chave
+    const calculateSimilarity = (text1: string, text2: string): number => {
+        if (!text1 || !text2) return 0;
+
+        const words1 = text1.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+        const words2 = text2.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+
+        const matches = words1.filter(w => words2.some(w2 => w2.includes(w) || w.includes(w2)));
+        const similarity = words1.length > 0 ? (matches.length / words1.length) * 100 : 0;
+
+        return Math.round(similarity);
     };
 
     const handleSelect = async (asset: AssetMatch) => {
@@ -132,6 +174,9 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                                 🔍
                             </span>
                             {t('asset_library.title', 'Biblioteca de Ativos')}
+                            <span className="ml-2 text-sm font-normal text-zinc-400">
+                                ({totalStats.images} imagens • {totalStats.videos} vídeos)
+                            </span>
                         </h2>
                         <p className="text-zinc-400 text-sm mt-1">
                             {t('asset_library.subtitle', 'Reutilize conteúdos similares e economize créditos')}
