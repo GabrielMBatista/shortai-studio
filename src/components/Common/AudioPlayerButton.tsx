@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Loader2, AlertCircle, Volume2, Play, Square } from 'lucide-react';
+import { useGlobalAudioManager } from '../../hooks/useGlobalAudioManager';
 
 interface AudioPlayerButtonProps {
     audioUrl?: string;
@@ -10,86 +11,77 @@ interface AudioPlayerButtonProps {
 
 const AudioPlayerButton: React.FC<AudioPlayerButtonProps> = ({ audioUrl, status, label = "Listen", icon }) => {
     const [isPlaying, setIsPlaying] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const { play, stop, isPlaying: checkIsPlaying } = useGlobalAudioManager();
+    const audioKeyRef = useRef<string>('');
+
+    // Gerar chave única para este botão
+    useEffect(() => {
+        audioKeyRef.current = `audio-${Math.random().toString(36).substr(2, 9)}`;
+    }, []);
+
+    // Sincronizar estado local com o manager global
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const playing = checkIsPlaying(audioKeyRef.current);
+            if (playing !== isPlaying) {
+                setIsPlaying(playing);
+            }
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [isPlaying, checkIsPlaying]);
 
     const toggleAudio = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!audioUrl) return;
 
-        // Initialize Audio on first click (Lazy Load)
-        if (!audioRef.current) {
-            try {
-                let resolvedUrl = audioUrl;
-
-                // Convert data URI to Blob URL for compatibility
-                if (audioUrl.startsWith('data:audio/')) {
-                    const [header, base64Data] = audioUrl.split(',');
-                    if (base64Data) {
-                        const mimeMatch = header.match(/data:(.*?);/);
-                        const mimeType = mimeMatch ? mimeMatch[1] : 'audio/wav';
-                        try {
-                            const binaryString = atob(base64Data);
-                            const bytes = new Uint8Array(binaryString.length);
-                            for (let i = 0; i < binaryString.length; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
-                            }
-                            const blob = new Blob([bytes], { type: mimeType });
-                            resolvedUrl = URL.createObjectURL(blob);
-                        } catch (err) {
-                            console.error("Failed to convert data URI to Blob:", err);
-                            return;
-                        }
-                    }
-                }
-
-                const audio = new Audio(resolvedUrl);
-                audio.onended = () => setIsPlaying(false);
-                audio.onpause = () => setIsPlaying(false);
-                audio.onerror = (e) => {
-                    console.error("Audio playback error:", audio.error);
-                    setIsPlaying(false);
-                };
-
-                audioRef.current = audio;
-            } catch (e) {
-                console.error("Audio initialization error:", e);
-                return;
-            }
+        if (isPlaying) {
+            stop();
+            setIsPlaying(false);
+            return;
         }
 
-        const audio = audioRef.current;
-        if (!audio) return;
+        try {
+            let resolvedUrl = audioUrl;
 
-        if (isPlaying) {
-            audio.pause();
-            audio.currentTime = 0;
-            setIsPlaying(false);
-        } else {
-            // Using resourceQueue valid here? 
-            // Since it's user initiated (1 click = 1 stream), flooding is unlikely unless user clicks 10 buttons 1s.
-            // But we can wrap play in a try-catch
-            try {
-                await audio.play();
-                setIsPlaying(true);
-            } catch (e) {
-                console.warn("Playback failed/prevented", e);
-                setIsPlaying(false);
+            // Convert data URI to Blob URL for compatibility
+            if (audioUrl.startsWith('data:audio/')) {
+                const [header, base64Data] = audioUrl.split(',');
+                if (base64Data) {
+                    const mimeMatch = header.match(/data:(.*?);/);
+                    const mimeType = mimeMatch ? mimeMatch[1] : 'audio/wav';
+                    try {
+                        const binaryString = atob(base64Data);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        const blob = new Blob([bytes], { type: mimeType });
+                        resolvedUrl = URL.createObjectURL(blob);
+                    } catch (err) {
+                        console.error("Failed to convert data URI to Blob:", err);
+                        return;
+                    }
+                }
             }
+
+            setIsPlaying(true);
+            await play(resolvedUrl, audioKeyRef.current);
+            setIsPlaying(false);
+        } catch (e) {
+            console.warn("Playback failed/prevented", e);
+            setIsPlaying(false);
         }
     };
 
-    // Cleanup on unmount
+    // Cleanup on unmount - stop if this button's audio is playing
     useEffect(() => {
         return () => {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                const src = audioRef.current.src;
-                audioRef.current.src = '';
-                if (src.startsWith('blob:')) URL.revokeObjectURL(src);
-                audioRef.current = null;
+            if (checkIsPlaying(audioKeyRef.current)) {
+                stop();
             }
         };
-    }, []);
+    }, [stop, checkIsPlaying]);
 
     // Show loader for any processing state
     const isLoading = ['pending', 'queued', 'processing', 'loading'].includes(status);

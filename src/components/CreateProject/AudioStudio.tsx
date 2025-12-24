@@ -9,12 +9,28 @@ const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provid
     const [status, setStatus] = useState<'idle' | 'loading' | 'playing'>('idle');
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
+    // 🔧 CLEANUP: Parar áudio ao desmontar ou trocar voice/provider
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                audioRef.current.src = '';
+                audioRef.current = null;
+            }
+            setStatus('idle');
+        };
+    }, [voice, provider]); // Limpar quando mudar voice ou provider
+
     const handlePlay = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
         if (status === 'playing') {
             audioRef.current?.pause();
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+            }
             setStatus('idle');
             return;
         }
@@ -31,9 +47,16 @@ const VoicePreviewButton = ({ voice, provider, voices }: { voice: string, provid
 
             if (!url) throw new Error(t('input.no_preview'));
 
+            // 🔧 Limpar áudio anterior se existir
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = '';
+            }
+
             const audio = new Audio(url);
             audioRef.current = audio;
             audio.onended = () => setStatus('idle');
+            audio.onerror = () => setStatus('idle'); // Adicionar tratamento de erro
             await audio.play();
             setStatus('playing');
         } catch (e) {

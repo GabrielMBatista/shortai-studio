@@ -90,16 +90,25 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
             // Buscar TODOS os assets do catálogo
             const catalogResponse = await apiFetch('/assets/catalog?limit=1000');
 
+            console.log('[AssetLibrary] RAW catalogResponse:', catalogResponse);
+            console.log('[AssetLibrary] catalogResponse.data:', catalogResponse?.data);
+            console.log('[AssetLibrary] catalogResponse.data.assets:', catalogResponse?.data?.assets);
+
             if (!catalogResponse?.data?.assets) {
                 console.warn('[AssetLibrary] No assets returned from catalog');
                 setAssets([]);
                 return;
             }
 
+            console.log('[AssetLibrary] Total assets from API:', catalogResponse.data.assets.length);
+
             // Filtrar apenas VIDEO e IMAGE (ignorar AUDIO sempre)
             let allAssets = catalogResponse.data.assets.filter((asset: any) =>
                 asset.asset_type === 'VIDEO' || asset.asset_type === 'IMAGE'
             );
+
+            console.log('[AssetLibrary] After filtering VIDEO/IMAGE:', allAssets.length);
+            console.log('[AssetLibrary] Sample assets:', allAssets.slice(0, 3));
 
             // Calcular similaridade com a descrição (se houver)
             const allMatches: AssetMatch[] = allAssets.map((asset: any) => {
@@ -230,86 +239,89 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                             <p>{t('asset_library.matching', 'Buscando melhores combinações...')}</p>
                         </div>
                     ) : filteredAssets.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredAssets.slice(0, visibleCount).map((asset) => (
-                                <div
-                                    key={asset.id}
-                                    className="group relative bg-zinc-800/30 border border-zinc-700/50 rounded-xl overflow-hidden hover:border-indigo-500/50 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
-                                >
-                                    {/* Asset Preview */}
-                                    <div className="aspect-video bg-black relative overflow-hidden">
-                                        {asset.type === 'VIDEO' ? (
-                                            <SafeVideo
-                                                src={asset.url}
-                                                className="w-full h-full object-cover"
-                                                autoPlay
-                                                loop
-                                                muted
-                                                playsInline
-                                            />
-                                        ) : asset.type === 'IMAGE' ? (
-                                            <SafeImage
-                                                src={asset.url}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-zinc-800">
-                                                <span className="text-4xl">🎵</span>
+                        <>
+                            {console.log('[AssetLibrary] Rendering:', filteredAssets.length, 'filtered assets, showing', Math.min(visibleCount, filteredAssets.length))}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredAssets.slice(0, visibleCount).map((asset) => (
+                                    <div
+                                        key={asset.id}
+                                        className="group relative bg-zinc-800/30 border border-zinc-700/50 rounded-xl overflow-hidden hover:border-indigo-500/50 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
+                                    >
+                                        {/* Asset Preview */}
+                                        <div className="aspect-video bg-black relative overflow-hidden">
+                                            {asset.type === 'VIDEO' ? (
+                                                <SafeVideo
+                                                    src={asset.url}
+                                                    className="w-full h-full object-cover"
+                                                    autoPlay
+                                                    loop
+                                                    muted
+                                                    playsInline
+                                                />
+                                            ) : asset.type === 'IMAGE' ? (
+                                                <SafeImage
+                                                    src={asset.url}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                                                    <span className="text-4xl">🎵</span>
+                                                </div>
+                                            )}
+
+                                            {/* Type Badge */}
+                                            <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 border border-white/10 text-[10px] uppercase font-bold text-white flex items-center gap-1">
+                                                {asset.type === 'VIDEO' ? '🎥 VIDEO' : asset.type === 'IMAGE' ? '🖼️ IMAGE' : '🎵 AUDIO'}
                                             </div>
-                                        )}
 
-                                        {/* Type Badge */}
-                                        <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 border border-white/10 text-[10px] uppercase font-bold text-white flex items-center gap-1">
-                                            {asset.type === 'VIDEO' ? '🎥 VIDEO' : asset.type === 'IMAGE' ? '🖼️ IMAGE' : '🎵 AUDIO'}
-                                        </div>
-
-                                        {/* Score Badge */}
-                                        <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${asset.similarity > 80 ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`}></div>
-                                            <span className="text-xs font-bold text-white">
-                                                {asset.similarity}%
-                                            </span>
-                                        </div>
-
-                                        {/* Recently Used Badge */}
-                                        {asset.isRecentlyUsed && (
-                                            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-blue-500/80 backdrop-blur-md border border-blue-400/30 flex items-center gap-1.5">
-                                                <span className="text-xs font-semibold text-white flex items-center gap-1">
-                                                    🕐 Usado Recentemente
+                                            {/* Score Badge */}
+                                            <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${asset.similarity > 80 ? 'bg-green-400' : 'bg-yellow-400'} animate-pulse`}></div>
+                                                <span className="text-xs font-bold text-white">
+                                                    {asset.similarity}%
                                                 </span>
                                             </div>
-                                        )}
 
-                                        {/* Hover Overlay */}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button
-                                                onClick={() => handleSelect(asset)}
-                                                disabled={!!applying}
-                                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-6 rounded-full transform scale-90 group-hover:scale-100 transition-all flex items-center gap-2"
-                                            >
-                                                {applying === asset.id ? <Loader size="sm" /> : 'Reutilizar'}
-                                            </button>
+                                            {/* Recently Used Badge */}
+                                            {asset.isRecentlyUsed && (
+                                                <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-blue-500/80 backdrop-blur-md border border-blue-400/30 flex items-center gap-1.5">
+                                                    <span className="text-xs font-semibold text-white flex items-center gap-1">
+                                                        🕐 Usado Recentemente
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Hover Overlay */}
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <button
+                                                    onClick={() => handleSelect(asset)}
+                                                    disabled={!!applying}
+                                                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-6 rounded-full transform scale-90 group-hover:scale-100 transition-all flex items-center gap-2"
+                                                >
+                                                    {applying === asset.id ? <Loader size="sm" /> : 'Reutilizar'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Description/Tags */}
+                                        <div className="p-4">
+                                            <p className="text-zinc-300 text-sm line-clamp-2 italic">
+                                                "{asset.description}"
+                                            </p>
+                                            {asset.tags.length > 0 && (
+                                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                                    {asset.tags.slice(0, 3).map((tag, i) => (
+                                                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400 border border-zinc-700">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-
-                                    {/* Description/Tags */}
-                                    <div className="p-4">
-                                        <p className="text-zinc-300 text-sm line-clamp-2 italic">
-                                            "{asset.description}"
-                                        </p>
-                                        {asset.tags.length > 0 && (
-                                            <div className="mt-3 flex flex-wrap gap-1.5">
-                                                {asset.tags.slice(0, 3).map((tag, i) => (
-                                                    <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400 border border-zinc-700">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        </>
                     ) : (
                         <div className="h-64 flex flex-col items-center justify-center text-zinc-500">
                             <span className="text-5xl mb-4 opacity-20">🔍</span>

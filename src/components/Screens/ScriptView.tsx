@@ -311,6 +311,19 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
     const [isLoadingVoices, setIsLoadingVoices] = useState(false);
 
+    // 🔧 CLEANUP: Parar áudio de preview ao desmontar ou mudar provider/voice
+    useEffect(() => {
+        return () => {
+            if (previewAudioRef.current) {
+                previewAudioRef.current.pause();
+                previewAudioRef.current.currentTime = 0;
+                previewAudioRef.current.src = '';
+                previewAudioRef.current = null;
+            }
+            setPreviewState({ status: 'idle' });
+        };
+    }, [selectedProvider, selectedVoice]); // Limpar quando mudar provider ou voice
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -387,6 +400,9 @@ const ScriptView: React.FC<ScriptViewProps> = ({
     const handlePreviewVoice = async () => {
         if (previewState.status === 'playing') {
             previewAudioRef.current?.pause();
+            if (previewAudioRef.current) {
+                previewAudioRef.current.currentTime = 0;
+            }
             setPreviewState({ status: 'idle' });
             return;
         }
@@ -396,9 +412,16 @@ const ScriptView: React.FC<ScriptViewProps> = ({
             const sampleText = `Hello, I am ${voiceObj?.label}.`;
             const url = await generatePreviewAudio(sampleText, selectedVoice, selectedProvider);
 
+            // 🔧 Limpar áudio anterior se existir
+            if (previewAudioRef.current) {
+                previewAudioRef.current.pause();
+                previewAudioRef.current.src = '';
+            }
+
             const audio = new Audio(url);
             previewAudioRef.current = audio;
             audio.onended = () => setPreviewState({ status: 'idle' });
+            audio.onerror = () => setPreviewState({ status: 'idle' }); // Adicionar tratamento de erro
             await audio.play();
             setPreviewState({ status: 'playing' });
         } catch (e: any) {
