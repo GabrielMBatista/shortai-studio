@@ -48,6 +48,8 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
 
     // Drag and drop states
     const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [dragCounter, setDragCounter] = useState(0);
     const { uploadAsset, isUploading, uploadProgress, error: uploadError } = useAssetUpload();
 
@@ -457,6 +459,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                             loop
                             muted
                             playsInline
+                            style={{ objectPosition: `${scene.videoCropConfig?.x ?? 50}% center` }}
                         />
                     ) : showVideo && isVideoLoading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-indigo-400 bg-slate-900/80 backdrop-blur-sm">
@@ -605,6 +608,39 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, sceneIndex, onRegenerateIm
                             >
                                 {isVideoLoading || localLoading.video ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Video className="w-3.5 h-3.5" />}
                             </button>
+                        )}
+
+                        {/* Video Framing Controls */}
+                        {showVideo && hasVideo && (onUpdateScene && sceneIndex !== undefined) && (
+                            <div className="flex items-center gap-1 bg-black/60 backdrop-blur rounded-md p-0.5 border border-white/10 shadow-sm mr-1">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const currentX = scene.videoCropConfig?.x ?? 50;
+                                        const newX = Math.max(0, currentX - 10);
+                                        onUpdateScene(sceneIndex, { videoCropConfig: { ...scene.videoCropConfig, x: newX } });
+                                    }}
+                                    className="p-1 hover:text-indigo-400 text-white/80 transition-colors"
+                                    title="Move Left"
+                                >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                                </button>
+                                <span className="text-[10px] font-mono text-white/50 w-6 text-center select-none">
+                                    {scene.videoCropConfig?.x ?? 50}%
+                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const currentX = scene.videoCropConfig?.x ?? 50;
+                                        const newX = Math.min(100, currentX + 10);
+                                        onUpdateScene(sceneIndex, { videoCropConfig: { ...scene.videoCropConfig, x: newX } });
+                                    }}
+                                    className="p-1 hover:text-indigo-400 text-white/80 transition-colors"
+                                    title="Move Right"
+                                >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+                                </button>
+                            </div>
                         )}
 
                         {/* Asset Library Button */}

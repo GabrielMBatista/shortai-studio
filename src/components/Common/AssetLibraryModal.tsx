@@ -41,6 +41,9 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
     const [totalStats, setTotalStats] = useState({ images: 0, videos: 0 });
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+    const [filterTypes, setFilterTypes] = useState<('VIDEO' | 'IMAGE')[]>(
+        assetType === 'AUDIO' ? ['VIDEO', 'IMAGE'] : [assetType]
+    );
 
     // Debounce search query
     useEffect(() => {
@@ -56,7 +59,7 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
         if (isOpen) {
             fetchAssets();
         }
-    }, [isOpen, sceneDescription, assetType, debouncedSearchQuery]);
+    }, [isOpen, sceneDescription, assetType, debouncedSearchQuery, filterTypes]);
 
     const [visibleCount, setVisibleCount] = useState(12);
 
@@ -86,61 +89,77 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                 });
             }
 
-            let fetchedAssets: AssetMatch[] = [];
+            let allAssets: AssetMatch[] = [];
 
-            // 1. Se houver termo de busca ou descrição de cena, usar busca OTIMIZADA do servidor
-            // A busca manual tem precedência sobre a descrição da cena
-            const term = debouncedSearchQuery.trim() || sceneDescription;
-            const useServerSearch = !!term;
+            // Execute fetch for each selected type
+            await Promise.all(filterTypes.map(async (type) => {
+                let typeAssets: AssetMatch[] = [];
 
-            if (useServerSearch) {
-                console.log('[AssetLibrary] Using Server-Side Search for:', term.substring(0, 30));
-                // Se for busca manual, search query prevalece
-                const searchResponse = await apiFetch(`/assets/search?description=${encodeURIComponent(term)}&type=${assetType}&minSimilarity=0.0`);
+                // 1. Se houver termo de busca ou descrição de cena, usar busca OTIMIZADA do servidor
+                // A busca manual tem precedência sobre a descrição da cena
+                const term = debouncedSearchQuery.trim() || sceneDescription;
+                const useServerSearch = !!term;
 
-                if (searchResponse?.matches) {
-                    fetchedAssets = searchResponse.matches.map((m: any) => ({
-                        id: m.id,
-                        url: m.url,
-                        type: m.type,
-                        similarity: debouncedSearchQuery ? 0 : m.similarity, // Se for busca manual, ignorar similarity score visualmente ou n? Melhor manter 0 pois é keyword matching
-                        description: m.description,
-                        tags: m.tags || [],
-                        category: m.category,
-                        duration: m.duration,
-                        isRecentlyUsed: false,
-                        thumbnailUrl: m.thumbnail_url
-                    }));
+                if (useServerSearch) {
+                    // console.log('[AssetLibrary] Using Server-Side Search for:', term.substring(0, 30), type);
+                    // Se for busca manual, search query prevalece
+                    const searchResponse = await apiFetch(`/assets/search?description=${encodeURIComponent(term)}&type=${type}&minSimilarity=0.0`);
+
+                    if (searchResponse?.matches) {
+                        typeAssets = searchResponse.matches.map((m: any) => ({
+                            id: m.id,
+                            url: m.url,
+                            type: m.type,
+                            similarity: debouncedSearchQuery ? 0 : m.similarity,
+                            description: m.description,
+                            tags: m.tags || [],
+                            category: m.category,
+                            duration: m.duration,
+                            isRecentlyUsed: false,
+                            thumbnailUrl: m.thumbnail_url
+                        }));
+                    }
+                } else {
+                    // 2. Fallback: Se não tiver nada, busca os mais recentes
+                    // console.log('[AssetLibrary] Fetching recent catalog (Browse Mode) for', type);
+                    const catalogResponse = await apiFetch('/assets/catalog?limit=50&take=50');
+
+                    if (catalogResponse?.data?.assets) {
+                        const rawAssets = catalogResponse.data.assets.filter((asset: any) =>
+                            asset.asset_type === type
+                        );
+
+                        typeAssets = rawAssets.map((asset: any) => ({
+                            id: asset.id,
+                            url: asset.url,
+                            type: asset.asset_type,
+                            similarity: 0,
+                            description: asset.description || '',
+                            tags: asset.tags || [],
+                            category: asset.category,
+                            duration: asset.duration_seconds,
+                            isRecentlyUsed: asset.last_used_in_channel ? true : false,
+                            thumbnailUrl: asset.thumbnail_url
+                        }));
+                    }
                 }
-            } else {
-                // 2. Fallback: Se não tiver nada, busca os mais recentes
-                console.log('[AssetLibrary] Fetching recent catalog (Browse Mode)');
-                const catalogResponse = await apiFetch('/assets/catalog?limit=50&take=50');
+                allAssets = [...allAssets, ...typeAssets];
+            }));
 
-                if (catalogResponse?.data?.assets) {
-                    const rawAssets = catalogResponse.data.assets.filter((asset: any) =>
-                        asset.asset_type === assetType
-                    );
+            // Remove duplicates (just in case)
+            const uniqueAssets = Array.from(new Map(allAssets.map(item => [item.id, item])).values());
 
-                    fetchedAssets = rawAssets.map((asset: any) => ({
-                        id: asset.id,
-                        url: asset.url,
-                        type: asset.asset_type,
-                        similarity: 0,
-                        description: asset.description || '',
-                        tags: asset.tags || [],
-                        category: asset.category,
-                        duration: asset.duration_seconds,
-                        isRecentlyUsed: asset.last_used_in_channel ? true : false,
-                        thumbnailUrl: asset.thumbnail_url
-                    }));
-                }
-            }
+            // Sort by similarity desc, then recency? Or strictly similarity?
+            // If manual search, similarity is 0, so result order from API matters. 
+            // Since we merged, let's sort by type to group them, or just let them mix?
+            // Mixing is better for "all results".
 
-            console.log(`[AssetLibrary] Loaded ${fetchedAssets.length} assets via ${useServerSearch ? 'Server Search' : 'Catalog Browse'}`);
+            // If similarity exists, sort by it.
+            uniqueAssets.sort((a, b) => b.similarity - a.similarity);
 
-            setAssets(fetchedAssets);
-            // setFilteredAssets não é mais necessário pois fetch traz exatamente o que queremos
+            // console.log(`[AssetLibrary] Loaded ${uniqueAssets.length} total assets`);
+
+            setAssets(uniqueAssets);
 
         } catch (error) {
             console.error('Failed to fetch assets:', error);
@@ -205,33 +224,78 @@ export const AssetLibraryModal: React.FC<AssetLibraryModalProps> = ({
                     </button>
                 </div>
 
-                {/* Search Bar */}
+                {/* Search Bar & Filters */}
                 <div className="px-6 pb-4 border-b border-zinc-800">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('asset_library.search_placeholder', 'Pesquisar por descrição, tags ou categoria...')}
-                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 pl-10 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
-                        />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
-                            🔍
-                        </span>
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                            >
-                                ✕
-                            </button>
-                        )}
+                    <div className="flex flex-col gap-3">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder={t('asset_library.search_placeholder', 'Pesquisar por descrição, tags ou categoria...')}
+                                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 pl-10 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                            />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+                                🔍
+                            </span>
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterTypes.includes('IMAGE') ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                                        {filterTypes.includes('IMAGE') && <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={filterTypes.includes('IMAGE')}
+                                        onChange={() => {
+                                            setFilterTypes(prev =>
+                                                prev.includes('IMAGE')
+                                                    ? prev.filter(t => t !== 'IMAGE')
+                                                    : [...prev, 'IMAGE']
+                                            );
+                                        }}
+                                    />
+                                    <span className={`text-sm ${filterTypes.includes('IMAGE') ? 'text-white' : 'text-zinc-400'}`}>Imagens</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filterTypes.includes('VIDEO') ? 'bg-purple-500 border-purple-500' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                                        {filterTypes.includes('VIDEO') && <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={filterTypes.includes('VIDEO')}
+                                        onChange={() => {
+                                            setFilterTypes(prev =>
+                                                prev.includes('VIDEO')
+                                                    ? prev.filter(t => t !== 'VIDEO')
+                                                    : [...prev, 'VIDEO']
+                                            );
+                                        }}
+                                    />
+                                    <span className={`text-sm ${filterTypes.includes('VIDEO') ? 'text-white' : 'text-zinc-400'}`}>Vídeos</span>
+                                </label>
+                            </div>
+
+                            {searchQuery && (
+                                <p className="text-xs text-zinc-500">
+                                    {assets.length} {t('asset_library.results', 'resultado(s)')}
+                                </p>
+                            )}
+                        </div>
                     </div>
-                    {searchQuery && (
-                        <p className="text-xs text-zinc-500 mt-2">
-                            {assets.length} {t('asset_library.results', 'resultado(s)')}
-                        </p>
-                    )}
                 </div>
 
                 {/* Content */}
