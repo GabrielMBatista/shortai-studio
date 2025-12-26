@@ -90,7 +90,7 @@ export const resourceQueue = {
         }
     },
 
-    release: (_type: any) => {
+    release: (_type?: any) => {
         // Manually decrement if needed (mostly internal use now)
         if (globalActiveRequests > 0) globalActiveRequests--;
         resourceQueue.processAll();

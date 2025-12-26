@@ -87,10 +87,10 @@ export const SafeImage: React.FC<SafeImageProps> = ({
         };
 
         // Enqueue immediately when visible
-        cancelQueue = resourceQueue.enqueue(loadTask);
+        loadTask();
 
         return () => {
-            if (cancelQueue) cancelQueue();
+            // Cleanup if needed (fetch cancellation not implemented in mediaCache yet)
         };
 
     }, [src, isVisible, fallbackSrc]);

@@ -93,10 +93,10 @@ export const SafeVideo = forwardRef<HTMLVideoElement, SafeVideoProps>((
             }
         };
 
-        cancelQueue = resourceQueue.enqueue(loadTask);
+        loadTask();
 
         return () => {
-            if (cancelQueue) cancelQueue();
+            // Cleanup if needed
         };
     }, [isVisible, src]);
 
